@@ -21,7 +21,7 @@ namespace Shadow.Test
 
 			Catalog local = CatalogReader.Read(File.OpenRead(mirrorPath));
 
-			Updater updater = new Updater(rootPath);
+			Synchronizer updater = new Synchronizer(rootPath);
 			updater.PerformUpdate(local, target);
 #else
 			Console.Write("Enter the root of the repository: ");

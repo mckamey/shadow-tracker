@@ -2,7 +2,7 @@
 using System.Configuration;
 using System.ServiceProcess;
 
-using Shadow.Watcher;
+using Shadow.Agent;
 
 namespace ShadowTrackerService
 {

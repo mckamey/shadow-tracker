@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Shadow.Watcher
+namespace Shadow.Agent
 {
 	public class FileTracker
 	{
