@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace Shadow.Model
 {
+	/// <summary>
+	/// Contains an in-memory listing of DataNodes with ability to lookup by file path or file signature.
+	/// </summary>
 	public class Catalog
 	{
 		#region Fields
