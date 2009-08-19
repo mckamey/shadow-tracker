@@ -7,6 +7,12 @@ namespace Shadow.Agent
 {
 	public class Cataloger
 	{
+		#region Constants
+
+		private const FileAttributes FilteredFiles = FileAttributes.Hidden|FileAttributes.System|FileAttributes.Temporary;
+
+		#endregion Constants
+
 		#region Fields
 
 		private readonly string RootPath;
@@ -37,7 +43,7 @@ namespace Shadow.Agent
 		{
 			Catalog catalog = new Catalog();
 
-			catalog.Entries = FileIterator.GetFiles(this.RootPath);
+			catalog.Entries = FileIterator.GetFiles(this.RootPath, Cataloger.FilteredFiles, true);
 
 			return catalog;
 		}

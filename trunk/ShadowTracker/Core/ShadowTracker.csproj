@@ -51,6 +51,7 @@
     <Compile Include="Agent\Synchronizer.cs" />
     <Compile Include="Model\Catalog.cs" />
     <Compile Include="Model\CatalogDelta.cs" />
+    <Compile Include="Model\DataNodeFactory.cs" />
     <Compile Include="Model\DeltaAction.cs" />
     <Compile Include="Model\NodeDelta.cs" />
     <Compile Include="Model\DataNode.cs" />
