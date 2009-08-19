@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using JsonFx.Json;
-
 namespace Shadow.Model
 {
 	/// <summary>
