@@ -33,7 +33,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JsonFx.Json, Version=1.1.908.1708, Culture=neutral, PublicKeyToken=315052dd637f8a52, processorArchitecture=MSIL">
+    <Reference Include="JsonFx.Json">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.Json.dll</HintPath>
     </Reference>
