@@ -16,9 +16,17 @@ namespace Shadow.Agent
 			return (
 					from node in target.Entries
 					let action = this.CalcNodeDelta(local, node)
-					where action != null
-					orderby action.Action
-					select action
+					where action != DeltaAction.None
+					let clonePath =
+						(action != DeltaAction.Clone) ? null :
+						local.GetPathOfNodeWithSignature(node.Signature)
+					orderby action
+					select new NodeDelta
+					{
+						Action = action,
+						ClonePath = clonePath,
+						Target = node
+					}
 				).Union(
 					// extras are any local entries not contained in target
 					from node in local.Entries
@@ -31,7 +39,7 @@ namespace Shadow.Agent
 				);
 		}
 
-		private NodeDelta CalcNodeDelta(Catalog catalog, DataNode target)
+		private DeltaAction CalcNodeDelta(Catalog catalog, DataNode target)
 		{
 			// look for existing node
 			if (!catalog.ContainsPath(target.Path))
@@ -40,68 +48,42 @@ namespace Shadow.Agent
 				if (target.IsDirectory)
 				{
 					// can build directory from metadata alone
-					return new NodeDelta
-					{
-						Action = DeltaAction.Meta,
-						Target = target
-					};
+					return DeltaAction.Meta;
 				}
 
 				// file is missing, see if have a copy elsewhere (e.g. moved/copied/renamed)
 				if (catalog.ContainsSignature(target.Signature))
 				{
 					// equivalent file found
-					return new NodeDelta
-					{
-						Action = DeltaAction.Clone,
-						ClonePath = catalog.GetPathOfNodeWithSignature(target.Signature),
-						Target = target
-					};
+					return DeltaAction.Clone;
 				}
 
 				// completely missing file, need to add
-				return new NodeDelta
-				{
-					Action = DeltaAction.Add,
-					Target = target
-				};
+				return DeltaAction.Add;
 			}
 
 			DataNode local = catalog.GetNodeAtPath(target.Path);
 			if (target.Equals(local))
 			{
 				// no changes, identical
-				return null;
+				return DeltaAction.None;
 			}
 
 			if (StringComparer.OrdinalIgnoreCase.Equals(local.Signature, target.Signature))
 			{
 				// correct bits exist at correct path but metadata is different
-				return new NodeDelta
-				{
-					Action = DeltaAction.Meta,
-					Target = target
-				};
+				return DeltaAction.Meta;
 			}
 
 			// bits are different, see if have a equivalent copy elsewhere
 			if (catalog.ContainsSignature(target.Signature))
 			{
 				// equivalent file found
-				return new NodeDelta
-				{
-					Action = DeltaAction.Clone,
-					ClonePath = catalog.GetPathOfNodeWithSignature(target.Signature),
-					Target = target
-				};
+				return DeltaAction.Clone;
 			}
 
 			// file exists but bits are different
-			return new NodeDelta
-			{
-				Action = DeltaAction.Update,
-				Target = target
-			};
+			return DeltaAction.Update;
 		}
 
 		#endregion Delta Methods
