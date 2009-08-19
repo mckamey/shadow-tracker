@@ -5,7 +5,7 @@ using Shadow.Model;
 
 namespace Shadow.Agent
 {
-	public class Updater
+	public class Synchronizer
 	{
 		#region Fields
 
@@ -19,7 +19,7 @@ namespace Shadow.Agent
 		/// Ctor
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public Updater(string rootPath)
+		public Synchronizer(string rootPath)
 		{
 			if (String.IsNullOrEmpty(rootPath))
 			{

@@ -45,16 +45,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent\Cataloger.cs" />
-    <Compile Include="Agent\Updater.cs" />
     <Compile Include="Agent\FileHash.cs" />
     <Compile Include="Agent\FileIterator.cs" />
+    <Compile Include="Agent\FileTracker.cs" />
+    <Compile Include="Agent\Synchronizer.cs" />
     <Compile Include="Model\Catalog.cs" />
     <Compile Include="Model\CatalogDelta.cs" />
     <Compile Include="Model\DeltaAction.cs" />
     <Compile Include="Model\NodeDelta.cs" />
     <Compile Include="Model\DataNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Watcher\FileTracker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
