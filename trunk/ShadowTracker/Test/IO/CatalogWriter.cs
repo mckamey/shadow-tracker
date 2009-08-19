@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 using JsonFx.Json;
@@ -21,7 +22,7 @@ namespace Shadow.IO
 			}
 		}
 
-		public static void Save(CatalogDelta delta, Stream stream)
+		public static void Save(IEnumerable<NodeDelta> delta, Stream stream)
 		{
 			using (CustomJsonWriter writer = new CustomJsonWriter(stream))
 			{

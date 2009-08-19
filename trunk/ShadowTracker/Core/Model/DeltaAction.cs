@@ -13,24 +13,28 @@ namespace Shadow.Model
 		None = 0,
 
 		/// <summary>
-		/// Data exists but metadata needs to be updated
+		/// Bits are missing, need to import
 		/// </summary>
-		Meta = 1,
+		Add = 1,
 
 		/// <summary>
-		/// Data exists but in different location
+		/// Bits are different at path, replace
 		/// </summary>
-		/// <remarks>
-		/// Includes Meta action
-		/// </remarks>
-		Copy = 2,
+		Update = 2,
 
 		/// <summary>
-		/// Data is missing
+		/// Bits exist but at different path
 		/// </summary>
-		/// <remarks>
-		/// Includes Meta action
-		/// </remarks>
-		Data = 3
+		Clone = 3,
+
+		/// <summary>
+		/// Bits exist but metadata needs to be updated
+		/// </summary>
+		Meta = 4,
+
+		/// <summary>
+		/// Bits are extra, need to remove
+		/// </summary>
+		Delete = 5
 	}
 }

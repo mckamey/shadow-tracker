@@ -21,13 +21,13 @@ namespace Shadow.Model
 		public DeltaAction Action { get; set; }
 
 		/// <summary>
-		/// Gets and sets the relative path to the data
+		/// Gets and sets the local path of the data
 		/// </summary>
 		[DefaultValue(null)]
-		public DataNode Local { get; set; }
+		public string LocalPath { get; set; }
 
 		/// <summary>
-		/// Gets and sets file attributes
+		/// Gets and sets target attributes
 		/// </summary>
 		[DefaultValue(null)]
 		public DataNode Target { get; set; }
@@ -43,7 +43,7 @@ namespace Shadow.Model
 
 			return (that != null) &&
 				EqualityComparer<DeltaAction>.Default.Equals(this.Action, that.Action) &&
-				EqualityComparer<DataNode>.Default.Equals(this.Local, that.Local) &&
+				StringComparer.OrdinalIgnoreCase.Equals(this.LocalPath, that.LocalPath) &&
 				EqualityComparer<DataNode>.Default.Equals(this.Target, that.Target);
 		}
 
@@ -52,7 +52,7 @@ namespace Shadow.Model
 		{
 			int hashcode = -834397989;
 			hashcode = (-1521134295 * hashcode) + EqualityComparer<DeltaAction>.Default.GetHashCode(this.Action);
-			hashcode = (-1521134295 * hashcode) + EqualityComparer<DataNode>.Default.GetHashCode(this.Local);
+			hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(this.LocalPath);
 			return ((-1521134295 * hashcode) + EqualityComparer<DataNode>.Default.GetHashCode(this.Target));
 		}
 
@@ -65,7 +65,7 @@ namespace Shadow.Model
 			builder.Append(this.Action);
 
 			builder.Append(", Local = ");
-			builder.Append(this.Local);
+			builder.Append(this.LocalPath);
 
 			builder.Append(", Target = ");
 			builder.Append(this.Target);

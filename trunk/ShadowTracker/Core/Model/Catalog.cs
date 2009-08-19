@@ -60,9 +60,15 @@ namespace Shadow.Model
 			return this.Signatures.ContainsKey(signature);
 		}
 
-		internal DataNode GetNodeWithSignature(string signature)
+		internal string GetPathOfNodeWithSignature(string signature)
 		{
-			return this.Signatures[signature];
+			DataNode node = this.Signatures[signature];
+			if (node == null)
+			{
+				return null;
+			}
+
+			return node.Path;
 		}
 
 		#endregion Methods
