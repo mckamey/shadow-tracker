@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 using Shadow.Agent;
@@ -21,8 +22,8 @@ namespace Shadow.Test
 
 			Catalog local = CatalogReader.Read(File.OpenRead(mirrorPath));
 
-			Synchronizer updater = new Synchronizer(rootPath);
-			updater.PerformUpdate(local, target);
+			Synchronizer updater = new Synchronizer();
+			updater.SyncCatalogs(local, target);
 #else
 			Console.Write("Enter the root of the repository: ");
 			string rootPath = Console.ReadLine();
