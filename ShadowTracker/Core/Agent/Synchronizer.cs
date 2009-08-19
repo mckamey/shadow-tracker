@@ -17,15 +17,15 @@ namespace Shadow.Agent
 					from node in target.Entries
 					let action = this.CalcNodeDelta(local, node)
 					where action != DeltaAction.None
-					let clonePath =
+					let sourcePath =
 						(action != DeltaAction.Clone) ? null :
 						local.GetPathOfNodeWithSignature(node.Signature)
 					orderby action
 					select new NodeDelta
 					{
 						Action = action,
-						ClonePath = clonePath,
-						Target = node
+						SourcePath = sourcePath,
+						Node = node
 					}
 				).Union(
 					// extras are any local entries not contained in target
@@ -34,7 +34,7 @@ namespace Shadow.Agent
 					select new NodeDelta
 						{
 							Action = DeltaAction.Delete,
-							Target = node
+							Node = node
 						}
 				);
 		}
@@ -100,27 +100,27 @@ namespace Shadow.Agent
 				{
 					case DeltaAction.Add:
 					{
-						Console.WriteLine("ADD \"{0}\" at \"{1}\"", action.Target.Signature, action.Target.Path);
+						Console.WriteLine("ADD \"{0}\" at \"{1}\"", action.Node.Signature, action.Node.Path);
 						break;
 					}
 					case DeltaAction.Clone:
 					{
-						Console.WriteLine("COPY: \"{0}\" to \"{1}\"", action.ClonePath, action.Target.Path);
+						Console.WriteLine("COPY: \"{0}\" to \"{1}\"", action.SourcePath, action.Node.Path);
 						break;
 					}
 					case DeltaAction.Update:
 					{
-						Console.WriteLine("REPLACE: \"{0}\" to \"{1}\"", action.Target.Signature, action.Target.Path);
+						Console.WriteLine("REPLACE: \"{0}\" to \"{1}\"", action.Node.Signature, action.Node.Path);
 						break;
 					}
 					case DeltaAction.Meta:
 					{
-						Console.WriteLine("ATTRIB: \"{0}\"", action.Target.Path);
+						Console.WriteLine("ATTRIB: \"{0}\"", action.Node.Path);
 						break;
 					}
 					case DeltaAction.Delete:
 					{
-						Console.WriteLine("REMOVE: \"{0}\"", action.Target.Path);
+						Console.WriteLine("REMOVE: \"{0}\"", action.Node.Path);
 						break;
 					}
 					default:

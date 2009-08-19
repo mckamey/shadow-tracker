@@ -10,31 +10,31 @@ namespace Shadow.Model
 		/// <summary>
 		/// No action required
 		/// </summary>
-		None = 0,
+		None,
 
 		/// <summary>
 		/// Bits are missing, need to import
 		/// </summary>
-		Add = 1,
+		Add,
 
 		/// <summary>
 		/// Bits are different at path, replace
 		/// </summary>
-		Update = 2,
+		Update,
 
 		/// <summary>
 		/// Bits exist but at different path
 		/// </summary>
-		Clone = 3,
+		Clone,
 
 		/// <summary>
 		/// Bits exist but metadata needs to be updated
 		/// </summary>
-		Meta = 4,
+		Meta,
 
 		/// <summary>
 		/// Bits are extra, need to remove
 		/// </summary>
-		Delete = 5
+		Delete
 	}
 }

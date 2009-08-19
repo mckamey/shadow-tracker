@@ -1,7 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 
@@ -21,16 +20,16 @@ namespace Shadow.Model
 		public DeltaAction Action { get; set; }
 
 		/// <summary>
-		/// Gets and sets the local path of the data
+		/// Gets and sets the source path of the bits
 		/// </summary>
 		[DefaultValue(null)]
-		public string ClonePath { get; set; }
+		public string SourcePath { get; set; }
 
 		/// <summary>
 		/// Gets and sets target attributes
 		/// </summary>
 		[DefaultValue(null)]
-		public DataNode Target { get; set; }
+		public DataNode Node { get; set; }
 
 		#endregion Properties
 
@@ -43,8 +42,8 @@ namespace Shadow.Model
 
 			return (that != null) &&
 				EqualityComparer<DeltaAction>.Default.Equals(this.Action, that.Action) &&
-				StringComparer.OrdinalIgnoreCase.Equals(this.ClonePath, that.ClonePath) &&
-				EqualityComparer<DataNode>.Default.Equals(this.Target, that.Target);
+				StringComparer.OrdinalIgnoreCase.Equals(this.SourcePath, that.SourcePath) &&
+				EqualityComparer<DataNode>.Default.Equals(this.Node, that.Node);
 		}
 
 		[DebuggerHidden]
@@ -52,8 +51,8 @@ namespace Shadow.Model
 		{
 			int hashcode = -834397989;
 			hashcode = (-1521134295 * hashcode) + EqualityComparer<DeltaAction>.Default.GetHashCode(this.Action);
-			hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(this.ClonePath);
-			return ((-1521134295 * hashcode) + EqualityComparer<DataNode>.Default.GetHashCode(this.Target));
+			hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(this.SourcePath);
+			return ((-1521134295 * hashcode) + EqualityComparer<DataNode>.Default.GetHashCode(this.Node));
 		}
 
 		[DebuggerHidden]
@@ -64,11 +63,11 @@ namespace Shadow.Model
 			builder.Append("{ Action = ");
 			builder.Append(this.Action);
 
-			builder.Append(", Local = ");
-			builder.Append(this.ClonePath);
+			builder.Append(", SourcePath = ");
+			builder.Append(this.SourcePath);
 
-			builder.Append(", Target = ");
-			builder.Append(this.Target);
+			builder.Append(", Node = ");
+			builder.Append(this.Node);
 
 			builder.Append(" }");
 
