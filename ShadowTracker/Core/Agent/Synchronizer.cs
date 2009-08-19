@@ -25,8 +25,8 @@ namespace Shadow.Agent
 					where !target.ContainsPath(node.Path)
 					select new NodeDelta
 						{
-							Action=DeltaAction.Delete,
-							LocalPath=node.Path
+							Action = DeltaAction.Delete,
+							Target = node
 						}
 				);
 		}
@@ -54,7 +54,7 @@ namespace Shadow.Agent
 					return new NodeDelta
 					{
 						Action = DeltaAction.Clone,
-						LocalPath = catalog.GetPathOfNodeWithSignature(target.Signature),
+						ClonePath = catalog.GetPathOfNodeWithSignature(target.Signature),
 						Target = target
 					};
 				}
@@ -91,7 +91,7 @@ namespace Shadow.Agent
 				return new NodeDelta
 				{
 					Action = DeltaAction.Clone,
-					LocalPath = catalog.GetPathOfNodeWithSignature(target.Signature),
+					ClonePath = catalog.GetPathOfNodeWithSignature(target.Signature),
 					Target = target
 				};
 			}
@@ -100,7 +100,6 @@ namespace Shadow.Agent
 			return new NodeDelta
 			{
 				Action = DeltaAction.Update,
-				LocalPath = local.Path,
 				Target = target
 			};
 		}
@@ -124,7 +123,7 @@ namespace Shadow.Agent
 					}
 					case DeltaAction.Clone:
 					{
-						Console.WriteLine("COPY: \"{0}\" to \"{1}\"", action.LocalPath, action.Target.Path);
+						Console.WriteLine("COPY: \"{0}\" to \"{1}\"", action.ClonePath, action.Target.Path);
 						break;
 					}
 					case DeltaAction.Update:
@@ -139,7 +138,7 @@ namespace Shadow.Agent
 					}
 					case DeltaAction.Delete:
 					{
-						Console.WriteLine("REMOVE: \"{0}\"", action.LocalPath);
+						Console.WriteLine("REMOVE: \"{0}\"", action.Target.Path);
 						break;
 					}
 					default:
