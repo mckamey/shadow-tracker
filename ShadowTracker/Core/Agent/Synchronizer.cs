@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 using Shadow.Model;
 
@@ -7,40 +8,11 @@ namespace Shadow.Agent
 {
 	public class Synchronizer
 	{
-		#region Fields
+		#region Delta Methods
 
-		private readonly string RootPath;
-
-		#endregion Fields
-
-		#region Init
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="rootPath"></param>
-		public Synchronizer(string rootPath)
+		public void SyncCatalogs(Catalog local, Catalog target)
 		{
-			if (String.IsNullOrEmpty(rootPath))
-			{
-				throw new ArgumentNullException("Root is invalid.");
-			}
-
-			if (rootPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
-			{
-				rootPath.TrimEnd(Path.DirectorySeparatorChar);
-			}
-
-			this.RootPath = rootPath;
-		}
-
-		#endregion Init
-
-		#region Methods
-
-		public void PerformUpdate(Catalog local, Catalog target)
-		{
-			CatalogDelta delta = Catalog.GetDelta(local, target);
+			CatalogDelta delta = this.GetDelta(local, target);
 
 			using (TextWriter writer = File.CreateText(@"X:\ExampleActions.txt"))
 			{
@@ -50,17 +22,17 @@ namespace Shadow.Agent
 					{
 						case DeltaAction.Meta:
 						{
-							this.SyncMetaData(writer, action);
+							this.UpdateNode(writer, action);
 							break;
 						}
 						case DeltaAction.Copy:
 						{
-							this.CopyData(writer, action, action.Local.Path);
+							this.CopyNode(writer, action, action.Local.Path);
 							break;
 						}
 						case DeltaAction.Data:
 						{
-							this.DownloadData(writer, action);
+							this.AddNode(writer, action);
 							break;
 						}
 						default:
@@ -76,30 +48,135 @@ namespace Shadow.Agent
 
 				foreach (string path in delta.Extras)
 				{
-					writer.WriteLine("REMOVE: \"{0}\"", path);
-					writer.WriteLine();
+					this.RemoveNode(writer, path);
 				}
 			}
 		}
 
-		private void DownloadData(TextWriter writer, NodeDelta action)
+		public CatalogDelta GetDelta(Catalog local, Catalog target)
+		{
+			CatalogDelta delta = new CatalogDelta();
+
+			// sequence of actions to take place
+			delta.Actions =
+				from node in target.Entries
+				let action = CalcNodeDelta(local, node)
+				where action != null
+				orderby action.Action
+				select action;
+
+			// extras are any local entries not contained in target
+			delta.Extras =
+				from node in local.Entries
+				where !target.ContainsPath(node.Path)
+				select node.Path;
+
+			return delta;
+		}
+
+		private static NodeDelta CalcNodeDelta(Catalog catalog, DataNode target)
+		{
+			// look for existing node
+			if (!catalog.ContainsPath(target.Path))
+			{
+				// check if is an empty directory
+				if (target.IsDirectory)
+				{
+					// can build directory from metadata
+					return new NodeDelta
+					{
+						Action=DeltaAction.Meta,
+						Target=target
+					};
+				}
+
+				// file is missing, see if have a copy elsewhere (e.g. moved/copied/renamed)
+				if (catalog.ContainsSignature(target.Signature))
+				{
+					// equivalent file found
+					return new NodeDelta
+					{
+						Action=DeltaAction.Copy,
+						Local=catalog.GetNodeWithSignature(target.Signature),
+						Target=target
+					};
+				}
+
+				// completely missing file, need to download
+				return new NodeDelta
+				{
+					Action=DeltaAction.Data,
+					Target=target
+				};
+			}
+
+			DataNode local = catalog.GetNodeAtPath(target.Path);
+			if (target.Equals(local))
+			{
+				// no changes, identical
+				return null;
+			}
+
+			if (StringComparer.OrdinalIgnoreCase.Equals(local.Signature, target.Signature))
+			{
+				// file exists with correct bits but metadata has changed
+				return new NodeDelta
+				{
+					Action=DeltaAction.Meta,
+					Local=local,
+					Target=target
+				};
+			}
+
+			// bits are different, see if have a equivalent copy elsewhere
+			if (catalog.ContainsSignature(target.Signature))
+			{
+				// equivalent file found
+				return new NodeDelta
+				{
+					Action=DeltaAction.Copy,
+					Local=catalog.GetNodeWithSignature(target.Signature),
+					Target=target
+				};
+			}
+
+			// file exists but bits are different
+			return new NodeDelta
+			{
+				Action=DeltaAction.Data,
+				Local=local,
+				Target=target
+			};
+		}
+
+		#endregion Delta Methods
+
+		#region Events
+
+		private void AddNode(TextWriter writer, NodeDelta action)
 		{
 			writer.WriteLine("DOWNLOAD \"{0}\"", action.Target.Signature);
 			string sourcePath = action.Target.Signature;
-			this.CopyData(writer, action, sourcePath);
+			this.CopyNode(writer, action, sourcePath);
 		}
 
-		private void CopyData(TextWriter writer, NodeDelta action, string sourcePath)
+		private void CopyNode(TextWriter writer, NodeDelta action, string sourcePath)
 		{
 			writer.WriteLine("COPY: \"{0}\" to \"{1}\"", sourcePath, action.Target.Path);
-			this.SyncMetaData(writer, action);
+			this.UpdateNode(writer, action);
 		}
 
-		private void SyncMetaData(TextWriter writer, NodeDelta action)
+		private void UpdateNode(TextWriter writer, NodeDelta action)
 		{
 			writer.WriteLine("ATTRIB: \"{0}\"", action.Target.Path);
 		}
 
-		#endregion Methods
+		private void RemoveNode(TextWriter writer, string path)
+		{
+			writer.WriteLine("REMOVE: \"{0}\"", path);
+			writer.WriteLine();
+		}
+
+		#endregion Events
 	}
 }
