@@ -41,18 +41,22 @@ namespace Shadow.Agent
 
 		private bool ContainsPath(Catalog catalog, string path)
 		{
-			return
-				(from entry in catalog.Entries
-				 where entry.Path == path
-				 select entry.Path).Count() > 0;
+			IQueryable<string> query =
+				from entry in catalog.Entries
+				where entry.Path == path
+				select entry.Path;
+
+			return query.Any();
 		}
 
 		private string GetPathOfEntryBySignature(Catalog catalog, string hash)
 		{
-			return
-				(from entry in catalog.Entries
-				 where entry.Signature == hash
-				 select entry.Path).SingleOrDefault();
+			IQueryable<string> query =
+				from entry in catalog.Entries
+				where entry.Signature == hash
+				select entry.Path;
+
+			return query.FirstOrDefault();
 		}
 
 		#endregion Delta Methods
