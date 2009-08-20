@@ -48,7 +48,6 @@
     <Compile Include="Model\FileCatalog.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Model\ICatalogRepository.cs" />
     <Compile Include="Model\ITable`1.cs" />
     <Compile Include="Model\MemoryTable`1.cs" />
     <Compile Include="Model\NodeDelta.cs" />
