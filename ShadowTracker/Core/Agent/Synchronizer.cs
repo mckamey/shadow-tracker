@@ -10,7 +10,7 @@ namespace Shadow.Agent
 	{
 		#region Delta Methods
 
-		public IEnumerable<NodeDelta> GetDelta(Catalog local, Catalog target)
+		public IEnumerable<NodeDelta> GetDelta(ICatalogRepository local, ICatalogRepository target)
 		{
 			// sequence of actions to take place
 			return (
@@ -19,7 +19,7 @@ namespace Shadow.Agent
 					where action != DeltaAction.None
 					let sourcePath =
 						(action != DeltaAction.Clone) ? null :
-						local.GetPathOfNodeWithSignature(node.Signature)
+						local.GetPathOfEntryBySignature(node.Signature)
 					orderby action
 					select new NodeDelta
 					{
@@ -28,18 +28,19 @@ namespace Shadow.Agent
 						Node = node
 					}
 				).Union(
-					// extras are any local entries not contained in target
+				// extras are any local entries not contained in target
 					from node in local.Entries
+
 					where !target.ContainsPath(node.Path)
 					select new NodeDelta
-						{
-							Action = DeltaAction.Delete,
-							Node = node
-						}
+					{
+						Action = DeltaAction.Delete,
+						Node = node
+					}
 				);
 		}
 
-		private DeltaAction CalcNodeDelta(Catalog catalog, DataNode target)
+		private DeltaAction CalcNodeDelta(ICatalogRepository catalog, CatalogEntry target)
 		{
 			// look for existing node
 			if (!catalog.ContainsPath(target.Path))
@@ -62,7 +63,7 @@ namespace Shadow.Agent
 				return DeltaAction.Add;
 			}
 
-			DataNode local = catalog.GetNodeAtPath(target.Path);
+			CatalogEntry local = catalog.GetEntryAtPath(target.Path);
 			if (target.Equals(local))
 			{
 				// no changes, identical
@@ -90,7 +91,7 @@ namespace Shadow.Agent
 
 		#region Event Placeholders
 
-		public void SyncCatalogs(Catalog local, Catalog target)
+		public void SyncCatalogs(ICatalogRepository local, ICatalogRepository target)
 		{
 			IEnumerable<NodeDelta> delta = this.GetDelta(local, target);
 

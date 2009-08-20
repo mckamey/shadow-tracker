@@ -43,7 +43,10 @@ namespace Shadow.Agent
 		{
 			Catalog catalog = new Catalog();
 
-			catalog.Entries = FileIterator.GetFiles(this.RootPath, Cataloger.FilteredFiles, true);
+			foreach (CatalogEntry entry in FileIterator.GetFiles(this.RootPath, Cataloger.FilteredFiles, true))
+			{
+				catalog.AddEntry(entry);
+			}
 
 			return catalog;
 		}

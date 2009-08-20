@@ -20,7 +20,7 @@ namespace Shadow.Test
 			Catalog target = new Cataloger(rootPath).CreateCatalog();
 			CatalogWriter.Save(target, File.Create(masterPath));
 
-			Catalog local = CatalogReader.Read(File.OpenRead(mirrorPath));
+			ICatalogRepository local = CatalogReader.Read(File.OpenRead(mirrorPath));
 
 			Synchronizer updater = new Synchronizer();
 			updater.SyncCatalogs(local, target);

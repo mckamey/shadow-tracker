@@ -46,10 +46,11 @@
     <Compile Include="Agent\FileTracker.cs" />
     <Compile Include="Agent\Synchronizer.cs" />
     <Compile Include="Model\Catalog.cs" />
+    <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\DataNodeFactory.cs" />
     <Compile Include="Model\DeltaAction.cs" />
+    <Compile Include="Model\ICatalogRepository.cs" />
     <Compile Include="Model\NodeDelta.cs" />
-    <Compile Include="Model\DataNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

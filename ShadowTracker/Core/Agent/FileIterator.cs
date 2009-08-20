@@ -10,7 +10,7 @@ namespace Shadow.Agent
 	{
 		#region Methods
 
-		public static IEnumerable<DataNode> GetFiles(string root, FileAttributes filteredFiles, bool listEmptyDirs)
+		public static IEnumerable<CatalogEntry> GetFiles(string root, FileAttributes filteredFiles, bool listEmptyDirs)
 		{
 			DirectoryInfo dir = new DirectoryInfo(root);
 			if (!dir.Exists)

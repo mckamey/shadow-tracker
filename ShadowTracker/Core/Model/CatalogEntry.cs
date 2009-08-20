@@ -9,7 +9,7 @@ namespace Shadow.Model
 	/// <summary>
 	/// Represents a single catalog data node
 	/// </summary>
-	public class DataNode
+	public class CatalogEntry
 	{
 		#region Properties
 
@@ -77,7 +77,7 @@ namespace Shadow.Model
 		[DebuggerHidden]
 		public override bool Equals(object obj)
 		{
-			var that = obj as DataNode;
+			var that = obj as CatalogEntry;
 
 			return (that != null) &&
 				EqualityComparer<String>.Default.Equals(this.Path, that.Path) &&
