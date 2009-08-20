@@ -10,18 +10,50 @@ namespace Shadow.Model
 	{
 		IQueryable<CatalogEntry> Entries { get; }
 
-		CatalogEntry GetEntryAtPath(string path);
-
-		string GetPathOfEntryBySignature(string signature);
-
+		/// <summary>
+		/// Check if an entry exists for the given path.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
 		bool ContainsPath(string path);
 
-		bool ContainsSignature(string signature);
+		/// <summary>
+		/// Gets the entry for a given path.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		CatalogEntry GetEntryAtPath(string path);
 
+		/// <summary>
+		/// Check if bits exist at any location.
+		/// </summary>
+		/// <param name="signature"></param>
+		/// <returns></returns>
+		bool ContainsSignature(string hash);
+
+		/// <summary>
+		/// Gets the entry for a given signature.
+		/// </summary>
+		/// <param name="signature"></param>
+		/// <returns></returns>
+		string GetPathOfEntryBySignature(string hash);
+
+		/// <summary>
+		/// Create a new entry for a path/bits combination.
+		/// </summary>
+		/// <param name="entry"></param>
 		void AddEntry(CatalogEntry entry);
 
+		/// <summary>
+		/// Update the bits for a particular entry.
+		/// </summary>
+		/// <param name="entry"></param>
 		void UpdateEntry(CatalogEntry entry);
 
-		void RemoveEntry(CatalogEntry entry);
+		/// <summary>
+		/// Removes the specified entry for the given path.
+		/// </summary>
+		/// <param name="path"></param>
+		void DeleteEntry(string path);
 	}
 }

@@ -40,20 +40,15 @@ namespace Shadow.Agent
 				);
 		}
 
-		private DeltaAction CalcNodeDelta(ICatalogRepository catalog, CatalogEntry target)
+		private DeltaAction CalcNodeDelta(ICatalogRepository catalog, CatalogEntry entry)
 		{
 			// look for existing node
-			if (!catalog.ContainsPath(target.Path))
-			{
-				// check if is an empty directory
-				if (target.IsDirectory)
-				{
-					// can build directory from metadata alone
-					return DeltaAction.Meta;
-				}
+			CatalogEntry local = catalog.GetEntryAtPath(entry.Path);
 
-				// file is missing, see if have a copy elsewhere (e.g. moved/copied/renamed)
-				if (catalog.ContainsSignature(target.Signature))
+			if (local == null)
+			{
+				// file is missing, see if have a copy elsewhere (e.g. moved/renamed/copied)
+				if (!entry.IsDirectory && catalog.ContainsSignature(entry.Signature))
 				{
 					// equivalent file found
 					return DeltaAction.Clone;
@@ -63,21 +58,20 @@ namespace Shadow.Agent
 				return DeltaAction.Add;
 			}
 
-			CatalogEntry local = catalog.GetEntryAtPath(target.Path);
-			if (target.Equals(local))
+			if (entry.Equals(local))
 			{
 				// no changes, identical
 				return DeltaAction.None;
 			}
 
-			if (StringComparer.OrdinalIgnoreCase.Equals(local.Signature, target.Signature))
+			if (StringComparer.OrdinalIgnoreCase.Equals(local.Signature, entry.Signature))
 			{
 				// correct bits exist at correct path but metadata is different
 				return DeltaAction.Meta;
 			}
 
 			// bits are different, see if have a equivalent copy elsewhere
-			if (catalog.ContainsSignature(target.Signature))
+			if (!entry.IsDirectory && catalog.ContainsSignature(entry.Signature))
 			{
 				// equivalent file found
 				return DeltaAction.Clone;

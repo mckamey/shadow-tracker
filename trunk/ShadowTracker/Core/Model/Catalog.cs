@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Shadow.Model
@@ -11,8 +10,7 @@ namespace Shadow.Model
 	{
 		#region Fields
 
-		private readonly Dictionary<string, CatalogEntry> Paths = new Dictionary<string, CatalogEntry>(100, StringComparer.OrdinalIgnoreCase);
-		private readonly Dictionary<string, CatalogEntry> Signatures = new Dictionary<string, CatalogEntry>(100, StringComparer.OrdinalIgnoreCase);
+		private IQueryable<CatalogEntry> entries;
 
 		#endregion Fields
 
@@ -23,48 +21,45 @@ namespace Shadow.Model
 		/// </summary>
 		public IQueryable<CatalogEntry> Entries
 		{
-			get { return this.Paths.Values.AsQueryable(); }
+			get { return this.entries; }
+			set { this.entries = value; }
 		}
 
 		public CatalogEntry GetEntryAtPath(string path)
 		{
-			return this.Paths[path];
+			return
+				(from entry in this.entries
+				 where entry.Path == path
+				 select entry).SingleOrDefault();
 		}
 
 		public bool ContainsPath(string path)
 		{
-			return this.Paths.ContainsKey(path);
+			return
+				(from entry in this.entries
+				 where entry.Path == path
+				 select entry.Path).Count() > 0;
 		}
 
-		public bool ContainsSignature(string signature)
+		public string GetPathOfEntryBySignature(string hash)
 		{
-			return this.Signatures.ContainsKey(signature);
+			return
+				(from entry in this.entries
+				 where entry.Signature == hash
+				 select entry.Path).SingleOrDefault();
 		}
 
-		public string GetPathOfEntryBySignature(string signature)
+		public bool ContainsSignature(string hash)
 		{
-			CatalogEntry node = this.Signatures[signature];
-			if (node == null)
-			{
-				return null;
-			}
-
-			return node.Path;
+			return
+				(from entry in this.entries
+				 where entry.Signature == hash
+				 select entry.Path).Count() > 0;
 		}
 
 		public void AddEntry(CatalogEntry entry)
 		{
-			if (String.IsNullOrEmpty(entry.Path))
-			{
-				throw new ArgumentOutOfRangeException("entry", entry, "CatalogEntry does not specify path.");
-			}
-
-			this.Paths[entry.Path] = entry;
-
-			if (entry.HasSignature)
-			{
-				this.Signatures[entry.Signature] = entry;
-			}
+			throw new NotImplementedException();
 		}
 
 		public void UpdateEntry(CatalogEntry entry)
@@ -72,7 +67,7 @@ namespace Shadow.Model
 			throw new NotImplementedException();
 		}
 
-		public void RemoveEntry(CatalogEntry entry)
+		public void DeleteEntry(string path)
 		{
 			throw new NotImplementedException();
 		}
