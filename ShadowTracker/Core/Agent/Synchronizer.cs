@@ -10,11 +10,11 @@ namespace Shadow.Agent
 	{
 		#region Delta Methods
 
-		public IEnumerable<NodeDelta> GetDelta(ICatalogRepository local, ICatalogRepository target)
+		public IEnumerable<NodeDelta> FullCatalogSync(ICatalogRepository source, ICatalogRepository local)
 		{
-			// sequence of actions to take place
+			// geterate the sequence of actions which represent the delta since
 			return (
-					from node in target.Entries
+					from node in source.Entries
 					let action = this.CalcNodeDelta(local, node)
 					where action != DeltaAction.None
 					let sourcePath =
@@ -30,8 +30,7 @@ namespace Shadow.Agent
 				).Union(
 				// extras are any local entries not contained in target
 					from node in local.Entries
-
-					where !target.ContainsPath(node.Path)
+					where !source.ContainsPath(node.Path)
 					select new NodeDelta
 					{
 						Action = DeltaAction.Delete,
@@ -87,7 +86,7 @@ namespace Shadow.Agent
 
 		public void SyncCatalogs(ICatalogRepository local, ICatalogRepository target)
 		{
-			IEnumerable<NodeDelta> delta = this.GetDelta(local, target);
+			IEnumerable<NodeDelta> delta = this.FullCatalogSync(target, local);
 
 			foreach (NodeDelta action in delta)
 			{

@@ -17,7 +17,7 @@ namespace Shadow.Test
 			string masterPath = @"X:\ExampleMaster.txt";
 			string mirrorPath = @"X:\ExampleMirror.txt";
 
-			Catalog target = new Cataloger(rootPath).CreateCatalog();
+			Catalog target = new FileCatalog(rootPath);
 			CatalogWriter.Save(target, File.Create(masterPath));
 
 			ICatalogRepository local = CatalogReader.Read(File.OpenRead(mirrorPath));
@@ -35,7 +35,7 @@ namespace Shadow.Test
 
 			Stopwatch timer = Stopwatch.StartNew();
 			Console.Write("Building catalog");
-			Catalog catalog = new Cataloger(rootPath).CreateCatalog();
+			Catalog catalog = new FileCatalog(rootPath);
 			Console.WriteLine();
 			Console.WriteLine("Done. Elapsed: "+timer.Elapsed);
 			Console.WriteLine();
