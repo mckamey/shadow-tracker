@@ -10,7 +10,7 @@ namespace Shadow.Agent
 	{
 		#region Methods
 
-		public static IEnumerable<CatalogEntry> GetFiles(string root, FileAttributes filteredFiles, bool listEmptyDirs)
+		public static IEnumerable<FileSystemInfo> GetFiles(string root, FileAttributes filteredFiles, bool listEmptyDirs)
 		{
 			DirectoryInfo dir = new DirectoryInfo(root);
 			if (!dir.Exists)
@@ -29,7 +29,7 @@ namespace Shadow.Agent
 				if (listEmptyDirs && files.Length == 0)
 				{
 					// create a node for empty directories
-					yield return DataNodeFactory.CreateNode(root, dir);
+					yield return dir;
 				}
 
 				foreach (FileSystemInfo info in files)
@@ -45,10 +45,9 @@ namespace Shadow.Agent
 						continue;
 					}
 
-					FileInfo file = info as FileInfo;
-					if (file != null)
+					if (info is FileInfo)
 					{
-						yield return DataNodeFactory.CreateNode(root, file);
+						yield return info;
 					}
 				}
 			}

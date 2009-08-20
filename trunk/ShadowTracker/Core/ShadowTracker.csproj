@@ -40,15 +40,16 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Agent\Cataloger.cs" />
     <Compile Include="Agent\FileHash.cs" />
     <Compile Include="Agent\FileIterator.cs" />
     <Compile Include="Agent\FileTracker.cs" />
     <Compile Include="Agent\Synchronizer.cs" />
     <Compile Include="Model\Catalog.cs" />
     <Compile Include="Model\CatalogEntry.cs" />
-    <Compile Include="Model\DataNodeFactory.cs" />
     <Compile Include="Model\DeltaAction.cs" />
+    <Compile Include="Model\FileCatalog.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Model\ICatalogRepository.cs" />
     <Compile Include="Model\ITable`1.cs" />
     <Compile Include="Model\MemoryTable`1.cs" />
