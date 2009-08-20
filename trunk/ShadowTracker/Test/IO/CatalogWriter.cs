@@ -11,7 +11,7 @@ namespace Shadow.IO
 	{
 		#region Methods
 
-		public static void Save(Catalog catalog, Stream stream)
+		public static void Save(ICatalogRepository catalog, Stream stream)
 		{
 			using (CustomJsonWriter writer = new CustomJsonWriter(stream))
 			{

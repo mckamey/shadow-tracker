@@ -15,9 +15,9 @@ namespace Shadow.Model
 
 		#region Methods
 
-		public static DataNode CreateNode(string root, DirectoryInfo dir)
+		public static CatalogEntry CreateNode(string root, DirectoryInfo dir)
 		{
-			return new DataNode
+			return new CatalogEntry
 			{
 				Path = DataNodeFactory.NormalizePath(root, dir.FullName),
 				Attributes = DataNodeFactory.ScrubAttributes(dir.Attributes),
@@ -26,9 +26,9 @@ namespace Shadow.Model
 			};
 		}
 
-		public static DataNode CreateNode(string root, FileInfo file)
+		public static CatalogEntry CreateNode(string root, FileInfo file)
 		{
-			return new DataNode
+			return new CatalogEntry
 			{
 				Path = DataNodeFactory.NormalizePath(root, file.FullName),
 				Attributes = DataNodeFactory.ScrubAttributes(file.Attributes),

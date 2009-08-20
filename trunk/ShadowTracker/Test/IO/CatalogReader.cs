@@ -11,7 +11,7 @@ namespace Shadow.IO
 	{
 		#region Methods
 
-		public static Catalog Read(Stream stream)
+		public static ICatalogRepository Read(Stream stream)
 		{
 			return new JsonReader(stream).Deserialize<Catalog>();
 		}
