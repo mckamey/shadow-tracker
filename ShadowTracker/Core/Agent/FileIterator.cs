@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 
-using Shadow.Model;
-
 namespace Shadow.Agent
 {
 	internal static class FileIterator
 	{
 		#region Methods
 
-		public static IEnumerable<FileSystemInfo> GetFiles(string root, FileAttributes filteredFiles, bool listEmptyDirs)
+		public static IEnumerable<FileSystemInfo> GetFiles(string root, bool listEmptyDirs)
 		{
 			DirectoryInfo dir = new DirectoryInfo(root);
 			if (!dir.Exists)
@@ -40,11 +38,6 @@ namespace Shadow.Agent
 						continue;
 					}
 
-					if (IsFiltered(info.Attributes, filteredFiles))
-					{
-						continue;
-					}
-
 					if (info is FileInfo)
 					{
 						yield return info;
@@ -54,14 +47,5 @@ namespace Shadow.Agent
 		}
 
 		#endregion Methods
-
-		#region Utility Methods
-
-		private static bool IsFiltered(FileAttributes attributes, FileAttributes filteredFiles)
-		{
-			return ((attributes&filteredFiles) != 0);
-		}
-
-		#endregion Utility Methods
 	}
 }

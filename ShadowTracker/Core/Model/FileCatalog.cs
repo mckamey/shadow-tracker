@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 using Shadow.Agent;
 
@@ -39,7 +40,8 @@ namespace Shadow.Model
 
 			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
 
-			foreach (FileSystemInfo node in FileIterator.GetFiles(rootPath, FileCatalog.FilteredFiles, true))
+			var files = FileIterator.GetFiles(rootPath, true).Where(FileCatalog.IsFiltered);
+			foreach (FileSystemInfo node in files)
 			{
 				CatalogEntry entry = FileCatalog.CreateNode(rootPath, node);
 
@@ -68,6 +70,11 @@ namespace Shadow.Model
 		#endregion Methods
 
 		#region Utility Methods
+
+		private static bool IsFiltered(FileSystemInfo node)
+		{
+			return ((node.Attributes&FileCatalog.FilteredFiles) != 0);
+		}
 
 		private static FileAttributes ScrubAttributes(FileAttributes attributes)
 		{
