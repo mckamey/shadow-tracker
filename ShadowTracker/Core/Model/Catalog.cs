@@ -6,7 +6,7 @@ namespace Shadow.Model
 	/// <summary>
 	/// An in-memory implementation of DataNode Catalog.
 	/// </summary>
-	public class Catalog : ICatalogRepository
+	public class Catalog
 	{
 		#region Fields
 
@@ -14,7 +14,7 @@ namespace Shadow.Model
 
 		#endregion Fields
 
-		#region ICatalogRepository Members
+		#region Properties
 
 		/// <summary>
 		/// Gets and sets the sequence of data nodes
@@ -25,51 +25,70 @@ namespace Shadow.Model
 			set { this.entries = value; }
 		}
 
-		public CatalogEntry GetEntryAtPath(string path)
+		#endregion Properties
+
+		#region Methods
+
+		private CatalogEntry GetEntryAtPath(string path)
 		{
 			return
-				(from entry in this.entries
+				(from entry in this.Entries
 				 where entry.Path == path
 				 select entry).SingleOrDefault();
 		}
 
-		public bool ContainsPath(string path)
+		private bool ContainsSignature(string hash)
 		{
 			return
-				(from entry in this.entries
-				 where entry.Path == path
-				 select entry.Path).Count() > 0;
-		}
-
-		public string GetPathOfEntryBySignature(string hash)
-		{
-			return
-				(from entry in this.entries
-				 where entry.Signature == hash
-				 select entry.Path).SingleOrDefault();
-		}
-
-		public bool ContainsSignature(string hash)
-		{
-			return
-				(from entry in this.entries
+				(from entry in this.Entries
 				 where entry.Signature == hash
 				 select entry.Path).Count() > 0;
 		}
 
-		public void AddEntry(CatalogEntry entry)
+		private void DeleteEntryByPath(string path)
 		{
-			this.entries.Add(entry);
+			this.Entries.RemoveWhere(n => n.Path == path);
 		}
 
-		public void UpdateEntry(CatalogEntry entry)
+		public DeltaAction CalcNodeDelta(CatalogEntry entry)
 		{
-			this.entries.Update(entry);
-		}
+			// look for existing node
+			CatalogEntry local = this.GetEntryAtPath(entry.Path);
 
-		public void DeleteEntry(string path)
-		{
-			this.entries.RemoveWhere(n => n.Path == path);
+			if (local == null)
+			{
+				// file is missing, see if have a copy elsewhere (e.g. moved/renamed/copied)
+				if (!entry.IsDirectory && this.ContainsSignature(entry.Signature))
+				{
+					// equivalent file found
+					return DeltaAction.Clone;
+				}
+
+				// completely missing file, need to add
+				return DeltaAction.Add;
+			}
+
+			if (entry.Equals(local))
+			{
+				// no changes, identical
+				return DeltaAction.None;
+			}
+
+			if (StringComparer.OrdinalIgnoreCase.Equals(local.Signature, entry.Signature))
+			{
+				// correct bits exist at correct path but metadata is different
+				return DeltaAction.Meta;
+			}
+
+			// bits are different, see if have a equivalent copy elsewhere
+			if (!entry.IsDirectory && this.ContainsSignature(entry.Signature))
+			{
+				// equivalent file found
+				return DeltaAction.Clone;
+			}
+
+			// file exists but bits are different
+			return DeltaAction.Update;
 		}
 
 		#endregion ICatalogRepository Members

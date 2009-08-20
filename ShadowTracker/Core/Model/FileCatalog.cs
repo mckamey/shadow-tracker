@@ -45,7 +45,7 @@ namespace Shadow.Model
 			{
 				CatalogEntry entry = FileCatalog.CreateNode(rootPath, node);
 
-				this.AddEntry(entry);
+				this.Entries.Add(entry);
 			}
 		}
 

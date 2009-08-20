@@ -10,16 +10,16 @@ namespace Shadow.Agent
 	{
 		#region Delta Methods
 
-		public IEnumerable<NodeDelta> FullCatalogSync(ICatalogRepository source, ICatalogRepository local)
+		public IEnumerable<NodeDelta> FullCatalogSync(Catalog source, Catalog local)
 		{
 			// geterate the sequence of actions which represent the delta since
 			return (
 					from node in source.Entries
-					let action = this.CalcNodeDelta(local, node)
+					let action = local.CalcNodeDelta(node)
 					where action != DeltaAction.None
 					let sourcePath =
 						(action != DeltaAction.Clone) ? null :
-						local.GetPathOfEntryBySignature(node.Signature)
+						this.GetPathOfEntryBySignature(local, node.Signature)
 					orderby action
 					select new NodeDelta
 					{
@@ -30,7 +30,7 @@ namespace Shadow.Agent
 				).Union(
 				// extras are any local entries not contained in target
 					from node in local.Entries
-					where !source.ContainsPath(node.Path)
+					where !this.ContainsPath(source, node.Path)
 					select new NodeDelta
 					{
 						Action = DeltaAction.Delete,
@@ -39,52 +39,27 @@ namespace Shadow.Agent
 				);
 		}
 
-		private DeltaAction CalcNodeDelta(ICatalogRepository catalog, CatalogEntry entry)
+		private bool ContainsPath(Catalog catalog, string path)
 		{
-			// look for existing node
-			CatalogEntry local = catalog.GetEntryAtPath(entry.Path);
+			return
+				(from entry in catalog.Entries
+				 where entry.Path == path
+				 select entry.Path).Count() > 0;
+		}
 
-			if (local == null)
-			{
-				// file is missing, see if have a copy elsewhere (e.g. moved/renamed/copied)
-				if (!entry.IsDirectory && catalog.ContainsSignature(entry.Signature))
-				{
-					// equivalent file found
-					return DeltaAction.Clone;
-				}
-
-				// completely missing file, need to add
-				return DeltaAction.Add;
-			}
-
-			if (entry.Equals(local))
-			{
-				// no changes, identical
-				return DeltaAction.None;
-			}
-
-			if (StringComparer.OrdinalIgnoreCase.Equals(local.Signature, entry.Signature))
-			{
-				// correct bits exist at correct path but metadata is different
-				return DeltaAction.Meta;
-			}
-
-			// bits are different, see if have a equivalent copy elsewhere
-			if (!entry.IsDirectory && catalog.ContainsSignature(entry.Signature))
-			{
-				// equivalent file found
-				return DeltaAction.Clone;
-			}
-
-			// file exists but bits are different
-			return DeltaAction.Update;
+		private string GetPathOfEntryBySignature(Catalog catalog, string hash)
+		{
+			return
+				(from entry in catalog.Entries
+				 where entry.Signature == hash
+				 select entry.Path).SingleOrDefault();
 		}
 
 		#endregion Delta Methods
 
 		#region Event Placeholders
 
-		public void SyncCatalogs(ICatalogRepository local, ICatalogRepository target)
+		public void SyncCatalogs(Catalog local, Catalog target)
 		{
 			IEnumerable<NodeDelta> delta = this.FullCatalogSync(target, local);
 
