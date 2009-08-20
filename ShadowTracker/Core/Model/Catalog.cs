@@ -31,18 +31,22 @@ namespace Shadow.Model
 
 		private CatalogEntry GetEntryAtPath(string path)
 		{
-			return
-				(from entry in this.Entries
-				 where entry.Path == path
-				 select entry).SingleOrDefault();
+			IQueryable<CatalogEntry> query =
+				from entry in this.Entries
+				where entry.Path == path
+				select entry;
+
+			return query.FirstOrDefault();
 		}
 
 		private bool ContainsSignature(string hash)
 		{
-			return
-				(from entry in this.Entries
-				 where entry.Signature == hash
-				 select entry.Path).Count() > 0;
+			IQueryable<string> query =
+				from entry in this.Entries
+				where entry.Signature == hash
+				select entry.Path;
+
+			return query.Any();
 		}
 
 		private void DeleteEntryByPath(string path)
