@@ -10,7 +10,7 @@ namespace Shadow.Model
 	{
 		#region Fields
 
-		private IQueryable<CatalogEntry> entries;
+		private ITable<CatalogEntry> entries;
 
 		#endregion Fields
 
@@ -19,7 +19,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets the sequence of data nodes
 		/// </summary>
-		public IQueryable<CatalogEntry> Entries
+		public ITable<CatalogEntry> Entries
 		{
 			get { return this.entries; }
 			set { this.entries = value; }
@@ -59,17 +59,17 @@ namespace Shadow.Model
 
 		public void AddEntry(CatalogEntry entry)
 		{
-			throw new NotImplementedException();
+			this.entries.Add(entry);
 		}
 
 		public void UpdateEntry(CatalogEntry entry)
 		{
-			throw new NotImplementedException();
+			this.entries.Update(entry);
 		}
 
 		public void DeleteEntry(string path)
 		{
-			throw new NotImplementedException();
+			this.entries.RemoveWhere(n => n.Path == path);
 		}
 
 		#endregion ICatalogRepository Members

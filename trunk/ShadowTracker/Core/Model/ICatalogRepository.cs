@@ -8,7 +8,7 @@ namespace Shadow.Model
 	/// </summary>
 	public interface ICatalogRepository
 	{
-		IQueryable<CatalogEntry> Entries { get; }
+		ITable<CatalogEntry> Entries { get; }
 
 		/// <summary>
 		/// Check if an entry exists for the given path.
