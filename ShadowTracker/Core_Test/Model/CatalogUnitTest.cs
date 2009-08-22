@@ -64,23 +64,23 @@ namespace Shadow.Model_Test
 		[TestMethod]
 		public void Test_DeleteEntryByPath()
 		{
-			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
+			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Foo.txt"));
 
 			this.catalog.DeleteEntryByPath("Foo.txt");
 
-			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
+			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Foo.txt"));
 		}
 
 		[TestMethod]
 		public void Test_FastMoveByPath()
 		{
-			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
-			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Bar.txt").Any());
+			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Foo.txt"));
+			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Bar.txt"));
 
 			this.catalog.FastMoveByPath("Foo.txt", "Bar.txt");
 
-			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
-			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Bar.txt").Any());
+			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Foo.txt"));
+			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Bar.txt"));
 		}
 	}
 }

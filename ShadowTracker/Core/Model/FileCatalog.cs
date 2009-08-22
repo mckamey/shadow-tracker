@@ -56,7 +56,7 @@ namespace Shadow.Model
 			{
 				CatalogEntry entry = FileCatalog.CreateNode(this.RootPath, node);
 
-				this.Entries.Add(entry);
+				this.AddEntry(entry);
 			}
 		}
 
@@ -65,7 +65,7 @@ namespace Shadow.Model
 		#region Methods
 
 		/// <summary>
-		/// 
+		/// Builds a CatalogEntry from a file system descriptor. (Requires read access)
 		/// </summary>
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace Shadow.Model
 {
@@ -12,7 +13,7 @@ namespace Shadow.Model
 	{
 		#region Fields
 
-		private readonly ITable<CatalogEntry> entries;
+		private readonly ITable<CatalogEntry> Entries;
 
 		#endregion Fields
 
@@ -24,24 +25,101 @@ namespace Shadow.Model
 		/// <param name="entries">the backing CatalogEntry storage</param>
 		public Catalog(ITable<CatalogEntry> entries)
 		{
-			this.entries = entries;
+			this.Entries = entries;
 		}
 
 		#endregion Init
 
-		#region Properties
+		#region Action Methods
 
 		/// <summary>
-		/// Gets and sets the sequence of data nodes
+		/// Action where does not exist (requires expensive bit transfer).
 		/// </summary>
-		public ITable<CatalogEntry> Entries
+		/// <param name="entry"></param>
+		public virtual void AddEntry(CatalogEntry entry)
 		{
-			get { return this.entries; }
+			Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
+			this.Entries.Add(entry);
 		}
 
-		#endregion Properties
+		/// <summary>
+		/// Action where bits exist, but need to add or update entry (no transfer required).
+		/// </summary>
+		/// <param name="entry"></param>
+		/// <param name="match"></param>
+		public virtual void CloneEntry(CatalogEntry entry, CatalogEntry match)
+		{
+			Console.WriteLine("CLONE: \"{0}\" to \"{1}\"", match.Signature, entry.Path);
+			this.Entries.Add(entry);
+		}
 
-		#region Methods
+		/// <summary>
+		/// Action where bits are same but metadata different (no transfer required).
+		/// </summary>
+		/// <param name="entry"></param>
+		public virtual void UpdateMetaData(CatalogEntry entry)
+		{
+			Console.WriteLine("META: \"{0}\"", entry.Path);
+			this.Entries.Update(entry);
+		}
+
+		/// <summary>
+		/// Action where bits are different but entry exists (requires expensive bit transfer).
+		/// </summary>
+		/// <param name="entry"></param>
+		public virtual void UpdateData(CatalogEntry entry)
+		{
+			Console.WriteLine("DATA: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
+			this.Entries.Update(entry);
+		}
+
+		/// <summary>
+		/// Action where file is being removed (no transfer required).
+		/// </summary>
+		/// <param name="path"></param>
+		public virtual void DeleteEntryByPath(string path)
+		{
+			Console.WriteLine("REMOVE: \"{0}\"", path);
+			this.Entries.RemoveWhere(n => n.Path == path);
+		}
+
+		/// <summary>
+		/// Action where is simple move or rename (no transfer required).
+		/// </summary>
+		/// <param name="oldPath"></param>
+		/// <param name="newPath"></param>
+		public virtual void FastMoveByPath(string oldPath, string newPath)
+		{
+			CatalogEntry entry = this.GetEntryAtPath(oldPath);
+			if (entry == null)
+			{
+				// TODO: log error
+				throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
+			}
+
+			Console.WriteLine("FAST MOVE: \"{0}\" to \"{1}\"", oldPath, newPath);
+
+			entry.Path = newPath;
+			this.Entries.Update(entry);
+		}
+
+		#endregion Action Methods
+
+		#region Query Methods
+
+		/// <summary>
+		/// Allows simple checking for existance.
+		/// </summary>
+		/// <param name="predicate"></param>
+		/// <returns></returns>
+		public bool Exists(Expression<Func<CatalogEntry, bool>> predicate)
+		{
+			return this.Entries.Any(predicate);
+		}
+
+		#endregion Query Methods
+
+		#region Delta Methods
 
 		[Flags]
 		private enum MatchRank
@@ -93,23 +171,6 @@ namespace Shadow.Model
 			return this.Entries.FirstOrDefault(n => n.Path == path);
 		}
 
-		public virtual void DeleteEntryByPath(string path)
-		{
-			this.Entries.RemoveWhere(n => n.Path == path);
-		}
-
-		public virtual void FastMoveByPath(string oldPath, string newPath)
-		{
-			CatalogEntry entry = this.GetEntryAtPath(oldPath);
-			if (entry == null)
-			{
-				// TODO: log error
-				throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
-			}
-			entry.Path = newPath;
-			this.Entries.Update(entry);
-		}
-
 		protected DeltaAction CalcEntryDelta(CatalogEntry entry, out CatalogEntry match)
 		{
 			if (entry == null)
@@ -157,7 +218,7 @@ namespace Shadow.Model
 			}
 		}
 
-		public virtual void ApplyChanges(CatalogEntry entry)
+		public void ApplyChanges(CatalogEntry entry)
 		{
 			CatalogEntry match;
 			switch (this.CalcEntryDelta(entry, out match))
@@ -165,53 +226,49 @@ namespace Shadow.Model
 				case DeltaAction.Add:
 				{
 					// does not exist (requires expensive bit transfer)
-					Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
-					this.Entries.Add(entry);
+					this.AddEntry(entry);
 					break;
 				}
 				case DeltaAction.Clone:
 				{
 					// bits exist need to add or update entry (no transfer required)
-					Console.WriteLine("CLONE: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
-					this.Entries.Add(entry);
+					this.CloneEntry(entry, match);
 					break;
 				}
 				case DeltaAction.Delete:
 				{
-					// this actually wouldn't be detected here
-					Console.WriteLine("REMOVE: \"{0}\"", entry.Path);
+					// NOTE: this actually wouldn't be detected here
+
+					// file is being removed
 					this.DeleteEntryByPath(entry.Path);
 					break;
 				}
 				case DeltaAction.Meta:
 				{
 					// bits are same but metadata different
-					Console.WriteLine("ATTRIB: \"{0}\"", entry.Path);
-					this.Entries.Update(entry);
+					this.UpdateMetaData(entry);
 					break;
 				}
 				case DeltaAction.Update:
 				{
 					// bits are different but exists (requires expensive bit transfer)
-					Console.WriteLine("REPLACE: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
-					this.Entries.Update(entry);
+					this.UpdateData(entry);
 					break;
 				}
 				default:
 				case DeltaAction.None:
 				{
 					// no change required
-					// Console.WriteLine("No Action: "+entry);
 					break;
 				}
 			}
 		}
 
-		#endregion Methods
+		#endregion Delta Methods
 
-		#region Full Delta Methods
+		#region Catalog Sync Methods
 
-		public void SyncCatalog(Catalog that)
+		public void Sync(Catalog that)
 		{
 			// apply any deltas since last sync
 			foreach (CatalogEntry entry in that.Entries)
@@ -234,6 +291,6 @@ namespace Shadow.Model
 			}
 		}
 
-		#endregion Full Delta Methods
+		#endregion Catalog Sync Methods
 	}
 }
