@@ -87,7 +87,7 @@ namespace Shadow.Agent
 					this.ApplyChange(e);
 					this.Timers.Remove(e.FullPath);
 				}
-				catch (IOException ex)
+				catch (IOException /*ex*/)
 				{
 					//"The process cannot access the file 'XYZ' because it is being used by another process."
 					//Console.Error.WriteLine(ex.Message);
