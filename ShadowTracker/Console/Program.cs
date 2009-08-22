@@ -16,7 +16,7 @@ namespace Shadow.ConsoleTest
 
 			Console.WriteLine("Initializing " + watchFolder);
 			ConsoleCatalog catalog = new ConsoleCatalog(new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer));
-			FileUtility.LoadCatalog(catalog, watchFolder);
+			FileUtility.SyncCatalog(catalog, watchFolder);
 
 			Console.WriteLine("Begin tracking " + watchFolder);
 			tracker.Start(watchFolder, watchFilter, catalog);
