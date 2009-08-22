@@ -153,6 +153,11 @@ namespace Shadow.Agent
 			throw e.GetException();
 		}
 
+		private string NormalizePath(string path)
+		{
+			return FileCatalog.NormalizePath(this.Watcher.Path, path);
+		}
+
 		private CatalogEntry CreateEntry(string path)
 		{
 			return FileCatalog.CreateNode(this.Watcher.Path, new FileInfo(path));
@@ -171,18 +176,23 @@ namespace Shadow.Agent
 				}
 				case WatcherChangeTypes.Deleted:
 				{
-					this.catalog.DeleteEntryByPath(e.FullPath);
+					this.catalog.DeleteEntryByPath(this.NormalizePath(e.FullPath));
 					break;
 				}
 				case WatcherChangeTypes.Renamed:
 				{
-					CatalogEntry entry = this.CreateEntry(e.FullPath);
-					this.catalog.ApplyChanges(entry, DeltaAction.Clone);
+					RenamedEventArgs e2 = e as RenamedEventArgs;
+					if (e2 == null)
+					{
+						// TODO: log as error
+						Console.Error.WriteLine("UpdateTimerCallback state was not FileSystemEventArgs");
+						return;
+					}
 
-					entry.Path = ((RenamedEventArgs)e).OldFullPath;
-					this.catalog.ApplyChanges(entry, DeltaAction.Delete);
+					this.catalog.MoveEntryPath(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
 					break;
 				}
+				case WatcherChangeTypes.Changed:
 				default:
 				{
 					CatalogEntry entry = this.CreateEntry(e.FullPath);

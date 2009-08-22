@@ -10,6 +10,11 @@ namespace Shadow.Model
 	/// An in-memory representation of a queryable table.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
+	/// <remarks>
+	/// Note this contains object references so if the object is retrieved and updated,
+	/// the changes will take effect immediately within the Table. This is different
+	/// from remote persistent storage system such as a RDBMS.
+	/// </remarks>
 	public class MemoryTable<T> : ITable<T>
 	{
 		#region Fields

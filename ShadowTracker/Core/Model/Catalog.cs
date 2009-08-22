@@ -45,6 +45,18 @@ namespace Shadow.Model
 			this.Entries.RemoveWhere(n => n.Path == path);
 		}
 
+		public void MoveEntryPath(string oldPath, string newPath)
+		{
+			CatalogEntry entry = this.GetEntryAtPath(oldPath);
+			if (entry == null)
+			{
+				// TODO: log error
+				throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
+			}
+			entry.Path = newPath;
+			this.Entries.Update(entry);
+		}
+
 		public DeltaAction CalcNodeDelta(CatalogEntry entry)
 		{
 			if (entry == null)

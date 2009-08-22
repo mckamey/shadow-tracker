@@ -108,8 +108,9 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="fullPath"></param>
 		/// <returns>root-relative paths</returns>
-		private static string NormalizePath(string rootPath, string fullPath)
+		public static string NormalizePath(string rootPath, string fullPath)
 		{
+			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
 			if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
 			{
 				throw new InvalidOperationException("Unexpected path format.");
