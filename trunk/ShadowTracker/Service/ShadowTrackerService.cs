@@ -35,7 +35,7 @@ namespace ShadowTrackerService
 			string watchFilter = ConfigurationManager.AppSettings["WatchFilter"];
 
 			Catalog catalog = new Catalog(new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer));
-			FileUtility.LoadCatalog(catalog, watchFolder);
+			FileUtility.SyncCatalog(catalog, watchFolder);
 
 			this.Tracker.Start(watchFolder, watchFilter, catalog);
 		}

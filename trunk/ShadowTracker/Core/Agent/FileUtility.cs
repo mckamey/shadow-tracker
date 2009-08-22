@@ -28,10 +28,10 @@ namespace Shadow.Agent
 		#region Methods
 
 		/// <summary>
-		/// Ctor
+		/// Syncs an existing catalog with file system.
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public static void LoadCatalog(Catalog catalog, string rootPath)
+		public static void SyncCatalog(Catalog catalog, string rootPath)
 		{
 			if (catalog == null)
 			{
@@ -44,13 +44,16 @@ namespace Shadow.Agent
 
 			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
 
+			// TODO: perform this loop with a timer to allow trickle updates
 			var files = FileIterator.GetFiles(rootPath, true).Where(FileUtility.FilterFiles);
 			foreach (FileSystemInfo node in files)
 			{
 				CatalogEntry entry = FileUtility.CreateEntry(rootPath, node);
 
-				catalog.AddEntry(entry);
+				catalog.ApplyChanges(entry);
 			}
+
+			// TODO: remove any extra files here
 		}
 
 		/// <summary>
