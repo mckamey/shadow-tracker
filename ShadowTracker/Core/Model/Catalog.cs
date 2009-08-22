@@ -98,7 +98,7 @@ namespace Shadow.Model
 			this.Entries.RemoveWhere(n => n.Path == path);
 		}
 
-		public virtual void MoveEntryPath(string oldPath, string newPath)
+		public virtual void FastMoveByPath(string oldPath, string newPath)
 		{
 			CatalogEntry entry = this.GetEntryAtPath(oldPath);
 			if (entry == null)

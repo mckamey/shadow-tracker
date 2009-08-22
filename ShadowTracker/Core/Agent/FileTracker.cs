@@ -183,7 +183,18 @@ namespace Shadow.Agent
 						return;
 					}
 
-					this.catalog.MoveEntryPath(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+					try
+					{
+						this.catalog.FastMoveByPath(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+					}
+					catch (ArgumentException ex)
+					{
+						// TODO: log as error
+						Console.Error.WriteLine(ex.Message);
+
+						// recover by simply adding
+						goto case WatcherChangeTypes.Created;
+					}
 					break;
 				}
 				case WatcherChangeTypes.Created:

@@ -72,12 +72,12 @@ namespace Shadow.Model_Test
 		}
 
 		[TestMethod]
-		public void Test_MoveEntryPath()
+		public void Test_FastMoveByPath()
 		{
 			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
 			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Bar.txt").Any());
 
-			this.catalog.MoveEntryPath("Foo.txt", "Bar.txt");
+			this.catalog.FastMoveByPath("Foo.txt", "Bar.txt");
 
 			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
 			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Bar.txt").Any());
