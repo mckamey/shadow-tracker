@@ -1,13 +1,22 @@
 ﻿using System;
 using System.IO;
 
+using Shadow.Model;
+
 namespace Shadow.Agent
 {
 	public class FileTracker
 	{
+		#region Constants
+
+		private const NotifyFilters AllNotifyFilters = NotifyFilters.Attributes|NotifyFilters.CreationTime|NotifyFilters.DirectoryName|NotifyFilters.FileName|NotifyFilters.LastAccess|NotifyFilters.LastWrite|NotifyFilters.Security|NotifyFilters.Size;
+
+		#endregion Constants
+
 		#region Fields
 
 		private readonly FileSystemWatcher watcher = new FileSystemWatcher();
+		private Catalog catalog;
 
 		#endregion Fields
 
@@ -19,7 +28,7 @@ namespace Shadow.Agent
 		public FileTracker()
 		{
 			this.watcher.IncludeSubdirectories = true;
-			this.watcher.NotifyFilter = (NotifyFilters)383;//NotifyFilters.Size | NotifyFilters.LastWrite | NotifyFilters.Attributes;
+			this.watcher.NotifyFilter = FileTracker.AllNotifyFilters;
 
 			this.watcher.Created += new FileSystemEventHandler(this.OnFileCreated);
 			this.watcher.Changed += new FileSystemEventHandler(this.OnFileChanged);
@@ -48,15 +57,17 @@ namespace Shadow.Agent
 
 		private void OnError(object sender, ErrorEventArgs e)
 		{
-			Console.WriteLine(e.GetException().ToString());
+			// TODO: log error
+			throw e.GetException();
 		}
 
 		#endregion Events
 
 		#region Methods
 
-		public void Start(string watchFolder, string watchFilter)
+		public void Start(string watchFolder, string watchFilter, Catalog catalog)
 		{
+			this.catalog = catalog;
 			this.watcher.Path = watchFolder;
 			this.watcher.Filter = watchFilter;
 

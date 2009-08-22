@@ -4,7 +4,8 @@ using System.Linq;
 namespace Shadow.Model
 {
 	/// <summary>
-	/// An in-memory implementation of DataNode Catalog.
+	/// Implements a repository pattern for Catalog Entries which
+	/// can be backed by a number of different storage mechanisms.
 	/// </summary>
 	public class Catalog
 	{
@@ -31,22 +32,12 @@ namespace Shadow.Model
 
 		private CatalogEntry GetEntryAtPath(string path)
 		{
-			IQueryable<CatalogEntry> query =
-				from entry in this.Entries
-				where entry.Path == path
-				select entry;
-
-			return query.FirstOrDefault();
+			return this.Entries.FirstOrDefault(n => n.Path == path);
 		}
 
 		private bool ContainsSignature(string hash)
 		{
-			IQueryable<string> query =
-				from entry in this.Entries
-				where entry.Signature == hash
-				select entry.Path;
-
-			return query.Any();
+			return this.Entries.Any(n => n.Signature == hash);
 		}
 
 		private void DeleteEntryByPath(string path)

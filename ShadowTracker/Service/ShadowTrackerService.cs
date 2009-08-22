@@ -3,6 +3,7 @@ using System.Configuration;
 using System.ServiceProcess;
 
 using Shadow.Agent;
+using Shadow.Model;
 
 namespace ShadowTrackerService
 {
@@ -33,7 +34,9 @@ namespace ShadowTrackerService
 			string watchFolder = ConfigurationManager.AppSettings["WatchFolder"];
 			string watchFilter = ConfigurationManager.AppSettings["WatchFilter"];
 
-			this.Tracker.Start(watchFolder, watchFilter);
+			FileCatalog catalog = new FileCatalog(watchFolder);
+
+			this.Tracker.Start(watchFolder, watchFilter, catalog);
 		}
 
 		protected override void OnStop()
