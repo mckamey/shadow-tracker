@@ -64,6 +64,12 @@ namespace Shadow.Model
 
 		#region Methods
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
+		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
+		/// <exception cref="System.IO.IOException">The file is already open.</exception>
 		public static CatalogEntry CreateNode(string root, FileSystemInfo file)
 		{
 			return new CatalogEntry
