@@ -64,13 +64,25 @@ namespace Shadow.Model_Test
 		}
 
 		[TestMethod]
-		public void TestDelete()
+		public void Test_DeleteEntryByPath()
 		{
 			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
 
 			this.catalog.DeleteEntryByPath("Foo.txt");
 
-			Assert.IsFalse( this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any() );
+			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
+		}
+
+		[TestMethod]
+		public void Test_MoveEntryPath()
+		{
+			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
+			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Bar.txt").Any());
+
+			this.catalog.MoveEntryPath("Foo.txt", "Bar.txt");
+
+			Assert.IsFalse(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
+			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Bar.txt").Any());
 		}
 	}
 }
