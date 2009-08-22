@@ -2,14 +2,14 @@
 using System.IO;
 using System.Linq;
 
-using Shadow.Agent;
+using Shadow.Model;
 
-namespace Shadow.Model
+namespace Shadow.Agent
 {
 	/// <summary>
 	/// A catalog built initialized via the file system.
 	/// </summary>
-	public class FileCatalog : Catalog
+	public static class FileUtility
 	{
 		#region Constants
 
@@ -25,44 +25,33 @@ namespace Shadow.Model
 
 		#endregion Constants
 
-		#region Fields
-
-		public readonly string RootPath;
-
-		#endregion Fields
-
-		#region Init
+		#region Methods
 
 		/// <summary>
 		/// Ctor
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public FileCatalog(ITable<CatalogEntry> entries, string rootPath)
-			: base(entries)
+		public static void LoadCatalog(Catalog catalog, string rootPath)
 		{
+			if (catalog == null)
+			{
+				throw new ArgumentNullException("catalog", "Catalog is null.");
+			}
 			if (String.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
 			{
 				throw new ArgumentNullException("rootPath", "Root path is invalid.");
 			}
-			if (entries == null)
-			{
-				throw new ArgumentNullException("entries", "Entries table is null.");
-			}
 
-			this.RootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
+			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
 
-			var files = FileIterator.GetFiles(this.RootPath, true).Where(FileCatalog.FilterFiles);
+			var files = FileIterator.GetFiles(rootPath, true).Where(FileUtility.FilterFiles);
 			foreach (FileSystemInfo node in files)
 			{
-				CatalogEntry entry = FileCatalog.CreateNode(this.RootPath, node);
+				CatalogEntry entry = FileUtility.CreateEntry(rootPath, node);
 
-				this.AddEntry(entry);
+				catalog.AddEntry(entry);
 			}
 		}
-
-		#endregion Init
-
-		#region Methods
 
 		/// <summary>
 		/// Builds a CatalogEntry from a file system descriptor. (Requires read access)
@@ -70,12 +59,12 @@ namespace Shadow.Model
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
-		public static CatalogEntry CreateNode(string root, FileSystemInfo file)
+		public static CatalogEntry CreateEntry(string root, FileSystemInfo file)
 		{
 			return new CatalogEntry
 			{
-				Path = FileCatalog.NormalizePath(root, file.FullName),
-				Attributes = FileCatalog.ScrubAttributes(file.Attributes),
+				Path = FileUtility.NormalizePath(root, file.FullName),
+				Attributes = FileUtility.ScrubAttributes(file.Attributes),
 				CreatedDate = file.CreationTime,
 				ModifiedDate = file.LastWriteTime,
 				Signature = (file is FileInfo) ?
@@ -95,12 +84,12 @@ namespace Shadow.Model
 		/// <returns></returns>
 		private static bool FilterFiles(FileSystemInfo node)
 		{
-			return ((node.Attributes&FileCatalog.FilteredFiles) == 0);
+			return ((node.Attributes&FileUtility.FilteredFiles) == 0);
 		}
 
 		private static FileAttributes ScrubAttributes(FileAttributes attributes)
 		{
-			return attributes&FileCatalog.AttribMask;
+			return attributes&FileUtility.AttribMask;
 		}
 
 		/// <summary>
