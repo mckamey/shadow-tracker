@@ -219,6 +219,9 @@ namespace Shadow.Model
 				this.ApplyChanges(entry);
 			}
 
+			// NOTE: always perform deletes last, so that
+			// moves or renames can be expressed as a clone/delete
+
 			foreach (CatalogEntry entry in this.Entries)
 			{
 				// extras are any local entries not contained in other
