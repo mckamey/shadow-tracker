@@ -40,13 +40,18 @@ namespace Shadow.Model
 			return this.Entries.Any(n => n.Signature == hash);
 		}
 
-		private void DeleteEntryByPath(string path)
+		public void DeleteEntryByPath(string path)
 		{
 			this.Entries.RemoveWhere(n => n.Path == path);
 		}
 
 		public DeltaAction CalcNodeDelta(CatalogEntry entry)
 		{
+			if (entry == null)
+			{
+				return DeltaAction.None;
+			}
+
 			// look for existing node
 			CatalogEntry local = this.GetEntryAtPath(entry.Path);
 
@@ -84,6 +89,49 @@ namespace Shadow.Model
 
 			// file exists but bits are different
 			return DeltaAction.Update;
+		}
+
+		public void ApplyChanges(CatalogEntry entry)
+		{
+			this.ApplyChanges(entry, this.CalcNodeDelta(entry));
+		}
+
+		public void ApplyChanges(CatalogEntry entry, DeltaAction action)
+		{
+			switch (action)
+			{
+				case DeltaAction.Add:
+				{
+					Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
+					break;
+				}
+				case DeltaAction.Clone:
+				{
+					Console.WriteLine("COPY: \"{0}\" to \"{1}\"", entry, entry.Path);
+					break;
+				}
+				case DeltaAction.Delete:
+				{
+					Console.WriteLine("REMOVE: \"{0}\"", entry.Path);
+					break;
+				}
+				case DeltaAction.Meta:
+				{
+					Console.WriteLine("ATTRIB: \"{0}\"", entry.Path);
+					break;
+				}
+				case DeltaAction.Update:
+				{
+					Console.WriteLine("REPLACE: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
+					break;
+				}
+				default:
+				case DeltaAction.None:
+				{
+					Console.WriteLine("ERROR: "+entry);
+					break;
+				}
+			}
 		}
 
 		#endregion ICatalogRepository Members

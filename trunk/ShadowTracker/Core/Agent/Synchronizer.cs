@@ -60,52 +60,5 @@ namespace Shadow.Agent
 		}
 
 		#endregion Delta Methods
-
-		#region Event Placeholders
-
-		public void SyncCatalogs(Catalog local, Catalog target)
-		{
-			IEnumerable<NodeDelta> delta = this.FullCatalogSync(target, local);
-
-			foreach (NodeDelta action in delta)
-			{
-				switch (action.Action)
-				{
-					case DeltaAction.Add:
-					{
-						Console.WriteLine("ADD \"{0}\" at \"{1}\"", action.Node.Signature, action.Node.Path);
-						break;
-					}
-					case DeltaAction.Clone:
-					{
-						Console.WriteLine("COPY: \"{0}\" to \"{1}\"", action.SourcePath, action.Node.Path);
-						break;
-					}
-					case DeltaAction.Update:
-					{
-						Console.WriteLine("REPLACE: \"{0}\" to \"{1}\"", action.Node.Signature, action.Node.Path);
-						break;
-					}
-					case DeltaAction.Meta:
-					{
-						Console.WriteLine("ATTRIB: \"{0}\"", action.Node.Path);
-						break;
-					}
-					case DeltaAction.Delete:
-					{
-						Console.WriteLine("REMOVE: \"{0}\"", action.Node.Path);
-						break;
-					}
-					default:
-					case DeltaAction.None:
-					{
-						Console.WriteLine("ERROR: "+action);
-						break;
-					}
-				}
-			}
-		}
-
-		#endregion Event Placeholders
 	}
 }
