@@ -211,53 +211,24 @@ namespace Shadow.Model
 
 		#region Full Delta Methods
 
-		/// <summary>
-		/// TODO: evaluate the usefulness of a full sync description.
-		/// </summary>
-		internal IEnumerable<NodeDelta> CalcCatalogDelta(Catalog source)
+		public void SyncCatalog(Catalog that)
 		{
-			// generate the sequence of actions which represent the delta since last sync
-			foreach (CatalogEntry entry in source.Entries)
+			// apply any deltas since last sync
+			foreach (CatalogEntry entry in that.Entries)
 			{
-				CatalogEntry match;
-				DeltaAction action = this.CalcEntryDelta(entry, out match);
-				if (action == DeltaAction.None)
-				{
-					continue;
-				}
-
-				yield return new NodeDelta
-				{
-					Action = action,
-					SourcePath = (action != DeltaAction.Clone) ? null : match.Signature,
-					Entry = entry
-				};
+				this.ApplyChanges(entry);
 			}
 
-			// extras are any local entries not contained in target
 			foreach (CatalogEntry entry in this.Entries)
 			{
-				if (source.ContainsPath(entry.Path))
+				// extras are any local entries not contained in other
+				if (that.Entries.Where(n => n.Path == entry.Path).Any())
 				{
 					continue;
 				}
 
-				yield return new NodeDelta
-				{
-					Action = DeltaAction.Delete,
-					Entry = entry
-				};
+				this.DeleteEntryByPath(entry.Path);
 			}
-		}
-
-		private bool ContainsPath(string path)
-		{
-			IQueryable<string> query =
-				from entry in this.Entries
-				where entry.Path == path
-				select entry.Path;
-
-			return query.Any();
 		}
 
 		#endregion Full Delta Methods

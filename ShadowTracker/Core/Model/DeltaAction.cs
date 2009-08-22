@@ -3,7 +3,7 @@
 namespace Shadow.Model
 {
 	/// <summary>
-	/// Represents the action for a single catalog data node
+	/// Represents the action for a single catalog entry
 	/// </summary>
 	public enum DeltaAction
 	{
