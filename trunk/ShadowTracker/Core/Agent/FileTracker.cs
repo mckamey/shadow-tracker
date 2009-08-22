@@ -155,12 +155,12 @@ namespace Shadow.Agent
 
 		private string NormalizePath(string path)
 		{
-			return FileCatalog.NormalizePath(this.Watcher.Path, path);
+			return FileUtility.NormalizePath(this.Watcher.Path, path);
 		}
 
 		private CatalogEntry CreateEntry(string path)
 		{
-			return FileCatalog.CreateNode(this.Watcher.Path, new FileInfo(path));
+			return FileUtility.CreateEntry(this.Watcher.Path, new FileInfo(path));
 		}
 
 		private void ApplyChange(FileSystemEventArgs e)

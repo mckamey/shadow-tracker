@@ -38,7 +38,6 @@ namespace Shadow.Model
 		/// <param name="entry"></param>
 		public virtual void AddEntry(CatalogEntry entry)
 		{
-			Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
 			this.Entries.Add(entry);
 		}
 
@@ -49,7 +48,6 @@ namespace Shadow.Model
 		/// <param name="match"></param>
 		public virtual void CloneEntry(CatalogEntry entry, CatalogEntry match)
 		{
-			Console.WriteLine("CLONE: \"{0}\" to \"{1}\"", match.Signature, entry.Path);
 			this.Entries.Add(entry);
 		}
 
@@ -59,7 +57,6 @@ namespace Shadow.Model
 		/// <param name="entry"></param>
 		public virtual void UpdateMetaData(CatalogEntry entry)
 		{
-			Console.WriteLine("META: \"{0}\"", entry.Path);
 			this.Entries.Update(entry);
 		}
 
@@ -69,7 +66,6 @@ namespace Shadow.Model
 		/// <param name="entry"></param>
 		public virtual void UpdateData(CatalogEntry entry)
 		{
-			Console.WriteLine("DATA: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
 			this.Entries.Update(entry);
 		}
 
@@ -79,7 +75,6 @@ namespace Shadow.Model
 		/// <param name="path"></param>
 		public virtual void DeleteEntryByPath(string path)
 		{
-			Console.WriteLine("REMOVE: \"{0}\"", path);
 			this.Entries.RemoveWhere(n => n.Path == path);
 		}
 
@@ -96,8 +91,6 @@ namespace Shadow.Model
 				// TODO: log error
 				throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
 			}
-
-			Console.WriteLine("FAST MOVE: \"{0}\" to \"{1}\"", oldPath, newPath);
 
 			entry.Path = newPath;
 			this.Entries.Update(entry);
