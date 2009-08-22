@@ -2,9 +2,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("ShadowTracker.Service")]
-[assembly: AssemblyDescription("Shadow Tracker Windows Service.")]
-[assembly: AssemblyProduct("ShadowTracker")]
+[assembly: AssemblyTitle("ShadowTracker.Console_Test")]
+[assembly: AssemblyDescription("ShadowTracker Test App.")]
+[assembly: AssemblyProduct("Shadow")]
 [assembly: AssemblyCopyright("Copyright ©2009. All rights reserved.")]
 
 #if DEBUG
@@ -16,4 +16,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: Guid("58cee771-1d54-4b9f-a108-ec8b853904f4")]
+[assembly: Guid("b30d5e48-4100-41f3-b6ff-26938d14c8e0")]

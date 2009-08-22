@@ -1,0 +1,76 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Shadow.Model;
+
+namespace Shadow.Model_Test
+{
+	[TestClass]
+	public class CatalogUnitTest
+	{
+		#region Fields
+
+		private TestContext testContextInstance;
+		private Catalog catalog;
+
+		#endregion Fields
+
+		#region Init
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		public CatalogUnitTest()
+		{
+		}
+
+		#endregion Init
+
+		#region Properties
+
+		/// <summary>
+		///Gets or sets the test context which provides
+		///information about and functionality for the current test run.
+		///</summary>
+		public TestContext TestContext
+		{
+			get{ return this.testContextInstance; }
+			set { this.testContextInstance = value; }
+		}
+
+		#endregion Properties
+
+		[TestInitialize()]
+		public void CatalogInitialize()
+		{
+			CatalogEntry[] entries =
+			{
+				new CatalogEntry
+				{
+					Attributes = FileAttributes.ReadOnly,
+					CreatedDate = new DateTime(2009, 8, 21, 23, 42, 37, DateTimeKind.Local),
+					ModifiedDate = new DateTime(2009, 8, 21, 23, 42, 37, DateTimeKind.Local),
+					Path = "Foo.txt",
+					Signature = ""
+				}
+			};
+
+			this.catalog = new Catalog();
+			this.catalog.Entries = new MemoryTable<CatalogEntry>(entries, CatalogEntry.PathComparer);
+		}
+
+		[TestMethod]
+		public void TestDelete()
+		{
+			Assert.IsTrue(this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any());
+
+			this.catalog.DeleteEntryByPath("Foo.txt");
+
+			Assert.IsFalse( this.catalog.Entries.Where(n => n.Path == "Foo.txt").Any() );
+		}
+	}
+}

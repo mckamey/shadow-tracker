@@ -11,9 +11,12 @@ namespace Shadow.Model
 	/// </summary>
 	public class CatalogEntry
 	{
-		#region PathComparer
+		#region EqualityComparer
 
-		public class PathComparer : IEqualityComparer<CatalogEntry>
+		public static readonly IEqualityComparer<CatalogEntry> PathComparer = new PathEqualityComparer();
+		public static readonly IEqualityComparer<CatalogEntry> SignatureComparer = new SignatureEqualityComparer();
+
+		private class PathEqualityComparer : IEqualityComparer<CatalogEntry>
 		{
 			#region IEqualityComparer<T> Members
 
@@ -21,7 +24,33 @@ namespace Shadow.Model
 			{
 				if (x == null || y == null)
 				{
-					return x == y;
+					// return true if both null
+					return EqualityComparer<CatalogEntry>.Default.Equals(x, y);
+				}
+
+				return StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path);
+			}
+
+			int IEqualityComparer<CatalogEntry>.GetHashCode(CatalogEntry obj)
+			{
+				return (obj == null) ?
+					StringComparer.OrdinalIgnoreCase.GetHashCode(null) :
+					StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
+			}
+
+			#endregion IEqualityComparer<T> Members
+		}
+
+		private class SignatureEqualityComparer : IEqualityComparer<CatalogEntry>
+		{
+			#region IEqualityComparer<T> Members
+
+			bool IEqualityComparer<CatalogEntry>.Equals(CatalogEntry x, CatalogEntry y)
+			{
+				if (x == null || y == null)
+				{
+					// return true if both null
+					return EqualityComparer<CatalogEntry>.Default.Equals(x, y);
 				}
 
 				return StringComparer.OrdinalIgnoreCase.Equals(x, y);
@@ -30,14 +59,14 @@ namespace Shadow.Model
 			int IEqualityComparer<CatalogEntry>.GetHashCode(CatalogEntry obj)
 			{
 				return (obj == null) ?
-				0 :
-				StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
+					StringComparer.OrdinalIgnoreCase.GetHashCode(null) :
+					StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature);
 			}
 
 			#endregion IEqualityComparer<T> Members
 		}
 
-		#endregion PathComparer
+		#endregion EqualityComparer
 
 		#region Properties
 
