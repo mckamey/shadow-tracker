@@ -18,7 +18,7 @@ namespace Shadow.Agent
 	{
 		#region Constants
 
-		private const int UpdateDelay = 100;//milliseconds
+		private const int UpdateDelay = 1000;//milliseconds
 		private const NotifyFilters AllNotifyFilters = NotifyFilters.Attributes|NotifyFilters.CreationTime|NotifyFilters.DirectoryName|NotifyFilters.FileName|NotifyFilters.LastAccess|NotifyFilters.LastWrite|NotifyFilters.Security|NotifyFilters.Size;
 
 		#endregion Constants
@@ -70,19 +70,34 @@ namespace Shadow.Agent
 				if (e == null)
 				{
 					// TODO: log as error
+					Console.Error.WriteLine("UpdateTimerCallback state was not FileSystemEventArgs");
 					return;
 				}
 
 				if (!this.Timers.ContainsKey(e.FullPath))
 				{
+					Console.Error.WriteLine(e.ChangeType+" Timer empty: "+e.FullPath);
 					return;
 				}
 
-				this.Timers[e.FullPath].Change(Timeout.Infinite, Timeout.Infinite);
-				this.Timers.Remove(e.FullPath);
-			}
+				Timer timer = this.Timers[e.FullPath];
+				try
+				{
+					timer.Change(Timeout.Infinite, Timeout.Infinite);
+					this.ApplyChange(e);
+					this.Timers.Remove(e.FullPath);
+				}
+				catch (IOException ex)
+				{
+					//"The process cannot access the file 'XYZ' because it is being used by another process."
+					Console.Error.WriteLine(ex.Message);
 
-			this.ApplyChange(e);
+					// queue up for another check
+					Console.WriteLine(e.ChangeType+" Timer reset: "+e.FullPath);
+					timer.Change(UpdateDelay, Timeout.Infinite);
+					return;
+				}
+			}
 		}
 
 		private void OnFileCreated(object sender, FileSystemEventArgs e)
@@ -91,6 +106,7 @@ namespace Shadow.Agent
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
 				{
+					Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
 					return;
 				}
 
@@ -104,6 +120,7 @@ namespace Shadow.Agent
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
 				{
+					Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
 					return;
 				}
 
@@ -122,6 +139,7 @@ namespace Shadow.Agent
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
 				{
+					Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
 					return;
 				}
 
@@ -142,6 +160,7 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
+			Console.WriteLine("Apply " + e.ChangeType + ": " + e.FullPath);
 			switch (e.ChangeType)
 			{
 				case WatcherChangeTypes.Created:
