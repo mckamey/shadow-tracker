@@ -29,7 +29,7 @@ namespace Shadow.Model
 		/// Gets and sets target attributes
 		/// </summary>
 		[DefaultValue(null)]
-		public CatalogEntry Node { get; set; }
+		public CatalogEntry Entry { get; set; }
 
 		#endregion Properties
 
@@ -43,7 +43,7 @@ namespace Shadow.Model
 			return (that != null) &&
 				EqualityComparer<DeltaAction>.Default.Equals(this.Action, that.Action) &&
 				StringComparer.OrdinalIgnoreCase.Equals(this.SourcePath, that.SourcePath) &&
-				EqualityComparer<CatalogEntry>.Default.Equals(this.Node, that.Node);
+				EqualityComparer<CatalogEntry>.Default.Equals(this.Entry, that.Entry);
 		}
 
 		[DebuggerHidden]
@@ -52,7 +52,7 @@ namespace Shadow.Model
 			int hashcode = -834397989;
 			hashcode = (-1521134295 * hashcode) + EqualityComparer<DeltaAction>.Default.GetHashCode(this.Action);
 			hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(this.SourcePath);
-			return ((-1521134295 * hashcode) + EqualityComparer<CatalogEntry>.Default.GetHashCode(this.Node));
+			return ((-1521134295 * hashcode) + EqualityComparer<CatalogEntry>.Default.GetHashCode(this.Entry));
 		}
 
 		[DebuggerHidden]
@@ -67,7 +67,7 @@ namespace Shadow.Model
 			builder.Append(this.SourcePath);
 
 			builder.Append(", Node = ");
-			builder.Append(this.Node);
+			builder.Append(this.Entry);
 
 			builder.Append(" }");
 

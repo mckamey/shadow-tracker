@@ -41,7 +41,6 @@
     <Compile Include="Agent\FileHash.cs" />
     <Compile Include="Agent\FileIterator.cs" />
     <Compile Include="Agent\FileTracker.cs" />
-    <Compile Include="Agent\Synchronizer.cs" />
     <Compile Include="Model\Catalog.cs" />
     <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\DeltaAction.cs" />
