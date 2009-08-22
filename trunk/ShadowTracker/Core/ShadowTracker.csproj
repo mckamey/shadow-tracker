@@ -49,7 +49,6 @@
     </Compile>
     <Compile Include="Model\ITable`1.cs" />
     <Compile Include="Model\MemoryTable`1.cs" />
-    <Compile Include="Model\NodeDelta.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
