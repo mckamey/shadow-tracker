@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Shadow.Model
@@ -42,14 +43,54 @@ namespace Shadow.Model
 
 		#region Methods
 
+		[Flags]
+		private enum MatchRank
+		{
+			None = 0x00,
+			Path = 0x01,
+			Hash = 0x02,
+			Both = Path|Hash
+		}
+
+		/// <summary>
+		/// Finds the nearest matching existing CatalogEntry.
+		/// Exact match (path & hash) is best.
+		/// Same file signature is next (can clone).
+		/// Finally a matching path (requires expensive copying of bits).
+		/// </summary>
+		/// <param name="path"></param>
+		/// <param name="hash"></param>
+		/// <param name="match"></param>
+		/// <returns></returns>
+		private MatchRank FindMatch(string path, string hash, out CatalogEntry match)
+		{
+			var query =
+				from entry in this.Entries
+				let rank =
+					(entry.Path == path ? MatchRank.Path : MatchRank.None) |
+					(entry.Signature == hash ? MatchRank.Hash : MatchRank.Path)
+				where rank > 0
+				orderby rank descending
+				select new
+				{
+					Rank = rank,
+					Entry = entry
+				};
+
+			var result = query.FirstOrDefault();
+			if (result == null || result.Entry == null)
+			{
+				match = null;
+				return MatchRank.None;
+			}
+
+			match = result.Entry;
+			return result.Rank;
+		}
+
 		private CatalogEntry GetEntryAtPath(string path)
 		{
 			return this.Entries.FirstOrDefault(n => n.Path == path);
-		}
-
-		private bool ContainsSignature(string hash)
-		{
-			return this.Entries.Any(n => n.Signature == hash);
 		}
 
 		public virtual void DeleteEntryByPath(string path)
@@ -69,87 +110,89 @@ namespace Shadow.Model
 			this.Entries.Update(entry);
 		}
 
-		public DeltaAction CalcNodeDelta(CatalogEntry entry)
+		protected DeltaAction CalcEntryDelta(CatalogEntry entry, out CatalogEntry match)
 		{
 			if (entry == null)
 			{
+				match = null;
 				return DeltaAction.None;
 			}
 
-			// look for existing node
-			CatalogEntry local = this.GetEntryAtPath(entry.Path);
-
-			if (local == null)
+			// look for closest matching node
+			switch(this.FindMatch(entry.Path, entry.Signature, out match))
 			{
-				// file is missing, see if have a copy elsewhere (e.g. moved/renamed/copied)
-				if (!entry.IsDirectory && this.ContainsSignature(entry.Signature))
+				case MatchRank.Hash:
 				{
+					if (entry.IsDirectory)
+					{
+						// need to add empty directory
+						return DeltaAction.Add;
+					}
+
 					// equivalent file found
 					return DeltaAction.Clone;
 				}
+				case MatchRank.Path:
+				{
+					// file exists but bits are different
+					return DeltaAction.Update;
+				}
+				case MatchRank.Both:
+				{
+					if (entry.Equals(match))
+					{
+						// no changes, identical
+						return DeltaAction.None;
+					}
 
-				// completely missing file, need to add
-				return DeltaAction.Add;
+					// correct bits exist at correct path but metadata is different
+					return DeltaAction.Meta;
+				}
+				default:
+				case MatchRank.None:
+				{
+					// completely missing file, need to add
+					return DeltaAction.Add;
+				}
 			}
-
-			if (entry.Equals(local))
-			{
-				// no changes, identical
-				return DeltaAction.None;
-			}
-
-			if (StringComparer.OrdinalIgnoreCase.Equals(local.Signature, entry.Signature))
-			{
-				// correct bits exist at correct path but metadata is different
-				return DeltaAction.Meta;
-			}
-
-			// bits are different, see if have a equivalent copy elsewhere
-			if (!entry.IsDirectory && this.ContainsSignature(entry.Signature))
-			{
-				// equivalent file found
-				return DeltaAction.Clone;
-			}
-
-			// file exists but bits are different
-			return DeltaAction.Update;
 		}
 
 		public virtual void ApplyChanges(CatalogEntry entry)
 		{
-			this.ApplyChanges(entry, this.CalcNodeDelta(entry));
-		}
-
-		public virtual void ApplyChanges(CatalogEntry entry, DeltaAction action)
-		{
-			switch (action)
+			CatalogEntry match;
+			switch (this.CalcEntryDelta(entry, out match))
 			{
 				case DeltaAction.Add:
 				{
+					// does not exist (requires expensive bit transfer)
 					Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
 					this.Entries.Add(entry);
 					break;
 				}
 				case DeltaAction.Clone:
 				{
-					Console.WriteLine("COPY: \"{0}\" to \"{1}\"", entry, entry.Path);
+					// bits exist need to add or update entry (no transfer required)
+					Console.WriteLine("CLONE: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
 					this.Entries.Add(entry);
 					break;
 				}
 				case DeltaAction.Delete:
 				{
+					// this actually wouldn't be detected here
 					Console.WriteLine("REMOVE: \"{0}\"", entry.Path);
 					this.DeleteEntryByPath(entry.Path);
 					break;
 				}
 				case DeltaAction.Meta:
 				{
+					// bits are same but metadata different
 					Console.WriteLine("ATTRIB: \"{0}\"", entry.Path);
 					this.Entries.Update(entry);
 					break;
 				}
 				case DeltaAction.Update:
 				{
+					// bits are different but exists (requires expensive bit transfer)
 					Console.WriteLine("REPLACE: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
 					this.Entries.Update(entry);
 					break;
@@ -157,12 +200,66 @@ namespace Shadow.Model
 				default:
 				case DeltaAction.None:
 				{
-					Console.WriteLine("No Action: "+entry);
+					// no change required
+					// Console.WriteLine("No Action: "+entry);
 					break;
 				}
 			}
 		}
 
-		#endregion ICatalogRepository Members
+		#endregion Methods
+
+		#region Full Delta Methods
+
+		/// <summary>
+		/// TODO: evaluate the usefulness of a full sync description.
+		/// </summary>
+		internal IEnumerable<NodeDelta> CalcCatalogDelta(Catalog source)
+		{
+			// generate the sequence of actions which represent the delta since last sync
+			foreach (CatalogEntry entry in source.Entries)
+			{
+				CatalogEntry match;
+				DeltaAction action = this.CalcEntryDelta(entry, out match);
+				if (action == DeltaAction.None)
+				{
+					continue;
+				}
+
+				yield return new NodeDelta
+				{
+					Action = action,
+					SourcePath = (action != DeltaAction.Clone) ? null : match.Signature,
+					Entry = entry
+				};
+			}
+
+			// extras are any local entries not contained in target
+			foreach (CatalogEntry entry in this.Entries)
+			{
+				if (source.ContainsPath(entry.Path))
+				{
+					continue;
+				}
+
+				yield return new NodeDelta
+				{
+					Action = DeltaAction.Delete,
+					Entry = entry
+				};
+			}
+		}
+
+		private bool ContainsPath(string path)
+		{
+			IQueryable<string> query =
+				from entry in this.Entries
+				where entry.Path == path
+				select entry.Path;
+
+			return query.Any();
+		}
+
+		#endregion Full Delta Methods
 	}
 }
