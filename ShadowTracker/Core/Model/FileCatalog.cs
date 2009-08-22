@@ -7,7 +7,7 @@ using Shadow.Agent;
 namespace Shadow.Model
 {
 	/// <summary>
-	/// A catalog built from the file system.
+	/// A catalog built initialized via the file system.
 	/// </summary>
 	public class FileCatalog : Catalog
 	{
@@ -25,25 +25,36 @@ namespace Shadow.Model
 
 		#endregion Constants
 
+		#region Fields
+
+		public readonly string RootPath;
+
+		#endregion Fields
+
 		#region Init
 
 		/// <summary>
 		/// Ctor
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public FileCatalog(string rootPath)
+		public FileCatalog(string rootPath, ITable<CatalogEntry> entries)
 		{
-			if (String.IsNullOrEmpty(rootPath))
+			if (String.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
 			{
-				throw new ArgumentNullException("Root is invalid.");
+				throw new ArgumentNullException("rootPath", "Root path is invalid.");
+			}
+			if (entries == null)
+			{
+				throw new ArgumentNullException("entries", "Entries table is null.");
 			}
 
-			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
+			this.Entries = entries;
+			this.RootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
 
-			var files = FileIterator.GetFiles(rootPath, true).Where(FileCatalog.IsFiltered);
+			var files = FileIterator.GetFiles(this.RootPath, true).Where(FileCatalog.FilterFiles);
 			foreach (FileSystemInfo node in files)
 			{
-				CatalogEntry entry = FileCatalog.CreateNode(rootPath, node);
+				CatalogEntry entry = FileCatalog.CreateNode(this.RootPath, node);
 
 				this.Entries.Add(entry);
 			}
@@ -53,7 +64,7 @@ namespace Shadow.Model
 
 		#region Methods
 
-		private static CatalogEntry CreateNode(string root, FileSystemInfo file)
+		public static CatalogEntry CreateNode(string root, FileSystemInfo file)
 		{
 			return new CatalogEntry
 			{
@@ -71,9 +82,14 @@ namespace Shadow.Model
 
 		#region Utility Methods
 
-		private static bool IsFiltered(FileSystemInfo node)
+		/// <summary>
+		/// Returns true if passes, false if is to be filtered.
+		/// </summary>
+		/// <param name="node"></param>
+		/// <returns></returns>
+		private static bool FilterFiles(FileSystemInfo node)
 		{
-			return ((node.Attributes&FileCatalog.FilteredFiles) != 0);
+			return ((node.Attributes&FileCatalog.FilteredFiles) == 0);
 		}
 
 		private static FileAttributes ScrubAttributes(FileAttributes attributes)

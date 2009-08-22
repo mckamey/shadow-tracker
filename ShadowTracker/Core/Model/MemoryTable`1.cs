@@ -24,6 +24,35 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
+		public MemoryTable()
+		{
+			this.Items = new HashSet<T>();
+			this.Queryable = this.Items.AsQueryable();
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="source">initial items</param>
+		public MemoryTable(IEnumerable<T> items)
+		{
+			this.Items = new HashSet<T>(items);
+			this.Queryable = this.Items.AsQueryable();
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="comparer">determines if two objects represent the same item</param>
+		public MemoryTable(IEqualityComparer<T> comparer)
+		{
+			this.Items = new HashSet<T>(comparer);
+			this.Queryable = this.Items.AsQueryable();
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
 		/// <param name="source">initial items</param>
 		/// <param name="comparer">determines if two objects represent the same item</param>
 		public MemoryTable(IEnumerable<T> items, IEqualityComparer<T> comparer)
