@@ -38,6 +38,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Agent\ActionQueue.cs" />
     <Compile Include="Agent\FileHash.cs" />
     <Compile Include="Agent\FileIterator.cs" />
     <Compile Include="Agent\FileTracker.cs" />

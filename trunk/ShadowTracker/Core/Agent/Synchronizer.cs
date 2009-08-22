@@ -12,7 +12,7 @@ namespace Shadow.Agent
 
 		public IEnumerable<NodeDelta> FullCatalogSync(Catalog source, Catalog local)
 		{
-			// geterate the sequence of actions which represent the delta since
+			// generate the sequence of actions which represent the delta since last sync
 			return (
 					from node in source.Entries
 					let action = local.CalcNodeDelta(node)
@@ -28,7 +28,7 @@ namespace Shadow.Agent
 						Node = node
 					}
 				).Union(
-				// extras are any local entries not contained in target
+					// extras are any local entries not contained in target
 					from node in local.Entries
 					where !this.ContainsPath(source, node.Path)
 					select new NodeDelta
