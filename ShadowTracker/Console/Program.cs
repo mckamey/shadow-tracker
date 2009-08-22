@@ -14,7 +14,7 @@ namespace Shadow.ConsoleTest
 			string watchFolder = ConfigurationManager.AppSettings["WatchFolder"];
 			string watchFilter = ConfigurationManager.AppSettings["WatchFilter"];
 
-			FileCatalog catalog = new FileCatalog(watchFolder, new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer));
+			FileCatalog catalog = new FileCatalog(new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer), watchFolder);
 
 			Console.WriteLine("Begin tracking " + watchFolder);
 			tracker.Start(watchFolder, watchFilter, catalog);

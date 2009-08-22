@@ -59,8 +59,8 @@ namespace Shadow.Model_Test
 				}
 			};
 
-			this.catalog = new Catalog();
-			this.catalog.Entries = new MemoryTable<CatalogEntry>(entries, CatalogEntry.PathComparer);
+			ITable<CatalogEntry> table = new MemoryTable<CatalogEntry>(entries, CatalogEntry.PathComparer);
+			this.catalog = new Catalog(table);
 		}
 
 		[TestMethod]

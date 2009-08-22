@@ -37,7 +37,8 @@ namespace Shadow.Model
 		/// Ctor
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public FileCatalog(string rootPath, ITable<CatalogEntry> entries)
+		public FileCatalog(ITable<CatalogEntry> entries, string rootPath)
+			: base(entries)
 		{
 			if (String.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
 			{
@@ -48,7 +49,6 @@ namespace Shadow.Model
 				throw new ArgumentNullException("entries", "Entries table is null.");
 			}
 
-			this.Entries = entries;
 			this.RootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
 
 			var files = FileIterator.GetFiles(this.RootPath, true).Where(FileCatalog.FilterFiles);
