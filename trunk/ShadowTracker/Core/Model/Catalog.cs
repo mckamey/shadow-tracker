@@ -11,9 +11,22 @@ namespace Shadow.Model
 	{
 		#region Fields
 
-		private ITable<CatalogEntry> entries;
+		private readonly ITable<CatalogEntry> entries;
 
 		#endregion Fields
+
+		#region Init
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="entries">the backing CatalogEntry storage</param>
+		public Catalog(ITable<CatalogEntry> entries)
+		{
+			this.entries = entries;
+		}
+
+		#endregion Init
 
 		#region Properties
 
@@ -23,7 +36,6 @@ namespace Shadow.Model
 		public ITable<CatalogEntry> Entries
 		{
 			get { return this.entries; }
-			set { this.entries = value; }
 		}
 
 		#endregion Properties
