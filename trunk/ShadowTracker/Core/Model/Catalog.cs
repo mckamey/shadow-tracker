@@ -40,12 +40,12 @@ namespace Shadow.Model
 			return this.Entries.Any(n => n.Signature == hash);
 		}
 
-		public void DeleteEntryByPath(string path)
+		public virtual void DeleteEntryByPath(string path)
 		{
 			this.Entries.RemoveWhere(n => n.Path == path);
 		}
 
-		public void MoveEntryPath(string oldPath, string newPath)
+		public virtual void MoveEntryPath(string oldPath, string newPath)
 		{
 			CatalogEntry entry = this.GetEntryAtPath(oldPath);
 			if (entry == null)
@@ -103,44 +103,49 @@ namespace Shadow.Model
 			return DeltaAction.Update;
 		}
 
-		public void ApplyChanges(CatalogEntry entry)
+		public virtual void ApplyChanges(CatalogEntry entry)
 		{
 			this.ApplyChanges(entry, this.CalcNodeDelta(entry));
 		}
 
-		public void ApplyChanges(CatalogEntry entry, DeltaAction action)
+		public virtual void ApplyChanges(CatalogEntry entry, DeltaAction action)
 		{
 			switch (action)
 			{
 				case DeltaAction.Add:
 				{
 					Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
+					this.Entries.Add(entry);
 					break;
 				}
 				case DeltaAction.Clone:
 				{
 					Console.WriteLine("COPY: \"{0}\" to \"{1}\"", entry, entry.Path);
+					this.Entries.Add(entry);
 					break;
 				}
 				case DeltaAction.Delete:
 				{
 					Console.WriteLine("REMOVE: \"{0}\"", entry.Path);
+					this.DeleteEntryByPath(entry.Path);
 					break;
 				}
 				case DeltaAction.Meta:
 				{
 					Console.WriteLine("ATTRIB: \"{0}\"", entry.Path);
+					this.Entries.Update(entry);
 					break;
 				}
 				case DeltaAction.Update:
 				{
 					Console.WriteLine("REPLACE: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
+					this.Entries.Update(entry);
 					break;
 				}
 				default:
 				case DeltaAction.None:
 				{
-					Console.WriteLine("ERROR: "+entry);
+					Console.WriteLine("No Action: "+entry);
 					break;
 				}
 			}

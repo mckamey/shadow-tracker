@@ -11,6 +11,34 @@ namespace Shadow.Model
 	/// </summary>
 	public class CatalogEntry
 	{
+		#region PathComparer
+
+		public class PathComparer : IEqualityComparer<CatalogEntry>
+		{
+			#region IEqualityComparer<T> Members
+
+			bool IEqualityComparer<CatalogEntry>.Equals(CatalogEntry x, CatalogEntry y)
+			{
+				if (x == null || y == null)
+				{
+					return x == y;
+				}
+
+				return StringComparer.OrdinalIgnoreCase.Equals(x, y);
+			}
+
+			int IEqualityComparer<CatalogEntry>.GetHashCode(CatalogEntry obj)
+			{
+				return (obj == null) ?
+				0 :
+				StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
+			}
+
+			#endregion IEqualityComparer<T> Members
+		}
+
+		#endregion PathComparer
+
 		#region Properties
 
 		/// <summary>

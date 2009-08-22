@@ -77,6 +77,7 @@ namespace Shadow.Model
 
 		public void Update(T item)
 		{
+			this.RemoveWhere(n => this.Items.Comparer.Equals(n, item));
 			this.Items.Add(item);
 		}
 
