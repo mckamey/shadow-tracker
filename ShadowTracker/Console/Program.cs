@@ -4,7 +4,7 @@ using System.Configuration;
 using Shadow.Agent;
 using Shadow.Model;
 
-namespace Shadow.Test
+namespace Shadow.ConsoleTest
 {
 	class Program
 	{
@@ -14,7 +14,7 @@ namespace Shadow.Test
 			string watchFolder = ConfigurationManager.AppSettings["WatchFolder"];
 			string watchFilter = ConfigurationManager.AppSettings["WatchFilter"];
 
-			FileCatalog catalog = new FileCatalog(watchFolder, new MemoryTable<CatalogEntry>(new CatalogEntry.PathComparer()));
+			FileCatalog catalog = new FileCatalog(watchFolder, new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer));
 
 			Console.WriteLine("Begin tracking " + watchFolder);
 			tracker.Start(watchFolder, watchFilter, catalog);

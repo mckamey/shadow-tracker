@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ShadowTracker.Core")]
 [assembly: AssemblyDescription("Shadow Tracker Core Library.")]
 [assembly: AssemblyProduct("ShadowTracker")]
-[assembly: AssemblyCopyright("Copyright ©2007-2009. All rights reserved.")]
+[assembly: AssemblyCopyright("Copyright ©2009. All rights reserved.")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
