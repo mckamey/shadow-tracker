@@ -20,6 +20,9 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
+		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
+		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
+		/// <exception cref="System.IO.IOException">The file is already open.</exception>
 		public static string ComputeHash(FileInfo file)
 		{
 #if DEBUG
