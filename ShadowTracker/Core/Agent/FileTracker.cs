@@ -90,10 +90,10 @@ namespace Shadow.Agent
 				catch (IOException ex)
 				{
 					//"The process cannot access the file 'XYZ' because it is being used by another process."
-					Console.Error.WriteLine(ex.Message);
+					//Console.Error.WriteLine(ex.Message);
 
 					// queue up for another check
-					Console.WriteLine(e.ChangeType+" Timer reset: "+e.FullPath);
+					//Console.WriteLine(e.ChangeType+" Timer reset: "+e.FullPath);
 					timer.Change(UpdateDelay, Timeout.Infinite);
 					return;
 				}
@@ -106,7 +106,7 @@ namespace Shadow.Agent
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
 				{
-					Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
+					//Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
 					return;
 				}
 
@@ -120,7 +120,7 @@ namespace Shadow.Agent
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
 				{
-					Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
+					//Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
 					return;
 				}
 
@@ -139,7 +139,7 @@ namespace Shadow.Agent
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
 				{
-					Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
+					//Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
 					return;
 				}
 
@@ -165,15 +165,9 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
-			Console.WriteLine("Apply " + e.ChangeType + ": " + e.FullPath);
+			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
 			switch (e.ChangeType)
 			{
-				case WatcherChangeTypes.Created:
-				{
-					CatalogEntry entry = this.CreateEntry(e.FullPath);
-					this.catalog.ApplyChanges(entry, DeltaAction.Add);
-					break;
-				}
 				case WatcherChangeTypes.Deleted:
 				{
 					this.catalog.DeleteEntryByPath(this.NormalizePath(e.FullPath));
@@ -192,6 +186,7 @@ namespace Shadow.Agent
 					this.catalog.MoveEntryPath(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
 					break;
 				}
+				case WatcherChangeTypes.Created:
 				case WatcherChangeTypes.Changed:
 				default:
 				{
