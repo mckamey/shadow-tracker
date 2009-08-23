@@ -13,7 +13,7 @@ namespace Shadow.Model_Test
 		#region Fields
 
 		private TestContext testContextInstance;
-		private Catalog catalog;
+		private CatalogRepository catalog;
 
 		#endregion Fields
 
@@ -58,7 +58,7 @@ namespace Shadow.Model_Test
 			};
 
 			ITable<CatalogEntry> table = new MemoryTable<CatalogEntry>(entries, CatalogEntry.PathComparer);
-			this.catalog = new Catalog(table);
+			this.catalog = new CatalogRepository(table);
 		}
 
 		[TestMethod]

@@ -4,7 +4,7 @@ using Shadow.Model;
 
 namespace Shadow.ConsoleTest
 {
-	public class ConsoleCatalog : Catalog
+	public class ConsoleCatalog : CatalogRepository
 	{
 		#region Init
 
