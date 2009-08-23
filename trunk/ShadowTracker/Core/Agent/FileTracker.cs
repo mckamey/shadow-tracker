@@ -90,6 +90,8 @@ namespace Shadow.Agent
 				catch (IOException /*ex*/)
 				{
 					//"The process cannot access the file 'XYZ' because it is being used by another process."
+					// http://stackoverflow.com/questions/1314958
+
 					//Console.Error.WriteLine(ex.Message);
 
 					// queue up for another check
