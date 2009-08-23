@@ -21,7 +21,7 @@ namespace Shadow.ConsoleTest
 			FileUtility.SyncCatalog(catalog, watchFolder, callback);
 
 			Console.WriteLine("Begin tracking " + watchFolder);
-			tracker.Start(watchFolder, pathFilter, catalog);
+			tracker.Start(catalog, watchFolder, pathFilter);
 
 			Console.WriteLine("Press ENTER to exit.");
 			Console.ReadLine();
