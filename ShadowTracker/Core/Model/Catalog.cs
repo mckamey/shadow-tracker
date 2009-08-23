@@ -139,8 +139,8 @@ namespace Shadow.Model
 				from entry in this.Entries
 				let rank =
 					(entry.Path == path ? MatchRank.Path : MatchRank.None) |
-					(entry.Signature == hash ? MatchRank.Hash : MatchRank.Path)
-				where rank > 0
+					(entry.Signature == hash ? MatchRank.Hash : MatchRank.None)
+				where rank > MatchRank.None
 				orderby rank descending
 				select new
 				{
@@ -149,7 +149,7 @@ namespace Shadow.Model
 				};
 
 			var result = query.FirstOrDefault();
-			if (result == null || result.Entry == null)
+			if (result == null || result.Entry == null || result.Rank == MatchRank.None)
 			{
 				match = null;
 				return MatchRank.None;
