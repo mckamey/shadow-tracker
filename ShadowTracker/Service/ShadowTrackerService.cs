@@ -32,12 +32,14 @@ namespace ShadowTrackerService
 		protected override void OnStart(string[] args)
 		{
 			string watchFolder = ConfigurationManager.AppSettings["WatchFolder"];
-			string watchFilter = ConfigurationManager.AppSettings["WatchFilter"];
+			string pathFilter = ConfigurationManager.AppSettings["PathFilter"];
+			string fileFilter = ConfigurationManager.AppSettings["FileFilter"] ?? "";
+			var callback = FileUtility.CreateFileFilter(fileFilter.Split(',', '|'));
 
 			Catalog catalog = new Catalog(new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer));
-			FileUtility.SyncCatalog(catalog, watchFolder);
+			FileUtility.SyncCatalog(catalog, watchFolder, callback);
 
-			this.Tracker.Start(watchFolder, watchFilter, catalog);
+			this.Tracker.Start(watchFolder, pathFilter, catalog);
 		}
 
 		protected override void OnStop()

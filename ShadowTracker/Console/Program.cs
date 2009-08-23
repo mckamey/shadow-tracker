@@ -12,14 +12,16 @@ namespace Shadow.ConsoleTest
 		{
 			FileTracker tracker = new FileTracker();
 			string watchFolder = ConfigurationManager.AppSettings["WatchFolder"];
-			string watchFilter = ConfigurationManager.AppSettings["WatchFilter"];
+			string pathFilter = ConfigurationManager.AppSettings["PathFilter"];
+			string fileFilter = ConfigurationManager.AppSettings["FileFilter"] ?? "";
+			var callback = FileUtility.CreateFileFilter(fileFilter.Split(',', '|'));
 
 			Console.WriteLine("Initializing " + watchFolder);
 			ConsoleCatalog catalog = new ConsoleCatalog(new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer));
-			FileUtility.SyncCatalog(catalog, watchFolder);
+			FileUtility.SyncCatalog(catalog, watchFolder, callback);
 
 			Console.WriteLine("Begin tracking " + watchFolder);
-			tracker.Start(watchFolder, watchFilter, catalog);
+			tracker.Start(watchFolder, pathFilter, catalog);
 
 			Console.WriteLine("Press ENTER to exit.");
 			Console.ReadLine();

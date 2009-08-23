@@ -15,15 +15,14 @@ namespace Shadow.Agent
 	{
 		#region Constants
 
-		/// <summary>
-		/// Represents the FileAttributes which get tracked.
+		/// Represents the only FileAttributes which get tracked.
 		/// </summary>
 		private const FileAttributes AttribMask = FileAttributes.ReadOnly|FileAttributes.Archive|FileAttributes.Directory;
 
 		/// <summary>
 		/// Represents the FileAttributes of files which are not tracked.
 		/// </summary>
-		private const FileAttributes FilteredFiles = FileAttributes.Hidden|FileAttributes.System|FileAttributes.Temporary;
+		private const FileAttributes DefaultFilteredAttribs = FileAttributes.Hidden|FileAttributes.System|FileAttributes.Temporary;
 
 		/// <summary>
 		/// Trickle update rate
@@ -34,17 +33,35 @@ namespace Shadow.Agent
 
 		#region Methods
 
+		/// <summary>
+		/// Syncs an existing catalog with the file system.
+		/// </summary>
+		/// <param name="catalog"></param>
+		/// <param name="rootPath"></param>
 		public static void SyncCatalog(Catalog catalog, string rootPath)
 		{
-			FileUtility.SyncCatalog(catalog, rootPath, FileUtility.DefaultTrickleRate);
+			FileUtility.SyncCatalog(catalog, rootPath, FileUtility.CreateFileFilter());
 		}
 
 		/// <summary>
-		/// Syncs an existing catalog with file system.
+		/// Syncs an existing catalog with the file system.
 		/// </summary>
+		/// <param name="catalog"></param>
 		/// <param name="rootPath"></param>
-		/// <param name="timerDelay">number of milliseconds to wait between each file processed (for trickle updates)</param>
-		public static void SyncCatalog(Catalog catalog, string rootPath, int trickleRate)
+		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
+		public static void SyncCatalog(Catalog catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter)
+		{
+			FileUtility.SyncCatalog(catalog, rootPath, fileFilter, FileUtility.DefaultTrickleRate);
+		}
+
+		/// <summary>
+		/// Syncs an existing catalog with the file system.
+		/// </summary>
+		/// <param name="catalog"></param>
+		/// <param name="rootPath"></param>
+		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
+		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
+		public static void SyncCatalog(Catalog catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter, int trickleRate)
 		{
 			if (catalog == null)
 			{
@@ -57,7 +74,7 @@ namespace Shadow.Agent
 
 			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
 
-			var files = FileIterator.GetFiles(rootPath, true).Where(FileUtility.FilterFiles);
+			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
 			if (trickleRate > 0)
 			{
@@ -110,12 +127,12 @@ namespace Shadow.Agent
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
-		public static CatalogEntry CreateEntry(string root, FileSystemInfo file)
+		public static CatalogEntry CreateEntry(string rootPath, FileSystemInfo file)
 		{
 			return new CatalogEntry
 			{
-				Path = FileUtility.NormalizePath(root, file.FullName),
-				Attributes = FileUtility.ScrubAttributes(file.Attributes),
+				Path = FileUtility.NormalizePath(rootPath, file.FullName),
+				Attributes = (file.Attributes&FileUtility.AttribMask),
 				CreatedDate = file.CreationTime,
 				ModifiedDate = file.LastWriteTime,
 				Signature = (file is FileInfo) ?
@@ -124,24 +141,32 @@ namespace Shadow.Agent
 			};
 		}
 
+		public static Func<FileSystemInfo, bool> CreateFileFilter(params string[] trackedExtensions)
+		{
+			return CreateFileFilter(FileUtility.DefaultFilteredAttribs, trackedExtensions);
+		}
+
+		public static Func<FileSystemInfo, bool> CreateFileFilter(FileAttributes filteredAttribs, params string[] trackedExtensions)
+		{
+			return delegate(FileSystemInfo node)
+			{
+				if ((node.Attributes&filteredAttribs) != 0)
+				{
+					return false;
+				}
+
+				if (trackedExtensions == null || trackedExtensions.Length == 0)
+				{
+					return true;
+				}
+
+				return trackedExtensions.Contains(node.Extension);
+			};
+		}
+
 		#endregion Methods
 
 		#region Utility Methods
-
-		/// <summary>
-		/// Returns true if passes, false if is to be filtered.
-		/// </summary>
-		/// <param name="node"></param>
-		/// <returns></returns>
-		private static bool FilterFiles(FileSystemInfo node)
-		{
-			return ((node.Attributes&FileUtility.FilteredFiles) == 0);
-		}
-
-		private static FileAttributes ScrubAttributes(FileAttributes attributes)
-		{
-			return attributes&FileUtility.AttribMask;
-		}
 
 		/// <summary>
 		/// Makes paths root-relative and converts to URL type directory delim (for more compact encoding in C-style languages).
