@@ -25,7 +25,7 @@ namespace Shadow.Agent
 
 		#region Fields
 
-		private Catalog catalog;
+		private CatalogRepository catalog;
 		private readonly FileSystemWatcher Watcher = new FileSystemWatcher();
 		private readonly Dictionary<string, Timer> Timers = new Dictionary<string, Timer>(StringComparer.OrdinalIgnoreCase);
 
@@ -49,15 +49,6 @@ namespace Shadow.Agent
 		}
 
 		#endregion Init
-
-		#region Properties
-
-		public Catalog Catalog
-		{
-			get { return this.catalog; }
-		}
-
-		#endregion Properties
 
 		#region Events
 
@@ -217,10 +208,10 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Sends updates to a catalog
 		/// </summary>
+		/// <param name="catalog"></param>
 		/// <param name="watchFolder"></param>
 		/// <param name="watchFilter"></param>
-		/// <param name="catalog"></param>
-		public void Start(string watchFolder, string watchFilter, Catalog catalog)
+		public void Start(CatalogRepository catalog, string watchFolder, string watchFilter)
 		{
 			this.catalog = catalog;
 			this.Watcher.Path = watchFolder;

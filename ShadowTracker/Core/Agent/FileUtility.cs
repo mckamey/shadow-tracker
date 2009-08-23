@@ -38,7 +38,7 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="catalog"></param>
 		/// <param name="rootPath"></param>
-		public static void SyncCatalog(Catalog catalog, string rootPath)
+		public static void SyncCatalog(CatalogRepository catalog, string rootPath)
 		{
 			FileUtility.SyncCatalog(catalog, rootPath, FileUtility.CreateFileFilter());
 		}
@@ -49,7 +49,7 @@ namespace Shadow.Agent
 		/// <param name="catalog"></param>
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
-		public static void SyncCatalog(Catalog catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter)
+		public static void SyncCatalog(CatalogRepository catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter)
 		{
 			FileUtility.SyncCatalog(catalog, rootPath, fileFilter, FileUtility.DefaultTrickleRate);
 		}
@@ -61,7 +61,7 @@ namespace Shadow.Agent
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
-		public static void SyncCatalog(Catalog catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter, int trickleRate)
+		public static void SyncCatalog(CatalogRepository catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter, int trickleRate)
 		{
 			if (catalog == null)
 			{

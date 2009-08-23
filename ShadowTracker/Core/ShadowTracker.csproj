@@ -42,8 +42,8 @@
     <Compile Include="Agent\FileIterator.cs" />
     <Compile Include="Agent\FileTracker.cs" />
     <Compile Include="Agent\FileUtility.cs" />
-    <Compile Include="Model\Catalog.cs" />
     <Compile Include="Model\CatalogEntry.cs" />
+    <Compile Include="Model\CatalogRepository.cs" />
     <Compile Include="Model\DeltaAction.cs" />
     <Compile Include="Model\ITable`1.cs" />
     <Compile Include="Model\MemoryTable`1.cs" />

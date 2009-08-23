@@ -9,7 +9,7 @@ namespace Shadow.Model
 	/// Implements a repository pattern for Catalog Entries which
 	/// can be backed by a number of different storage mechanisms.
 	/// </summary>
-	public class Catalog
+	public class CatalogRepository
 	{
 		#region Fields
 
@@ -23,7 +23,7 @@ namespace Shadow.Model
 		/// Ctor
 		/// </summary>
 		/// <param name="entries">the backing CatalogEntry storage</param>
-		public Catalog(ITable<CatalogEntry> entries)
+		public CatalogRepository(ITable<CatalogEntry> entries)
 		{
 			this.Entries = entries;
 		}
@@ -261,7 +261,7 @@ namespace Shadow.Model
 
 		#region Catalog Sync Methods
 
-		public void Sync(Catalog that)
+		public void Sync(CatalogRepository that)
 		{
 			// apply any deltas since last sync
 			foreach (CatalogEntry entry in that.Entries)
