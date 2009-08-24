@@ -7,6 +7,7 @@
 			<Column Name="Attribs" Member="Attributes" Storage="attributes" DbType="Int NOT NULL" UpdateCheck="Never" />
 			<Column Name="Created" Member="CreatedDate" Storage="createdDate" DbType="DateTime NOT NULL" UpdateCheck="Never" />
 			<Column Name="Modified" Member="ModifiedDate" Storage="modifiedDate" DbType="DateTime NOT NULL" UpdateCheck="Never" />
+			<Column Name="Size" Member="Length" Storage="length" DbType="BigInt NOT NULL" UpdateCheck="Never" />
 			<Column Name="Hash" Member="Signature" Storage="signature" DbType="Char(40)" UpdateCheck="Never" />
 		</Type>
 	</Table>
