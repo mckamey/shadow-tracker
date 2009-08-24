@@ -150,7 +150,7 @@ namespace Shadow.Agent
 		{
 			return delegate(FileSystemInfo node)
 			{
-				if ((node.Attributes&filteredAttribs) != 0)
+				if (node.Attributes > 0 && (node.Attributes&filteredAttribs) != 0)
 				{
 					return false;
 				}

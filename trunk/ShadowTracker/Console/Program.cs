@@ -23,11 +23,11 @@ namespace Shadow.ConsoleTest
 
 			Console.WriteLine("Initializing " + watchFolder);
 			ConsoleCatalog catalog = new ConsoleCatalog(db);
-			FileUtility.SyncCatalog(catalog, watchFolder, callback);
+			FileUtility.SyncCatalog(catalog, watchFolder, callback, -1);
 
 			Console.WriteLine("Begin tracking " + watchFolder);
 			FileTracker tracker = new FileTracker();
-			tracker.Start(catalog, watchFolder, pathFilter);
+			tracker.Start(catalog, watchFolder, pathFilter, callback);
 
 			Console.WriteLine("Press ENTER to exit.");
 			Console.ReadLine();
