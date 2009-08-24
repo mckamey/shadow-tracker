@@ -238,7 +238,38 @@ namespace Shadow.Agent
 
 					try
 					{
-						this.catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+						bool hasChildren = false;
+						foreach (FileSystemInfo info in FileIterator.GetFiles(e2.FullPath, true))
+						{
+							try
+							{
+								string infoOldName = FileUtility.ReplaceRoot(e2.FullPath, info.FullName, e2.OldFullPath);
+								if (this.IsFiltered(infoOldName))
+								{
+									this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(info.FullName), Path.GetFileName(info.FullName)));
+									continue;
+								}
+
+								if (this.IsFiltered(info.FullName))
+								{
+									this.OnFileDeleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(infoOldName), Path.GetFileName(infoOldName)));
+									continue;
+								}
+
+								this.catalog.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
+								hasChildren = true;
+							}
+							catch (Exception ex)
+							{
+								// TODO: log as error
+								Console.Error.WriteLine(ex.Message);
+							}
+						}
+
+						if (!hasChildren)
+						{
+							this.catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+						}
 					}
 					catch (ArgumentException ex)
 					{
