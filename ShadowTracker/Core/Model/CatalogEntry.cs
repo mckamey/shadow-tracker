@@ -71,6 +71,11 @@ namespace Shadow.Model
 		#region Properties
 
 		/// <summary>
+		/// Gets and sets the primary key
+		/// </summary>
+		public long ID { get; set; }
+
+		/// <summary>
 		/// Gets and sets the relative path to the data
 		/// </summary>
 		public string Path { get; set; }

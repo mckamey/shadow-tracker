@@ -15,7 +15,7 @@ namespace Shadow.Model
 	/// the changes will take effect immediately within the Table. This is different
 	/// from remote persistent storage system such as a RDBMS.
 	/// </remarks>
-	public class MemoryTable<T> : ITable<T>
+	public class MemoryTable<T> : ITable<T> where T : class
 	{
 		#region Fields
 
@@ -86,9 +86,10 @@ namespace Shadow.Model
 			this.Items.Remove(item);
 		}
 
-		public void RemoveWhere(Predicate<T> match)
+		public void RemoveWhere(Expression<Func<T, bool>> match)
 		{
-			this.Items.RemoveWhere(match);
+			Func<T,bool> predicate = match.Compile();
+			this.Items.RemoveWhere(delegate(T item) { return predicate(item); });
 		}
 
 		#endregion ITable<TItem> Members

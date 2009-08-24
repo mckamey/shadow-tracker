@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E85F39FA-8203-47BA-B79E-A27DC91679CC}"
 	ProjectSection(SolutionItems) = preProject
 		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+		Readme.txt = Readme.txt
 		ShadowTracker.vsmdi = ShadowTracker.vsmdi
 	EndProjectSection
 EndProject
