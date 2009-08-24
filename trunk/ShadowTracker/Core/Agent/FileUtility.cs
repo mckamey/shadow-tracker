@@ -27,7 +27,7 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Trickle update rate
 		/// </summary>
-		private const int DefaultTrickleRate = 100;//milliseconds
+		public const int DefaultTrickleRate = 100;//milliseconds
 
 		#endregion Constants
 
@@ -51,7 +51,7 @@ namespace Shadow.Agent
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		public static void SyncCatalog(CatalogRepository catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter)
 		{
-			FileUtility.SyncCatalog(catalog, rootPath, fileFilter, FileUtility.DefaultTrickleRate);
+			FileUtility.SyncCatalog(catalog, rootPath, fileFilter, -1, null);
 		}
 
 		/// <summary>
@@ -61,7 +61,13 @@ namespace Shadow.Agent
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
-		public static void SyncCatalog(CatalogRepository catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter, int trickleRate)
+		public static void SyncCatalog(
+			CatalogRepository catalog,
+			string rootPath,
+			Func<FileSystemInfo,
+			bool> fileFilter,
+			int trickleRate,
+			Action<CatalogRepository> completedCallback)
 		{
 			if (catalog == null)
 			{
@@ -93,6 +99,9 @@ namespace Shadow.Agent
 							timer.Change(Timeout.Infinite, Timeout.Infinite);
 							timer = null;
 							files = null;
+
+							// remove any extra files after, so more clones can happen
+							FileUtility.RemoveExtras(catalog, rootPath, trickleRate, completedCallback);
 							return;
 						}
 
@@ -115,22 +124,76 @@ namespace Shadow.Agent
 					CatalogEntry entry = FileUtility.CreateEntry(rootPath, file);
 					catalog.ApplyChanges(entry);
 				}
-			}
 
-			// TODO: consider putting this in some sort of timer loop as well
-			// remove any extra files after
-			foreach (string path in catalog.GetExistingPaths())
-			{
-				// extras are any local entries not contained in other
-				if (File.Exists(Path.Combine(rootPath, path)))
-				{
-					continue;
-				}
-
-				catalog.DeleteEntryByPath(path);
+				// remove any extra files after, so more clones can happen
+				FileUtility.RemoveExtras(catalog, rootPath, trickleRate, completedCallback);
 			}
 
 			// TODO: try-catch around work and create a retry queue
+		}
+
+		private static void RemoveExtras(
+			CatalogRepository catalog,
+			string rootPath,
+			int trickleRate,
+			Action<CatalogRepository> completedCallback)
+		{
+			if (trickleRate > 0)
+			{
+				var enumerator = catalog.GetExistingPaths().GetEnumerator();
+
+				// perform loop with a timer to allow trickle updates
+				// use a closure as the callback to allow access to local vars
+				Timer timer = null;
+				timer = new Timer(
+					delegate(object state)
+					{
+						// check if any files left
+						if (!enumerator.MoveNext())
+						{
+							// free closure references
+							timer.Change(Timeout.Infinite, Timeout.Infinite);
+							timer = null;
+
+							// signal sync is complete
+							if (completedCallback != null)
+							{
+								completedCallback(catalog);
+							}
+							return;
+						}
+
+						// sync next node
+						string path = enumerator.Current;
+						if (!File.Exists(Path.Combine(rootPath, path)))
+						{
+							catalog.DeleteEntryByPath(path);
+						}
+
+						// queue up next iteration
+						timer.Change(trickleRate, Timeout.Infinite);
+					},
+					null,
+					trickleRate,
+					Timeout.Infinite);
+			}
+			else
+			{
+				foreach (string path in catalog.GetExistingPaths())
+				{
+					// extras are any local entries not contained in other
+					if (File.Exists(Path.Combine(rootPath, path)))
+					{
+						catalog.DeleteEntryByPath(path);
+					}
+				}
+
+				// signal sync is complete
+				if (completedCallback != null)
+				{
+					completedCallback(catalog);
+				}
+			}
 		}
 
 		/// <summary>
