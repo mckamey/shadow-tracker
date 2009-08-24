@@ -16,8 +16,20 @@ namespace Shadow.Model
 	{
 		#region EqualityComparer
 
+		/// <summary>
+		/// Tests equality of two CatalogEntry objects on their paths
+		/// </summary>
 		public static readonly IEqualityComparer<CatalogEntry> PathComparer = new PathEqualityComparer();
+
+		/// <summary>
+		/// Tests equality of two CatalogEntry objects on their signatures
+		/// </summary>
 		public static readonly IEqualityComparer<CatalogEntry> SignatureComparer = new SignatureEqualityComparer();
+
+		/// <summary>
+		/// Tests equality of two CatalogEntry objects on their non-identity fields
+		/// </summary>
+		public static readonly IEqualityComparer<CatalogEntry> ValueComparer = new ValueEqualityComparer();
 
 		private class PathEqualityComparer : IEqualityComparer<CatalogEntry>
 		{
@@ -64,6 +76,44 @@ namespace Shadow.Model
 				return (obj == null) ?
 					StringComparer.OrdinalIgnoreCase.GetHashCode(null) :
 					StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature);
+			}
+
+			#endregion IEqualityComparer<T> Members
+		}
+
+		private class ValueEqualityComparer : IEqualityComparer<CatalogEntry>
+		{
+			#region IEqualityComparer<T> Members
+
+			bool IEqualityComparer<CatalogEntry>.Equals(CatalogEntry x, CatalogEntry y)
+			{
+				if (x == null || y == null)
+				{
+					// return true if both null
+					return EqualityComparer<CatalogEntry>.Default.Equals(x, y);
+				}
+
+				return
+					StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path) &&
+					EqualityComparer<FileAttributes>.Default.Equals(x.Attributes, y.Attributes) &&
+					(x.CreatedDate.Ticks == y.CreatedDate.Ticks) &&
+					(x.ModifiedDate.Ticks == y.ModifiedDate.Ticks) &&
+					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature);
+			}
+
+			int IEqualityComparer<CatalogEntry>.GetHashCode(CatalogEntry obj)
+			{
+				if (obj == null)
+				{
+					return StringComparer.OrdinalIgnoreCase.GetHashCode(null);
+				}
+
+				int hashcode = 0x23f797e3;
+				hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
+				hashcode = (-1521134295 * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(obj.Attributes);
+				hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.CreatedDate);
+				hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.ModifiedDate);
+				return ((-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature));
 			}
 
 			#endregion IEqualityComparer<T> Members
@@ -286,30 +336,6 @@ namespace Shadow.Model
 		#endregion INotifyPropertyChanged Members
 
 		#region Object Overrides
-
-		[DebuggerHidden]
-		public override bool Equals(object obj)
-		{
-			var that = obj as CatalogEntry;
-
-			return (that != null) &&
-				StringComparer.OrdinalIgnoreCase.Equals(this.Path, that.Path) &&
-				EqualityComparer<FileAttributes>.Default.Equals(this.Attributes, that.Attributes) &&
-				(this.CreatedDate.Ticks == that.CreatedDate.Ticks) &&
-				(this.ModifiedDate.Ticks == that.ModifiedDate.Ticks) &&
-				StringComparer.OrdinalIgnoreCase.Equals(this.Signature, that.Signature);
-		}
-
-		[DebuggerHidden]
-		public override int GetHashCode()
-		{
-			int hashcode = 0x23f797e3;
-			hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(this.Path);
-			hashcode = (-1521134295 * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(this.Attributes);
-			hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(this.CreatedDate);
-			hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(this.ModifiedDate);
-			return ((-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(this.Signature));
-		}
 
 		[DebuggerHidden]
 		public override string ToString()

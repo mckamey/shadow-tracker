@@ -239,7 +239,7 @@ namespace Shadow.Model
 				}
 				case MatchRank.Both:
 				{
-					if (entry.Equals(match))
+					if (CatalogEntry.ValueComparer.Equals(entry, match))
 					{
 						// no changes, identical
 						return DeltaAction.None;
