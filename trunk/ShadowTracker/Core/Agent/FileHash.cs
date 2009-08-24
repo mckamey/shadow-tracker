@@ -25,6 +25,12 @@ namespace Shadow.Agent
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
 		public static string ComputeHash(FileInfo file)
 		{
+			file.Refresh();
+			if (!file.Exists)
+			{
+				return null;
+			}
+
 #if DEBUG
 			//var timer = System.Diagnostics.Stopwatch.StartNew();
 			//try
