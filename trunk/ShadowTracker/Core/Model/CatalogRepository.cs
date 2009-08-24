@@ -181,6 +181,11 @@ namespace Shadow.Model
 			return this.Entries.Any(predicate);
 		}
 
+		public IQueryable<string> GetExistingPaths()
+		{
+			return this.Entries.Select(n => n.Path);
+		}
+
 		// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
 		protected void SetUnitOfWorkLog(System.IO.TextWriter writer)
 		{
@@ -376,15 +381,15 @@ namespace Shadow.Model
 			// NOTE: always perform deletes last, so that
 			// moves or renames can be expressed as a clone/delete
 
-			foreach (CatalogEntry entry in this.Entries)
+			foreach (string path in this.GetExistingPaths())
 			{
 				// extras are any local entries not contained in other
-				if (that.Entries.Where(n => n.Path == entry.Path).Any())
+				if (that.Exists(n => n.Path == path))
 				{
 					continue;
 				}
 
-				this.DeleteEntryByPath(entry.Path);
+				this.DeleteEntryByPath(path);
 			}
 		}
 

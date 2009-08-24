@@ -117,7 +117,19 @@ namespace Shadow.Agent
 				}
 			}
 
-			// TODO: remove any extra files after
+			// TODO: consider putting this in some sort of timer loop as well
+			// remove any extra files after
+			foreach (string path in catalog.GetExistingPaths())
+			{
+				// extras are any local entries not contained in other
+				if (File.Exists(Path.Combine(rootPath, path)))
+				{
+					continue;
+				}
+
+				catalog.DeleteEntryByPath(path);
+			}
+
 			// TODO: try-catch around work and create a retry queue
 		}
 
