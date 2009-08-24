@@ -91,7 +91,20 @@ namespace Shadow.Model
 		/// <param name="path"></param>
 		public virtual void DeleteEntryByPath(string path)
 		{
-			this.Entries.RemoveWhere(n => n.Path == path);
+			if (!this.Exists(n => n.Path.ToLower() == path.ToLower()))
+			{
+				if (!path.EndsWith("/"))
+				{
+					path += "/";
+				}
+
+				this.Entries.RemoveWhere(n => n.Path.ToLower().StartsWith(path.ToLower()));
+			}
+			else
+			{
+				this.Entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
+			}
+
 			this.SubmitChanges();
 		}
 
@@ -384,7 +397,7 @@ namespace Shadow.Model
 			foreach (string path in this.GetExistingPaths())
 			{
 				// extras are any local entries not contained in other
-				if (that.Exists(n => n.Path == path))
+				if (that.Exists(n => n.Path.ToLower() == path.ToLower()))
 				{
 					continue;
 				}
