@@ -4,6 +4,7 @@ using System.Data.Linq;
 using System.Data.Linq.Mapping;
 
 using Shadow.Agent;
+using Shadow.Model;
 
 namespace Shadow.ConsoleTest
 {
@@ -22,7 +23,24 @@ namespace Shadow.ConsoleTest
 
 			Console.WriteLine("Initializing " + watchFolder);
 			ConsoleCatalog catalog = new ConsoleCatalog(db);
-			FileUtility.SyncCatalog(catalog, watchFolder, callback, -1);
+#if DEBUG
+			var watch = System.Diagnostics.Stopwatch.StartNew();
+#endif
+			FileUtility.SyncCatalog(
+				catalog,
+				watchFolder,
+				callback,
+				FileUtility.DefaultTrickleRate,
+				delegate(CatalogRepository c)
+				{
+#if DEBUG
+					watch.Stop();
+					Console.WriteLine("__________________________");
+					Console.WriteLine();
+					Console.WriteLine("Sync Time: "+watch.Elapsed);
+					Console.WriteLine("__________________________");
+#endif
+				});
 
 			Console.WriteLine("Begin tracking " + watchFolder);
 			FileTracker tracker = new FileTracker();

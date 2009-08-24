@@ -44,7 +44,7 @@ namespace Shadow.ConsoleTest
 			: base(db)
 		{
 #if DEBUG
-			this.SetUnitOfWorkLog(Console.Error);
+			//this.SetUnitOfWorkLog(Console.Error);
 #endif
 
 		}
