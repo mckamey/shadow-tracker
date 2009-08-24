@@ -38,6 +38,11 @@ namespace Shadow.ConsoleTest
 
 		private static DataContext GetDataContext(string connection, string mappings)
 		{
+			if (connection != null)
+			{
+				connection = connection.Replace("|DataDirectory|", Environment.CurrentDirectory);
+			}
+
 			MappingSource map = XmlMappingSource.FromUrl(mappings);
 			DataContext db = new DataContext(connection, map);
 
