@@ -11,7 +11,8 @@ namespace Shadow.Model
 	/// A queryable table adapter for LINQ-to-SQL tables.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public class TableAdapter<T> : ITable<T> where T:class
+	public class TableAdapter<T> :
+		ITable<T> where T:class
 	{
 		#region Fields
 

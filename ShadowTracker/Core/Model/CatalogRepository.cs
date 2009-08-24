@@ -80,30 +80,9 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="entry"></param>
 		/// <param name="match"></param>
-		public virtual void CloneEntry(CatalogEntry entry, CatalogEntry match)
+		public virtual void CloneEntry(CatalogEntry entry, CatalogEntry data)
 		{
-			this.Entries.Add(entry);
-			this.SubmitChanges();
-		}
-
-		/// <summary>
-		/// Action where bits are same but metadata different (no transfer required).
-		/// </summary>
-		/// <param name="entry"></param>
-		public virtual void UpdateMetaData(CatalogEntry entry)
-		{
-			this.Entries.Update(entry);
-			this.SubmitChanges();
-		}
-
-		/// <summary>
-		/// Action where bits are different but entry exists (requires expensive bit transfer).
-		/// </summary>
-		/// <param name="entry"></param>
-		public virtual void UpdateData(CatalogEntry entry)
-		{
-			this.Entries.Update(entry);
-			this.SubmitChanges();
+			this.AddEntry(entry);
 		}
 
 		/// <summary>
@@ -131,10 +110,51 @@ namespace Shadow.Model
 			}
 
 			entry.Path = newPath;
-
-			// don't need to reattach
-			//this.Entries.Update(entry);
 			this.SubmitChanges();
+		}
+
+		/// <summary>
+		/// Action where bits are same but metadata different (no transfer required).
+		/// </summary>
+		/// <param name="entry"></param>
+		/// <param name="data">the original entry</param>
+		public virtual void UpdateMeta(CatalogEntry entry, CatalogEntry original)
+		{
+			if (original == null || original.ID < 1)
+			{
+				this.Entries.Update(entry);
+			}
+			else
+			{
+				// TODO: figure out better way to manage DataContext restrictions
+				original.Attributes = entry.Attributes;
+				original.CreatedDate = entry.CreatedDate;
+				//original.ID = entry.ID;
+				original.ModifiedDate = entry.ModifiedDate;
+				original.Path = entry.Path;
+				original.Signature = entry.Signature;
+
+				//this.Entries.Update(original);
+			}
+
+			this.SubmitChanges();
+		}
+
+		/// <summary>
+		/// Action where bits are different but entry exists (requires expensive bit transfer).
+		/// </summary>
+		/// <param name="entry"></param>
+		/// <param name="data">the entry with source data</param>
+		public virtual void UpdateData(CatalogEntry entry, CatalogEntry original, CatalogEntry data)
+		{
+			if (original == null)
+			{
+				this.CloneEntry(entry, data);
+				return;
+			}
+
+			// TODO: handle data changes
+			this.UpdateMeta(entry, original);
 		}
 
 		private void SubmitChanges()
@@ -160,72 +180,114 @@ namespace Shadow.Model
 			return this.Entries.Any(predicate);
 		}
 
+		// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
+		protected void SetUnitOfWorkLog(System.IO.TextWriter writer)
+		{
+			this.UnitOfWork.Log = writer;
+		}
+
 		#endregion Query Methods
 
 		#region Delta Methods
 
 		[Flags]
-		private enum MatchRank
+		private enum MatchRank : int
 		{
 			None = 0x00,
-			Path = 0x01,
-			Hash = 0x02,
+			Hash = 0x01,
+			Path = 0x02,
 			Both = Path|Hash
 		}
 
 		/// <summary>
 		/// Finds the nearest matching existing CatalogEntry.
 		/// Exact match (path & hash) is best.
+		/// A matching path is next (however requires expensive copying of bits).
 		/// Same file signature is next (can clone).
-		/// Finally a matching path (requires expensive copying of bits).
 		/// </summary>
 		/// <param name="path"></param>
 		/// <param name="hash"></param>
 		/// <param name="match"></param>
 		/// <returns></returns>
-		private MatchRank FindMatch(string path, string hash, out CatalogEntry match)
+		private MatchRank FindMatch(CatalogEntry target, out CatalogEntry meta, out CatalogEntry data)
 		{
-			var query =
-				from entry in this.Entries
-				where entry.Path == path || entry.Signature == hash
-				let rank =
-					(int)(entry.Path == path ? MatchRank.Path : MatchRank.None) |
-					(int)(entry.Signature == hash ? MatchRank.Hash : MatchRank.None)
-				where rank > (int)MatchRank.None
-				orderby rank descending
-				select new
-				{
-					Rank = (int)rank,
-					Entry = entry
-				};
+			string path = target.Path != null ? target.Path.ToLowerInvariant() : null;
+			string hash = target.Signature != null ? target.Signature.ToLowerInvariant() : null;
 
-			var result = query.FirstOrDefault();
-			if (result == null || result.Entry == null || result.Rank == (int)MatchRank.None)
+			var query =
+				(from entry in this.Entries
+				 let rank =
+					(int)(entry.Path.ToLower() == path ? MatchRank.Path : MatchRank.None) |
+					(int)((entry.Signature != null && entry.Signature.ToLower() == hash) ? MatchRank.Hash : MatchRank.None)
+				 where rank > (int)MatchRank.None
+				 orderby rank descending
+				 select new
+				 {
+					 Rank = (MatchRank)rank,
+					 Entry = entry
+				 }).Take(2);
+
+			var result = query.ToArray();
+			if (result == null || result.Length < 1)
 			{
-				match = null;
+				meta = data = null;
 				return MatchRank.None;
 			}
 
-			match = result.Entry;
-			return (MatchRank)result.Rank;
+			switch (result[0].Rank)
+			{
+				case MatchRank.Both:
+				{
+					meta = data = result[0].Entry;
+					return MatchRank.Both;
+				}
+				case MatchRank.Path:
+				{
+					meta = result[0].Entry;
+					data = (result.Length > 1) ? result[1].Entry : null;
+					return MatchRank.Path;
+				}
+				case MatchRank.Hash:
+				{
+					meta = null;
+					data = result[0].Entry;
+					return MatchRank.Hash;
+				}
+				default:
+				{
+					// this should not happen
+					throw new InvalidOperationException("Unexpected result from FindMatch query.");
+				}
+			}
 		}
 
-		protected DeltaAction CalcEntryDelta(CatalogEntry entry, out CatalogEntry match)
+		protected DeltaAction CalcEntryDelta(CatalogEntry entry, out CatalogEntry meta, out CatalogEntry data)
 		{
 			if (entry == null)
 			{
-				match = null;
+				meta = data = null;
 				return DeltaAction.None;
 			}
 
 			// look for closest matching node
-			switch(this.FindMatch(entry.Path, entry.Signature, out match))
+			switch(this.FindMatch(entry, out meta, out data))
 			{
+				case MatchRank.Both:
+				{
+					if (CatalogEntry.ValueComparer.Equals(entry, meta))
+					{
+						// no changes, identical
+						return DeltaAction.None;
+					}
+
+					// correct bits exist at correct path but metadata is different
+					return DeltaAction.Meta;
+				}
 				case MatchRank.Hash:
 				{
 					if (entry.IsDirectory)
 					{
-						// need to add empty directory
+						// add empty directories (no data to clone)
 						return DeltaAction.Add;
 					}
 
@@ -236,17 +298,6 @@ namespace Shadow.Model
 				{
 					// file exists but bits are different
 					return DeltaAction.Update;
-				}
-				case MatchRank.Both:
-				{
-					if (CatalogEntry.ValueComparer.Equals(entry, match))
-					{
-						// no changes, identical
-						return DeltaAction.None;
-					}
-
-					// correct bits exist at correct path but metadata is different
-					return DeltaAction.Meta;
 				}
 				default:
 				case MatchRank.None:
@@ -259,8 +310,8 @@ namespace Shadow.Model
 
 		public void ApplyChanges(CatalogEntry entry)
 		{
-			CatalogEntry match;
-			switch (this.CalcEntryDelta(entry, out match))
+			CatalogEntry data, meta;
+			switch (this.CalcEntryDelta(entry, out meta, out data))
 			{
 				case DeltaAction.Add:
 				{
@@ -271,12 +322,12 @@ namespace Shadow.Model
 				case DeltaAction.Clone:
 				{
 					// bits exist need to add or update entry (no transfer required)
-					this.CloneEntry(entry, match);
+					this.CloneEntry(entry, data);
 					break;
 				}
 				case DeltaAction.Delete:
 				{
-					// NOTE: this actually wouldn't be detected here
+					// NOTE: this actually would not be detected here
 
 					// file is being removed
 					this.DeleteEntryByPath(entry.Path);
@@ -285,13 +336,19 @@ namespace Shadow.Model
 				case DeltaAction.Meta:
 				{
 					// bits are same but metadata different
-					this.UpdateMetaData(entry);
+					if (meta == null)
+					{
+						this.AddEntry(entry);
+						break;
+					}
+
+					this.UpdateMeta(entry, meta);
 					break;
 				}
 				case DeltaAction.Update:
 				{
-					// bits are different but exists (requires expensive bit transfer)
-					this.UpdateData(entry);
+					// path exists but bits are different (requires expensive bit transfer)
+					this.UpdateData(entry, meta, data);
 					break;
 				}
 				default:
