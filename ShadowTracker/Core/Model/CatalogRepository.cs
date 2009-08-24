@@ -16,6 +16,9 @@ namespace Shadow.Model
 
 		private readonly ITable<CatalogEntry> Entries;
 
+		// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
+		private readonly DataContext UnitOfWork;
+
 		#endregion Fields
 
 		#region Init
@@ -53,6 +56,8 @@ namespace Shadow.Model
 		/// <param name="db">LINQ-to-SQL DataContext</param>
 		public CatalogRepository(DataContext db)
 		{
+			// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
+			this.UnitOfWork = db;
 			this.Entries = new TableAdapter<CatalogEntry>(db);
 		}
 
@@ -67,6 +72,7 @@ namespace Shadow.Model
 		public virtual void AddEntry(CatalogEntry entry)
 		{
 			this.Entries.Add(entry);
+			this.SubmitChanges();
 		}
 
 		/// <summary>
@@ -77,6 +83,7 @@ namespace Shadow.Model
 		public virtual void CloneEntry(CatalogEntry entry, CatalogEntry match)
 		{
 			this.Entries.Add(entry);
+			this.SubmitChanges();
 		}
 
 		/// <summary>
@@ -86,6 +93,7 @@ namespace Shadow.Model
 		public virtual void UpdateMetaData(CatalogEntry entry)
 		{
 			this.Entries.Update(entry);
+			this.SubmitChanges();
 		}
 
 		/// <summary>
@@ -95,6 +103,7 @@ namespace Shadow.Model
 		public virtual void UpdateData(CatalogEntry entry)
 		{
 			this.Entries.Update(entry);
+			this.SubmitChanges();
 		}
 
 		/// <summary>
@@ -104,6 +113,7 @@ namespace Shadow.Model
 		public virtual void DeleteEntryByPath(string path)
 		{
 			this.Entries.RemoveWhere(n => n.Path == path);
+			this.SubmitChanges();
 		}
 
 		/// <summary>
@@ -122,6 +132,16 @@ namespace Shadow.Model
 
 			entry.Path = newPath;
 			this.Entries.Update(entry);
+			this.SubmitChanges();
+		}
+
+		private void SubmitChanges()
+		{
+			// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
+			if (this.UnitOfWork != null)
+			{
+				this.UnitOfWork.SubmitChanges(ConflictMode.ContinueOnConflict);
+			}
 		}
 
 		#endregion Action Methods

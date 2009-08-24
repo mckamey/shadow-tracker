@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Configuration;
-
-using Shadow.Agent;
-using Shadow.Model;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
+
+using Shadow.Agent;
 
 namespace Shadow.ConsoleTest
 {
