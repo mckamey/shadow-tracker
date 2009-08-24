@@ -176,7 +176,7 @@ namespace Shadow.Agent
 
 		private bool IsFiltered(string fullPath)
 		{
-			return this.fileFilter == null || !this.fileFilter(new FileInfo(fullPath));
+			return this.fileFilter != null && this.fileFilter(new FileInfo(fullPath));
 		}
 
 		private string NormalizePath(string path)
