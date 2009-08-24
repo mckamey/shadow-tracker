@@ -202,7 +202,18 @@ namespace Shadow.Agent
 
 		private CatalogEntry CreateEntry(string path)
 		{
-			return FileUtility.CreateEntry(this.Watcher.Path, new FileInfo(path));
+			FileSystemInfo info;
+			if (Directory.Exists(path))
+			{
+				// is a directory
+				info = new DirectoryInfo(path);
+			}
+			else
+			{
+				info = new FileInfo(path);
+			}
+
+			return FileUtility.CreateEntry(this.Watcher.Path, info);
 		}
 
 		private void ApplyChange(FileSystemEventArgs e)

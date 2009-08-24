@@ -180,7 +180,14 @@ namespace Shadow.Model
 		/// </summary>
 		public long Length
 		{
-			get { return this.length; }
+			get
+			{
+				if (this.IsDirectory)
+				{
+					return 0L;
+				}
+				return this.length;
+			}
 			set
 			{
 				if (this.length == value)
@@ -274,7 +281,14 @@ namespace Shadow.Model
 		/// </summary>
 		public string Signature
 		{
-			get { return this.signature; }
+			get
+			{
+				if (this.IsDirectory)
+				{
+					return String.Empty;
+				}
+				return this.signature;
+			}
 			set
 			{
 				if (StringComparer.OrdinalIgnoreCase.Equals(this.signature, value))
