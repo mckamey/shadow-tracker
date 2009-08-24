@@ -147,9 +147,9 @@ namespace Shadow.Model
 					return;
 				}
 
-				this.OnPropertyChanging("ID");
+				//this.OnPropertyChanging("ID");
 				this.id = value;
-				this.OnPropertyChanged("ID");
+				//this.OnPropertyChanged("ID");
 			}
 		}
 

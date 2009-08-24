@@ -6,8 +6,7 @@ using System.Linq.Expressions;
 namespace Shadow.Model
 {
 	public interface ITable<T> :
-		IQueryable<T>,
-		IEnumerable<T>
+		IQueryable<T>, IEnumerable<T> where T : class
 	{
 		/// <summary>
 		/// Adds an item

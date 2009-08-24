@@ -43,6 +43,10 @@ namespace Shadow.ConsoleTest
 		public ConsoleCatalog(DataContext db)
 			: base(db)
 		{
+#if DEBUG
+			this.SetUnitOfWorkLog(Console.Error);
+#endif
+
 		}
 
 		#endregion Init
@@ -56,11 +60,11 @@ namespace Shadow.ConsoleTest
 			base.AddEntry(entry);
 		}
 
-		public override void CloneEntry(CatalogEntry entry, CatalogEntry match)
+		public override void CloneEntry(CatalogEntry entry, CatalogEntry data)
 		{
-			Console.WriteLine("CLONE: \"{0}\" to \"{1}\"", match.Signature, entry.Path);
+			Console.WriteLine("CLONE: \"{0}\" to \"{1}\"", data.Signature, entry.Path);
 
-			base.CloneEntry(entry, match);
+			base.CloneEntry(entry, data);
 		}
 
 		public override void DeleteEntryByPath(string path)
@@ -77,18 +81,18 @@ namespace Shadow.ConsoleTest
 			base.RenameEntry(oldPath, newPath);
 		}
 
-		public override void UpdateData(CatalogEntry entry)
+		public override void UpdateData(CatalogEntry entry, CatalogEntry original, CatalogEntry data)
 		{
 			Console.WriteLine("DATA: \"{0}\" to \"{1}\"", entry.Signature, entry.Path);
 
-			base.UpdateData(entry);
+			base.UpdateData(entry, original, data);
 		}
 
-		public override void UpdateMetaData(CatalogEntry entry)
+		public override void UpdateMeta(CatalogEntry entry, CatalogEntry original)
 		{
 			Console.WriteLine("META: \"{0}\"", entry.Path);
 
-			base.UpdateMetaData(entry);
+			base.UpdateMeta(entry, original);
 		}
 
 		#endregion Action Methods
