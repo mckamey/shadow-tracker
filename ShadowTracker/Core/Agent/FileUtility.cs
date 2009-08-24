@@ -64,8 +64,7 @@ namespace Shadow.Agent
 		public static void SyncCatalog(
 			CatalogRepository catalog,
 			string rootPath,
-			Func<FileSystemInfo,
-			bool> fileFilter,
+			Func<FileSystemInfo, bool> fileFilter,
 			int trickleRate,
 			Action<CatalogRepository> completedCallback)
 		{
@@ -228,6 +227,11 @@ namespace Shadow.Agent
 		{
 			return delegate(FileSystemInfo node)
 			{
+				if (node is DirectoryInfo)
+				{
+					return true;
+				}
+
 				if (node.Attributes > 0 && (node.Attributes&filteredAttribs) != 0)
 				{
 					return false;
