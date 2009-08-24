@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 using Shadow.Model;
@@ -181,16 +182,7 @@ namespace Shadow.Agent
 				return false;
 			}
 
-			FileSystemInfo info;
-			if (Directory.Exists(fullPath))
-			{
-				// is a directory
-				info = new DirectoryInfo(fullPath);
-			}
-			else
-			{
-				info = new FileInfo(fullPath);
-			}
+			FileSystemInfo info = FileUtility.CreateFileSystemInfo(fullPath);
 
 			return !this.fileFilter(info);
 		}
@@ -198,22 +190,6 @@ namespace Shadow.Agent
 		private string NormalizePath(string path)
 		{
 			return FileUtility.NormalizePath(this.Watcher.Path, path);
-		}
-
-		private CatalogEntry CreateEntry(string path)
-		{
-			FileSystemInfo info;
-			if (Directory.Exists(path))
-			{
-				// is a directory
-				info = new DirectoryInfo(path);
-			}
-			else
-			{
-				info = new FileInfo(path);
-			}
-
-			return FileUtility.CreateEntry(this.Watcher.Path, info);
 		}
 
 		private void ApplyChange(FileSystemEventArgs e)
@@ -285,7 +261,14 @@ namespace Shadow.Agent
 				case WatcherChangeTypes.Changed:
 				default:
 				{
-					CatalogEntry entry = this.CreateEntry(e.FullPath);
+					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
+					if (info is DirectoryInfo &&
+						FileIterator.GetFiles(e.FullPath, true).Any())
+					{
+						break;
+					}
+
+					CatalogEntry entry = FileUtility.CreateEntry(this.Watcher.Path, info);
 					this.catalog.ApplyChanges(entry);
 					break;
 				}

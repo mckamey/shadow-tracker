@@ -251,6 +251,19 @@ namespace Shadow.Agent
 
 		#region Utility Methods
 
+		public static FileSystemInfo CreateFileSystemInfo(string path)
+		{
+			if (Directory.Exists(path))
+			{
+				// is a directory
+				return new DirectoryInfo(path);
+			}
+			else
+			{
+				return new FileInfo(path);
+			}
+		}
+
 		/// <summary>
 		/// Makes paths root-relative and converts to URL type directory delim (for more compact encoding in C-style languages).
 		/// </summary>
