@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -9,7 +10,9 @@ namespace Shadow.Model
 	/// <summary>
 	/// Represents a single catalog data node
 	/// </summary>
-	public class CatalogEntry
+	public class CatalogEntry :
+		INotifyPropertyChanging,
+		INotifyPropertyChanged
 	{
 		#region EqualityComparer
 
@@ -68,27 +71,95 @@ namespace Shadow.Model
 
 		#endregion EqualityComparer
 
+		#region Fields
+
+		private long id;
+		private string path;
+		private FileAttributes attributes;
+		private DateTime createdDate;
+		private DateTime modifiedDate;
+		private string signature;
+
+		#endregion Fields
+
 		#region Properties
 
 		/// <summary>
 		/// Gets and sets the primary key
 		/// </summary>
-		public long ID { get; set; }
+		public long ID
+		{
+			get { return this.id; }
+			set
+			{
+				if (this.id == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("ID");
+				this.id = value;
+				this.OnPropertyChanged("ID");
+			}
+		}
 
 		/// <summary>
 		/// Gets and sets the relative path to the data
 		/// </summary>
-		public string Path { get; set; }
+		public string Path
+		{
+			get { return this.path; }
+			set
+			{
+				if (this.path == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("Path");
+				this.path = value;
+				this.OnPropertyChanged("Path");
+			}
+		}
 
 		/// <summary>
 		/// Gets and sets file attributes
 		/// </summary>
-		public FileAttributes Attributes { get; set; }
+		public FileAttributes Attributes
+		{
+			get { return this.attributes; }
+			set
+			{
+				if (this.attributes == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("Attributes");
+				this.attributes = value;
+				this.OnPropertyChanged("Attributes");
+			}
+		}
+
 
 		/// <summary>
 		/// Gets and sets created date
 		/// </summary>
-		public DateTime CreatedDate { get; set; }
+		public DateTime CreatedDate
+		{
+			get { return this.createdDate; }
+			set
+			{
+				if (this.createdDate == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("CreatedDate");
+				this.createdDate = value;
+				this.OnPropertyChanged("CreatedDate");
+			}
+		}
 
 		/// <summary>
 		/// Gets if this node has an associated CreatedDate
@@ -101,7 +172,21 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets modified date
 		/// </summary>
-		public DateTime ModifiedDate { get; set; }
+		public DateTime ModifiedDate
+		{
+			get { return this.modifiedDate; }
+			set
+			{
+				if (this.modifiedDate == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("ModifiedDate");
+				this.modifiedDate = value;
+				this.OnPropertyChanged("ModifiedDate");
+			}
+		}
 
 		/// <summary>
 		/// Gets if this node has an associated ModifiedDate
@@ -114,7 +199,21 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets the hash signature of the file
 		/// </summary>
-		public string Signature { get; set; }
+		public string Signature
+		{
+			get { return this.signature; }
+			set
+			{
+				if (this.signature == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("Signature");
+				this.signature = value;
+				this.OnPropertyChanged("Signature");
+			}
+		}
 
 		/// <summary>
 		/// Gets if this node has an associated hash signature
@@ -133,6 +232,34 @@ namespace Shadow.Model
 		}
 
 		#endregion Properties
+
+		#region INotifyPropertyChanging Members
+
+		public event PropertyChangingEventHandler PropertyChanging;
+
+		protected virtual void OnPropertyChanging(string propertyName)
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
+			}
+		}
+	
+		#endregion INotifyPropertyChanging Members
+
+		#region INotifyPropertyChanged Members
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected virtual void OnPropertyChanged(string propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		#endregion INotifyPropertyChanged Members
 
 		#region Object Overrides
 
