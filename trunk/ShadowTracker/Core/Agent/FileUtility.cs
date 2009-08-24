@@ -267,6 +267,25 @@ namespace Shadow.Agent
 			return fullPath.Substring(rootPath.Length).Replace(Path.DirectorySeparatorChar, '/');
 		}
 
+		/// <summary>
+		/// Replaces the root with another
+		/// </summary>
+		/// <param name="rootPath"></param>
+		/// <param name="fullPath"></param>
+		/// <param name="newRoot"></param>
+		/// <returns></returns>
+		public static string ReplaceRoot(string rootPath, string fullPath, string newRoot)
+		{
+			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+			newRoot = newRoot.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+			if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
+			{
+				throw new InvalidOperationException("Unexpected path format.");
+			}
+
+			return Path.Combine(newRoot, fullPath.Substring(rootPath.Length));
+		}
+
 		#endregion Utility Methods
 	}
 }
