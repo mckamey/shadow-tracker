@@ -36,7 +36,7 @@ namespace ShadowTrackerService
 			string fileFilter = ConfigurationManager.AppSettings["FileFilter"] ?? "";
 			var callback = FileUtility.CreateFileFilter(fileFilter.Split(',', '|'));
 
-			CatalogRepository catalog = new CatalogRepository(new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer));
+			CatalogRepository catalog = new CatalogRepository();
 			FileUtility.SyncCatalog(catalog, watchFolder, callback);
 
 			this.Tracker.Start(catalog, watchFolder, pathFilter);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -22,10 +23,37 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
+		/// <remarks>Defaults to in-memory backing storage</remarks>
+		public CatalogRepository()
+		{
+			this.Entries = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer);
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="entries">initial items</param>
+		public CatalogRepository(IEnumerable<CatalogEntry> entries)
+		{
+			this.Entries = new MemoryTable<CatalogEntry>(entries, CatalogEntry.PathComparer); ;
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
 		/// <param name="entries">the backing CatalogEntry storage</param>
 		public CatalogRepository(ITable<CatalogEntry> entries)
 		{
 			this.Entries = entries;
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="db">LINQ-to-SQL DataContext</param>
+		public CatalogRepository(DataContext db)
+		{
+			this.Entries = new TableAdapter<CatalogEntry>(db);
 		}
 
 		#endregion Init
@@ -138,25 +166,25 @@ namespace Shadow.Model
 			var query =
 				from entry in this.Entries
 				let rank =
-					(entry.Path == path ? MatchRank.Path : MatchRank.None) |
-					(entry.Signature == hash ? MatchRank.Hash : MatchRank.None)
-				where rank > MatchRank.None
+					(entry.Path == path ? (int)MatchRank.Path : (int)MatchRank.None) |
+					(entry.Signature == hash ? (int)MatchRank.Hash : (int)MatchRank.None)
+				where rank > (int)MatchRank.None
 				orderby rank descending
 				select new
 				{
-					Rank = rank,
+					Rank = (int)rank,
 					Entry = entry
 				};
 
 			var result = query.FirstOrDefault();
-			if (result == null || result.Entry == null || result.Rank == MatchRank.None)
+			if (result == null || result.Entry == null || result.Rank == (int)MatchRank.None)
 			{
 				match = null;
 				return MatchRank.None;
 			}
 
 			match = result.Entry;
-			return result.Rank;
+			return (MatchRank)result.Rank;
 		}
 
 		private CatalogEntry GetEntryAtPath(string path)

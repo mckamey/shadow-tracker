@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace Shadow.Model
 {
@@ -30,6 +31,6 @@ namespace Shadow.Model
 		/// Deletes a set of items
 		/// </summary>
 		/// <param name="match"></param>
-		void RemoveWhere(Predicate<T> match);
+		void RemoveWhere(Expression<Func<T, bool>> match);
 	}
 }

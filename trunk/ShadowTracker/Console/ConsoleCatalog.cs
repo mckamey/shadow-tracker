@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data.Linq;
 
 using Shadow.Model;
 
@@ -11,8 +13,35 @@ namespace Shadow.ConsoleTest
 		/// <summary>
 		/// Ctor
 		/// </summary>
+		/// <remarks>Defaults to in-memory backing storage</remarks>
+		public ConsoleCatalog()
+		{
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="entries">initial items</param>
+		public ConsoleCatalog(IEnumerable<CatalogEntry> entries)
+			: base(entries)
+		{
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
 		/// <param name="entries"></param>
-		public ConsoleCatalog(ITable<CatalogEntry> entries) : base(entries)
+		public ConsoleCatalog(ITable<CatalogEntry> entries)
+			: base(entries)
+		{
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="db">LINQ-to-SQL DataContext</param>
+		public ConsoleCatalog(DataContext db)
+			: base(db)
 		{
 		}
 

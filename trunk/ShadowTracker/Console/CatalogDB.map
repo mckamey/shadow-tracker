@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Database Name="CatalogDB" xmlns="http://schemas.microsoft.com/linqtosql/mapping/2007">
+	<Table Name="dbo.File" Member="Entries">
+		<Type Name="Shadow.Model.CatalogEntry">
+			<Column Name="FileID" Member="ID" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" AutoSync="OnInsert" />
+			<Column Name="Path" Member="Path" DbType="NChar(1024) NOT NULL" CanBeNull="false" />
+			<Column Name="Attribs" Member="Attributes" DbType="Int NOT NULL" />
+			<Column Name="Created" Member="CreatedDate" DbType="DateTime NOT NULL" />
+			<Column Name="Modified" Member="ModifiedDate" DbType="DateTime NOT NULL" />
+			<Column Name="Hash" Member="Signature" DbType="Char(40)" />
+		</Type>
+	</Table>
+</Database>
