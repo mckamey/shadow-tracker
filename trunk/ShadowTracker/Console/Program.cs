@@ -38,7 +38,7 @@ namespace Shadow.ConsoleTest
 
 		private static DataContext GetDataContext(string connection, string mappings)
 		{
-			if (connection != null)
+			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
 			{
 				connection = connection.Replace("|DataDirectory|", Environment.CurrentDirectory);
 			}
