@@ -28,6 +28,7 @@ namespace Shadow.Agent
 		private CatalogRepository catalog;
 		private readonly FileSystemWatcher Watcher = new FileSystemWatcher();
 		private readonly Dictionary<string, Timer> Timers = new Dictionary<string, Timer>(StringComparer.OrdinalIgnoreCase);
+		private Func<FileSystemInfo, bool> fileFilter;
 
 		#endregion Fields
 
@@ -95,6 +96,11 @@ namespace Shadow.Agent
 
 		private void OnFileCreated(object sender, FileSystemEventArgs e)
 		{
+			if (this.IsFiltered(e.FullPath))
+			{
+				return;
+			}
+
 			lock (this.Timers)
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
@@ -109,6 +115,11 @@ namespace Shadow.Agent
 
 		private void OnFileChanged(object sender, FileSystemEventArgs e)
 		{
+			if (this.IsFiltered(e.FullPath))
+			{
+				return;
+			}
+
 			lock (this.Timers)
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
@@ -123,11 +134,28 @@ namespace Shadow.Agent
 
 		private void OnFileDeleted(object sender, FileSystemEventArgs e)
 		{
+			if (this.IsFiltered(e.FullPath))
+			{
+				return;
+			}
+
 			this.ApplyChange(e);
 		}
 
 		private void OnFileRenamed(object sender, RenamedEventArgs e)
 		{
+			if (this.IsFiltered(e.OldFullPath))
+			{
+				this.OnFileCreated(sender, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath), Path.GetFileName(e.FullPath)));
+				return;
+			}
+
+			if (this.IsFiltered(e.FullPath))
+			{
+				this.OnFileDeleted(sender, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath), Path.GetFileName(e.OldFullPath)));
+				return;
+			}
+
 			lock (this.Timers)
 			{
 				if (this.Timers.ContainsKey(e.FullPath))
@@ -144,6 +172,11 @@ namespace Shadow.Agent
 		{
 			// TODO: log error
 			throw e.GetException();
+		}
+
+		private bool IsFiltered(string fullPath)
+		{
+			return this.fileFilter == null || !this.fileFilter(new FileInfo(fullPath));
 		}
 
 		private string NormalizePath(string path)
@@ -210,12 +243,25 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="catalog"></param>
 		/// <param name="watchFolder"></param>
+		/// <param name="pathFilter"></param>
+		public void Start(CatalogRepository catalog, string watchFolder, string pathFilter)
+		{
+			this.Start(catalog, watchFolder, pathFilter, null);
+		}
+
+		/// <summary>
+		/// Sends updates to a catalog
+		/// </summary>
+		/// <param name="catalog"></param>
+		/// <param name="watchFolder"></param>
 		/// <param name="watchFilter"></param>
-		public void Start(CatalogRepository catalog, string watchFolder, string watchFilter)
+		public void Start(CatalogRepository catalog, string watchFolder, string pathFilter, Func<FileSystemInfo, bool> fileFilter)
 		{
 			this.catalog = catalog;
+			this.fileFilter = fileFilter;
+
 			this.Watcher.Path = watchFolder;
-			this.Watcher.Filter = watchFilter;
+			this.Watcher.Filter = pathFilter;
 
 			this.Watcher.EnableRaisingEvents = true;
 		}
