@@ -111,7 +111,7 @@ namespace Shadow.Model
 			get { return this.path; }
 			set
 			{
-				if (this.path == value)
+				if (StringComparer.OrdinalIgnoreCase.Equals(this.path, value))
 				{
 					return;
 				}
@@ -150,13 +150,14 @@ namespace Shadow.Model
 			get { return this.createdDate; }
 			set
 			{
-				if (this.createdDate == value)
+				value = CatalogEntry.ScrubDate(value);
+				if (this.createdDate.Ticks == value.Ticks)
 				{
 					return;
 				}
 
 				this.OnPropertyChanging("CreatedDate");
-				this.createdDate = CatalogEntry.ScrubDate(value);
+				this.createdDate = value;
 				this.OnPropertyChanged("CreatedDate");
 			}
 		}
@@ -177,13 +178,14 @@ namespace Shadow.Model
 			get { return this.modifiedDate; }
 			set
 			{
-				if (this.modifiedDate == value)
+				value = CatalogEntry.ScrubDate(value);
+				if (this.modifiedDate.Ticks == value.Ticks)
 				{
 					return;
 				}
 
 				this.OnPropertyChanging("ModifiedDate");
-				this.modifiedDate = CatalogEntry.ScrubDate(value);
+				this.modifiedDate = value;
 				this.OnPropertyChanged("ModifiedDate");
 			}
 		}
@@ -204,7 +206,7 @@ namespace Shadow.Model
 			get { return this.signature; }
 			set
 			{
-				if (this.signature == value)
+				if (StringComparer.OrdinalIgnoreCase.Equals(this.signature, value))
 				{
 					return;
 				}
@@ -245,7 +247,7 @@ namespace Shadow.Model
 		/// </remarks>
 		private static DateTime ScrubDate(DateTime value)
 		{
-			if (value.Kind != DateTimeKind.Utc)
+			if (value.Kind == DateTimeKind.Local)
 			{
 				value = value.ToUniversalTime();
 			}
@@ -291,10 +293,10 @@ namespace Shadow.Model
 			var that = obj as CatalogEntry;
 
 			return (that != null) &&
-				EqualityComparer<String>.Default.Equals(this.Path, that.Path) &&
+				StringComparer.OrdinalIgnoreCase.Equals(this.Path, that.Path) &&
 				EqualityComparer<FileAttributes>.Default.Equals(this.Attributes, that.Attributes) &&
-				EqualityComparer<DateTime>.Default.Equals(this.CreatedDate, that.CreatedDate) &&
-				EqualityComparer<DateTime>.Default.Equals(this.ModifiedDate, that.ModifiedDate) &&
+				(this.CreatedDate.Ticks == that.CreatedDate.Ticks) &&
+				(this.ModifiedDate.Ticks == that.ModifiedDate.Ticks) &&
 				StringComparer.OrdinalIgnoreCase.Equals(this.Signature, that.Signature);
 		}
 
@@ -302,7 +304,7 @@ namespace Shadow.Model
 		public override int GetHashCode()
 		{
 			int hashcode = 0x23f797e3;
-			hashcode = (-1521134295 * hashcode) + EqualityComparer<String>.Default.GetHashCode(this.Path);
+			hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(this.Path);
 			hashcode = (-1521134295 * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(this.Attributes);
 			hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(this.CreatedDate);
 			hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(this.ModifiedDate);
