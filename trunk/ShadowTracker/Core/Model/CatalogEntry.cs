@@ -156,7 +156,7 @@ namespace Shadow.Model
 				}
 
 				this.OnPropertyChanging("CreatedDate");
-				this.createdDate = value;
+				this.createdDate = CatalogEntry.ScrubDate(value);
 				this.OnPropertyChanged("CreatedDate");
 			}
 		}
@@ -183,7 +183,7 @@ namespace Shadow.Model
 				}
 
 				this.OnPropertyChanging("ModifiedDate");
-				this.modifiedDate = value;
+				this.modifiedDate = CatalogEntry.ScrubDate(value);
 				this.OnPropertyChanged("ModifiedDate");
 			}
 		}
@@ -232,6 +232,28 @@ namespace Shadow.Model
 		}
 
 		#endregion Properties
+
+		#region Utility Methods
+
+		/// <summary>
+		/// Cleanses dates for round-trip storage equality.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		/// <remarks>
+		/// Converts to UTC and only stores accurately to the second.
+		/// </remarks>
+		private static DateTime ScrubDate(DateTime value)
+		{
+			if (value.Kind != DateTimeKind.Utc)
+			{
+				value = value.ToUniversalTime();
+			}
+
+			return new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, DateTimeKind.Utc);
+		}
+
+		#endregion Utility Methods
 
 		#region INotifyPropertyChanging Members
 

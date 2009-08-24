@@ -165,9 +165,10 @@ namespace Shadow.Model
 		{
 			var query =
 				from entry in this.Entries
+				where entry.Path == path || entry.Signature == hash
 				let rank =
-					(entry.Path == path ? (int)MatchRank.Path : (int)MatchRank.None) |
-					(entry.Signature == hash ? (int)MatchRank.Hash : (int)MatchRank.None)
+					(int)(entry.Path == path ? MatchRank.Path : MatchRank.None) |
+					(int)(entry.Signature == hash ? MatchRank.Hash : MatchRank.None)
 				where rank > (int)MatchRank.None
 				orderby rank descending
 				select new
