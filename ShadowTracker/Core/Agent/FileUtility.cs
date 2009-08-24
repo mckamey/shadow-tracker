@@ -133,11 +133,14 @@ namespace Shadow.Agent
 			{
 				Path = FileUtility.NormalizePath(rootPath, file.FullName),
 				Attributes = (file.Attributes&FileUtility.AttribMask),
-				CreatedDate = file.CreationTime,
-				ModifiedDate = file.LastWriteTime,
+				CreatedDate = file.CreationTimeUtc,
+				ModifiedDate = file.LastWriteTimeUtc,
 				Signature = (file is FileInfo) ?
 					FileHash.ComputeHash((FileInfo)file) :
-					null
+					null,
+				Length = (file is FileInfo) ?
+					((FileInfo)file).Length :
+					0L
 			};
 		}
 

@@ -96,6 +96,7 @@ namespace Shadow.Model
 				return
 					StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path) &&
 					EqualityComparer<FileAttributes>.Default.Equals(x.Attributes, y.Attributes) &&
+					EqualityComparer<Int64>.Default.Equals(x.Length, y.Length) &&
 					(x.CreatedDate.Ticks == y.CreatedDate.Ticks) &&
 					(x.ModifiedDate.Ticks == y.ModifiedDate.Ticks) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature);
@@ -111,6 +112,7 @@ namespace Shadow.Model
 				int hashcode = 0x23f797e3;
 				hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
 				hashcode = (-1521134295 * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(obj.Attributes);
+				hashcode = (-1521134295 * hashcode) + EqualityComparer<Int64>.Default.GetHashCode(obj.Length);
 				hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.CreatedDate);
 				hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.ModifiedDate);
 				return ((-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature));
@@ -125,6 +127,7 @@ namespace Shadow.Model
 
 		private long id;
 		private string path;
+		private long length;
 		private FileAttributes attributes;
 		private DateTime createdDate;
 		private DateTime modifiedDate;
@@ -147,9 +150,9 @@ namespace Shadow.Model
 					return;
 				}
 
-				//this.OnPropertyChanging("ID");
+				this.OnPropertyChanging("ID");
 				this.id = value;
-				//this.OnPropertyChanged("ID");
+				this.OnPropertyChanged("ID");
 			}
 		}
 
@@ -173,6 +176,25 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
+		/// Gets and sets file size in bytes
+		/// </summary>
+		public long Length
+		{
+			get { return this.length; }
+			set
+			{
+				if (this.length == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("Length");
+				this.length = value;
+				this.OnPropertyChanged("Length");
+			}
+		}
+
+		/// <summary>
 		/// Gets and sets file attributes
 		/// </summary>
 		public FileAttributes Attributes
@@ -190,7 +212,6 @@ namespace Shadow.Model
 				this.OnPropertyChanged("Attributes");
 			}
 		}
-
 
 		/// <summary>
 		/// Gets and sets created date
