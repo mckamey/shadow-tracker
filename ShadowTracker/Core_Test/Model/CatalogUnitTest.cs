@@ -76,7 +76,7 @@ namespace Shadow.Model_Test
 			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Foo.txt"));
 			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Bar.txt"));
 
-			this.catalog.FastMoveByPath("Foo.txt", "Bar.txt");
+			this.catalog.RenameEntry("Foo.txt", "Bar.txt");
 
 			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Foo.txt"));
 			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Bar.txt"));

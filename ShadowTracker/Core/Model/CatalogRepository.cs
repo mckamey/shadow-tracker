@@ -121,9 +121,9 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="oldPath"></param>
 		/// <param name="newPath"></param>
-		public virtual void FastMoveByPath(string oldPath, string newPath)
+		public virtual void RenameEntry(string oldPath, string newPath)
 		{
-			CatalogEntry entry = this.GetEntryAtPath(oldPath);
+			CatalogEntry entry = this.Entries.FirstOrDefault(n => n.Path == oldPath);
 			if (entry == null)
 			{
 				// TODO: log error
@@ -131,7 +131,9 @@ namespace Shadow.Model
 			}
 
 			entry.Path = newPath;
-			this.Entries.Update(entry);
+
+			// don't need to reattach
+			//this.Entries.Update(entry);
 			this.SubmitChanges();
 		}
 
@@ -206,11 +208,6 @@ namespace Shadow.Model
 
 			match = result.Entry;
 			return (MatchRank)result.Rank;
-		}
-
-		private CatalogEntry GetEntryAtPath(string path)
-		{
-			return this.Entries.FirstOrDefault(n => n.Path == path);
 		}
 
 		protected DeltaAction CalcEntryDelta(CatalogEntry entry, out CatalogEntry match)
