@@ -211,7 +211,7 @@ namespace Shadow.Agent
 
 					try
 					{
-						this.catalog.FastMoveByPath(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+						this.catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
 					}
 					catch (ArgumentException ex)
 					{

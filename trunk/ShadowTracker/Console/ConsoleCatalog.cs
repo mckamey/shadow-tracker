@@ -70,11 +70,11 @@ namespace Shadow.ConsoleTest
 			base.DeleteEntryByPath(path);
 		}
 
-		public override void FastMoveByPath(string oldPath, string newPath)
+		public override void RenameEntry(string oldPath, string newPath)
 		{
-			Console.WriteLine("FAST MOVE: \"{0}\" to \"{1}\"", oldPath, newPath);
+			Console.WriteLine("RENAME: \"{0}\" to \"{1}\"", oldPath, newPath);
 
-			base.FastMoveByPath(oldPath, newPath);
+			base.RenameEntry(oldPath, newPath);
 		}
 
 		public override void UpdateData(CatalogEntry entry)
