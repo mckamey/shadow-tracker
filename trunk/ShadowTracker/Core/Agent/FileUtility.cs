@@ -227,7 +227,8 @@ namespace Shadow.Agent
 		{
 			return delegate(FileSystemInfo node)
 			{
-				if (node is DirectoryInfo)
+				if (node is DirectoryInfo ||
+					!node.Exists && String.IsNullOrEmpty(node.Extension))
 				{
 					return true;
 				}

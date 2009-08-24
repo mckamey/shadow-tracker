@@ -176,7 +176,23 @@ namespace Shadow.Agent
 
 		private bool IsFiltered(string fullPath)
 		{
-			return this.fileFilter != null && !this.fileFilter(new FileInfo(fullPath));
+			if (this.fileFilter == null)
+			{
+				return false;
+			}
+
+			FileSystemInfo info;
+			if (Directory.Exists(fullPath))
+			{
+				// is a directory
+				info = new DirectoryInfo(fullPath);
+			}
+			else
+			{
+				info = new FileInfo(fullPath);
+			}
+
+			return !this.fileFilter(info);
 		}
 
 		private string NormalizePath(string path)
