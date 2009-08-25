@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Database Name="CatalogDB" xmlns="http://schemas.microsoft.com/linqtosql/mapping/2007">
+<Database Name="ShadowDB" xmlns="http://schemas.microsoft.com/linqtosql/mapping/2007">
 	<Table Name="dbo.File" Member="Entries">
 		<Type Name="Shadow.Model.CatalogEntry">
 			<Column Name="FileID" Member="ID" Storage="id" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" AutoSync="OnInsert" UpdateCheck="Never" />
