@@ -385,6 +385,8 @@ namespace Shadow.Model
 
 		public void Sync(CatalogRepository that)
 		{
+			// TODO: reconcile this with trickle-updates
+
 			// apply any deltas since last sync
 			foreach (CatalogEntry entry in that.Entries)
 			{

@@ -1,4 +1,4 @@
-﻿namespace ShadowTrackerService
+﻿namespace Shadow.Service
 {
 	partial class ShadowTrackerService
 	{
