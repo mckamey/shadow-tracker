@@ -7,8 +7,8 @@
     <ProjectGuid>{5D5AD2EC-7B60-43EE-96BE-3D189DA2338F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Core_Test</RootNamespace>
-    <AssemblyName>Core_Test</AssemblyName>
+    <RootNamespace>ShadowTracker.Test</RootNamespace>
+    <AssemblyName>ShadowTracker.Core.Test</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -41,8 +41,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Model\CatalogUnitTest.cs" />
+    <Compile Include="Model\CatalogRepositoryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Shadow Include="Test References\ShadowTracker.Core.accessor" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\ShadowTracker.csproj">
