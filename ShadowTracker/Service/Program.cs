@@ -25,7 +25,7 @@ namespace Shadow.Service
 				}
 				try
 				{
-					service.Log = File.AppendText("ShadowTrackerService_Log.txt");
+					service.Out = File.AppendText("ShadowTrackerService_Log.txt");
 				}
 				catch (Exception ex)
 				{
@@ -36,15 +36,16 @@ namespace Shadow.Service
 			}
 			else
 			{
-				service.Log = Console.Out;
+				service.In = Console.In;
+				service.Out = Console.Out;
 				service.Error = Console.Error;
 
 				// TODO: handle command line args
 
 				service.Begin(args);
 
-				Console.WriteLine("Press ENTER to exit.");
-				Console.ReadLine();
+				Console.WriteLine("Press any key to exit.");
+				Console.ReadKey(true);
 
 				service.End();
 			}
