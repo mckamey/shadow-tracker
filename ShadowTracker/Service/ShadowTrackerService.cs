@@ -67,7 +67,6 @@ namespace Shadow.Service
 			try
 			{
 				string watchFolder = ConfigurationManager.AppSettings["WatchFolder"];
-				string pathFilter = ConfigurationManager.AppSettings["PathFilter"];
 				string fileFilter = ConfigurationManager.AppSettings["FileFilter"] ?? "";
 				var callback = FileUtility.CreateFileFilter(fileFilter.Split(',', '|'));
 
@@ -76,6 +75,7 @@ namespace Shadow.Service
 
 				this.Out.WriteLine("ShadowTracker");
 				this.Out.WriteLine(watchFolder);
+				this.Out.WriteLine(fileFilter);
 				this.Out.WriteLine("__________________________");
 
 				this.Out.WriteLine();
@@ -112,7 +112,7 @@ namespace Shadow.Service
 				this.Out.WriteLine();
 				this.Out.WriteLine("Tracking started...");
 				this.Out.WriteLine("__________________________");
-				this.Tracker.Start(catalog, watchFolder, pathFilter, callback);
+				this.Tracker.Start(catalog, watchFolder, callback);
 			}
 			catch (Exception ex)
 			{

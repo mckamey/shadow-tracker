@@ -284,10 +284,9 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="catalog"></param>
 		/// <param name="watchFolder"></param>
-		/// <param name="pathFilter"></param>
-		public void Start(CatalogRepository catalog, string watchFolder, string pathFilter)
+		public void Start(CatalogRepository catalog, string watchFolder)
 		{
-			this.Start(catalog, watchFolder, pathFilter, null);
+			this.Start(catalog, watchFolder, null);
 		}
 
 		/// <summary>
@@ -295,14 +294,13 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="catalog"></param>
 		/// <param name="watchFolder"></param>
-		/// <param name="watchFilter"></param>
-		public void Start(CatalogRepository catalog, string watchFolder, string pathFilter, Func<FileSystemInfo, bool> fileFilter)
+		/// <param name="fileFilter"></param>
+		public void Start(CatalogRepository catalog, string watchFolder, Func<FileSystemInfo, bool> fileFilter)
 		{
 			this.catalog = catalog;
 			this.fileFilter = fileFilter;
 
 			this.Watcher.Path = watchFolder;
-			this.Watcher.Filter = pathFilter;
 
 			this.Watcher.EnableRaisingEvents = true;
 		}
