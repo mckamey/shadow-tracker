@@ -91,9 +91,9 @@ namespace Shadow.Service
 				this.Out.WriteLine();
 				this.Out.WriteLine("Beginning trickle update...");
 				this.Out.WriteLine("__________________________");
-#if DEBUG
+
 				var watch = System.Diagnostics.Stopwatch.StartNew();
-#endif
+
 				FileUtility.SyncCatalog(
 					catalog,
 					watchFolder,
@@ -101,12 +101,10 @@ namespace Shadow.Service
 					FileUtility.DefaultTrickleRate,
 					delegate(CatalogRepository c)
 					{
-#if DEBUG
 						watch.Stop();
 						this.Out.WriteLine();
 						this.Out.WriteLine("Elapsed trickle update: "+watch.Elapsed);
 						this.Out.WriteLine("__________________________");
-#endif
 					});
 
 				this.Out.WriteLine();
