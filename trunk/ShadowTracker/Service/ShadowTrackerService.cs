@@ -25,7 +25,8 @@ namespace Shadow.Service
 		/// </summary>
 		public ShadowTrackerService()
 		{
-			this.Log = this.Error = TextWriter.Null;
+			this.In = TextReader.Null;
+			this.Out = this.Error = TextWriter.Null;
 
 			this.InitializeComponent();
 		}
@@ -34,7 +35,13 @@ namespace Shadow.Service
 
 		#region Properties
 
-		public TextWriter Log
+		public TextReader In
+		{
+			get;
+			set;
+		}
+
+		public TextWriter Out
 		{
 			get;
 			set;
@@ -67,23 +74,23 @@ namespace Shadow.Service
 				string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
 				string mappings = ConfigurationManager.AppSettings["SqlMapping"];
 
-				this.Log.WriteLine("ShadowTracker");
-				this.Log.WriteLine(watchFolder);
-				this.Log.WriteLine("__________________________");
+				this.Out.WriteLine("ShadowTracker");
+				this.Out.WriteLine(watchFolder);
+				this.Out.WriteLine("__________________________");
 
-				this.Log.WriteLine();
-				this.Log.WriteLine("Connecting to database...");
-				this.Log.WriteLine("__________________________");
+				this.Out.WriteLine();
+				this.Out.WriteLine("Connecting to database...");
+				this.Out.WriteLine("__________________________");
 
 				DataContext db = this.GetDataContext(connection, mappings);
 				AnnotatedCatalog catalog = new AnnotatedCatalog(db);
 
-				catalog.Log = this.Log;
+				catalog.Log = this.Out;
 				catalog.Error = this.Error;
 
-				this.Log.WriteLine();
-				this.Log.WriteLine("Beginning trickle update...");
-				this.Log.WriteLine("__________________________");
+				this.Out.WriteLine();
+				this.Out.WriteLine("Beginning trickle update...");
+				this.Out.WriteLine("__________________________");
 #if DEBUG
 				var watch = System.Diagnostics.Stopwatch.StartNew();
 #endif
@@ -96,15 +103,15 @@ namespace Shadow.Service
 					{
 #if DEBUG
 						watch.Stop();
-						this.Log.WriteLine();
-						this.Log.WriteLine("Elapsed trickle update: "+watch.Elapsed);
-						this.Log.WriteLine("__________________________");
+						this.Out.WriteLine();
+						this.Out.WriteLine("Elapsed trickle update: "+watch.Elapsed);
+						this.Out.WriteLine("__________________________");
 #endif
 					});
 
-				this.Log.WriteLine();
-				this.Log.WriteLine("Tracking started...");
-				this.Log.WriteLine("__________________________");
+				this.Out.WriteLine();
+				this.Out.WriteLine("Tracking started...");
+				this.Out.WriteLine("__________________________");
 				this.Tracker.Start(catalog, watchFolder, pathFilter, callback);
 			}
 			catch (Exception ex)
@@ -126,8 +133,8 @@ namespace Shadow.Service
 		{
 			this.Tracker.Stop();
 
-			this.Log.WriteLine();
-			this.Log.WriteLine("Tracking stopped.");
+			this.Out.WriteLine();
+			this.Out.WriteLine("Tracking stopped.");
 		}
 
 		#endregion Service Events
@@ -146,10 +153,14 @@ namespace Shadow.Service
 
 			if (!db.DatabaseExists())
 			{
-				this.Log.Write("Specified database does not exist. Want to create it? (y/n): ");
+				string answer = "n";
 
-				// TODO: reconcile this with being a service
-				string answer = Console.ReadLine();
+				if (this.In != TextReader.Null)
+				{
+					this.Out.Write("Specified database does not exist. Want to create it? (y/n): ");
+					answer = this.In.ReadLine();
+				}
+
 				if (!StringComparer.OrdinalIgnoreCase.Equals(answer, "y"))
 				{
 					throw new Exception("Database specified in connection string does not exist.");
