@@ -243,7 +243,7 @@ namespace Shadow.Agent
 					return true;
 				}
 
-				return trackedExtensions.Contains(node.Extension);
+				return trackedExtensions.Contains(node.Extension, StringComparer.OrdinalIgnoreCase);
 			};
 		}
 
