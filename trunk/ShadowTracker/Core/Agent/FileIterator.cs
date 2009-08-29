@@ -16,12 +16,12 @@ namespace Shadow.Agent
 				yield break;
 			}
 
-			Stack<DirectoryInfo> stack = new Stack<DirectoryInfo>(100);
-			stack.Push(dir);
+			Queue<DirectoryInfo> queue = new Queue<DirectoryInfo>(100);
+			queue.Enqueue(dir);
 
-			while (stack.Count > 0)
+			while (queue.Count > 0)
 			{
-				dir = stack.Pop();
+				dir = queue.Dequeue();
 
 				FileSystemInfo[] files = dir.GetFileSystemInfos();
 				if (listEmptyDirs && files.Length == 0)
@@ -34,7 +34,7 @@ namespace Shadow.Agent
 				{
 					if (info is DirectoryInfo)
 					{
-						stack.Push((DirectoryInfo)info);
+						queue.Enqueue((DirectoryInfo)info);
 						continue;
 					}
 
