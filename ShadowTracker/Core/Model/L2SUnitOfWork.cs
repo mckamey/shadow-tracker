@@ -12,6 +12,7 @@ namespace Shadow.Model
 		#region Fields
 
 		private readonly DataContext DB;
+		private ITable<CatalogEntry> entries;
 
 		#endregion Fields
 
@@ -52,7 +53,11 @@ namespace Shadow.Model
 		{
 			get
 			{
-				return new L2STable<CatalogEntry>(this.DB);
+				if (this.entries == null)
+				{
+					this.entries = new L2STable<CatalogEntry>(this.DB);
+				}
+				return this.entries;
 			}
 		}
 
