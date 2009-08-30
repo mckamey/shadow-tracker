@@ -163,8 +163,8 @@ namespace Shadow.Agent
 						}
 
 						// sync next node
-						string path = enumerator.Current;
-						if (!File.Exists(Path.Combine(rootPath, path)))
+						string path = Path.Combine(rootPath, enumerator.Current);
+						if (!File.Exists(path) && !Directory.Exists(path))
 						{
 							catalog.DeleteEntryByPath(path);
 						}
