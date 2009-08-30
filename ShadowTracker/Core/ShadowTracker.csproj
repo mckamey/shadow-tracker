@@ -36,6 +36,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Data.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -47,6 +48,9 @@
     <Compile Include="Agent\FileUtility.cs" />
     <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\CatalogRepository.cs" />
+    <Compile Include="Model\IUnitOfWork.cs" />
+    <Compile Include="Model\DBUnitOfWork.cs" />
+    <Compile Include="Model\MemoryUnitOfWork.cs" />
     <Compile Include="Model\TableAdapter`1.cs" />
     <Compile Include="Model\DeltaAction.cs" />
     <Compile Include="Model\ITable`1.cs" />

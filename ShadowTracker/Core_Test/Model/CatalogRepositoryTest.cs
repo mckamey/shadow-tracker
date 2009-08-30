@@ -4,8 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Shadow.Model;
-
 namespace Shadow.Model.Test
 {
 	[TestClass()]
@@ -58,7 +56,7 @@ namespace Shadow.Model.Test
 				}
 			};
 
-			this.catalog = new CatalogRepository(entries);
+			this.catalog = new CatalogRepository(new MemoryUnitOfWork(entries));
 		}
 
 		[TestMethod()]
@@ -67,18 +65,18 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository_Accessor target = new CatalogRepository_Accessor(); // TODO: Initialize to an appropriate value
-			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			CatalogEntry meta = null; // TODO: Initialize to an appropriate value
-			CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
-			CatalogEntry data = null; // TODO: Initialize to an appropriate value
-			CatalogEntry dataExpected = null; // TODO: Initialize to an appropriate value
-			DeltaAction expected = new DeltaAction(); // TODO: Initialize to an appropriate value
-			DeltaAction actual;
-			actual = target.CalcEntryDelta(entry, out meta, out data);
-			Assert.AreEqual(metaExpected, meta);
-			Assert.AreEqual(dataExpected, data);
-			Assert.AreEqual(expected, actual);
+			//CatalogRepository_Accessor target = this.catalog;
+			//CatalogEntry entry = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry meta = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry data = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry dataExpected = null; // TODO: Initialize to an appropriate value
+			//DeltaAction expected = new DeltaAction(); // TODO: Initialize to an appropriate value
+			//DeltaAction actual;
+			//actual = target.CalcEntryDelta(entry, out meta, out data);
+			//Assert.AreEqual(metaExpected, meta);
+			//Assert.AreEqual(dataExpected, data);
+			//Assert.AreEqual(expected, actual);
 		}
 
 		[TestMethod()]
@@ -86,10 +84,10 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
-			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			CatalogEntry data = null; // TODO: Initialize to an appropriate value
-			target.CloneEntry(entry, data);
+			//CatalogRepository target = this.catalog;
+			//CatalogEntry entry = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry data = null; // TODO: Initialize to an appropriate value
+			//target.CloneEntry(entry, data);
 		}
 
 		[TestMethod]
@@ -107,7 +105,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
+			CatalogRepository target = this.catalog;
 			Expression<Func<CatalogEntry, bool>> predicate = null; // TODO: Initialize to an appropriate value
 			bool expected = false; // TODO: Initialize to an appropriate value
 			bool actual;
@@ -120,7 +118,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
+			CatalogRepository target = this.catalog;
 			IQueryable<string> expected = null; // TODO: Initialize to an appropriate value
 			IQueryable<string> actual;
 			actual = target.GetExistingPaths();
@@ -144,7 +142,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
+			CatalogRepository target = this.catalog;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			CatalogEntry original = null; // TODO: Initialize to an appropriate value
 			target.UpdateMeta(entry, original);
@@ -155,7 +153,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
+			CatalogRepository target = this.catalog;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			CatalogEntry original = null; // TODO: Initialize to an appropriate value
 			CatalogEntry data = null; // TODO: Initialize to an appropriate value
@@ -167,7 +165,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
+			CatalogRepository target = this.catalog;
 			CatalogRepository that = null; // TODO: Initialize to an appropriate value
 			target.Sync(that);
 		}
@@ -178,18 +176,18 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository_Accessor target = new CatalogRepository_Accessor(); // TODO: Initialize to an appropriate value
-			CatalogEntry target1 = null; // TODO: Initialize to an appropriate value
-			CatalogEntry meta = null; // TODO: Initialize to an appropriate value
-			CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
-			CatalogEntry data = null; // TODO: Initialize to an appropriate value
-			CatalogEntry dataExpected = null; // TODO: Initialize to an appropriate value
-			CatalogRepository_Accessor.MatchRank expected = null; // TODO: Initialize to an appropriate value
-			CatalogRepository_Accessor.MatchRank actual;
-			actual = target.FindMatch(target1, out meta, out data);
-			Assert.AreEqual(metaExpected, meta);
-			Assert.AreEqual(dataExpected, data);
-			Assert.AreEqual(expected, actual);
+			//CatalogRepository_Accessor target = this.catalog;
+			//CatalogEntry target1 = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry meta = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry data = null; // TODO: Initialize to an appropriate value
+			//CatalogEntry dataExpected = null; // TODO: Initialize to an appropriate value
+			//CatalogRepository_Accessor.MatchRank expected = null; // TODO: Initialize to an appropriate value
+			//CatalogRepository_Accessor.MatchRank actual;
+			//actual = target.FindMatch(target1, out meta, out data);
+			//Assert.AreEqual(metaExpected, meta);
+			//Assert.AreEqual(dataExpected, data);
+			//Assert.AreEqual(expected, actual);
 		}
 
 		[TestMethod()]
@@ -197,7 +195,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
+			CatalogRepository target = this.catalog;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			target.ApplyChanges(entry);
 		}
@@ -207,7 +205,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = new CatalogRepository(); // TODO: Initialize to an appropriate value
+			CatalogRepository target = this.catalog;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			target.AddEntry(entry);
 		}

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Linq;
 using System.IO;
 
 using Shadow.Model;
@@ -14,42 +12,14 @@ namespace Shadow.Service
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <remarks>Defaults to in-memory backing storage</remarks>
-		public AnnotatedCatalog()
-		{
-			this.Log = this.Error = TextWriter.Null;
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="entries">initial items</param>
-		public AnnotatedCatalog(IEnumerable<CatalogEntry> entries)
-			: base(entries)
-		{
-			this.Log = this.Error = TextWriter.Null;
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="entries"></param>
-		public AnnotatedCatalog(ITable<CatalogEntry> entries)
-			: base(entries)
-		{
-			this.Log = this.Error = TextWriter.Null;
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="db">LINQ-to-SQL DataContext</param>
-		public AnnotatedCatalog(DataContext db)
+		/// <param name="db"></param>
+		public AnnotatedCatalog(IUnitOfWork db)
 			: base(db)
 		{
 #if DEBUG
-			//this.SetUnitOfWorkLog(Console.Error);
+			//db.SetDiagnosticsLog(Console.Error);
 #endif
+			// initialize these
 			this.Log = this.Error = TextWriter.Null;
 		}
 

@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Linq;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -15,9 +14,7 @@ namespace Shadow.Model
 		#region Fields
 
 		private readonly ITable<CatalogEntry> Entries;
-
-		// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
-		private readonly DataContext UnitOfWork;
+		private readonly IUnitOfWork UnitOfWork;
 
 		#endregion Fields
 
@@ -26,39 +23,10 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <remarks>Defaults to in-memory backing storage</remarks>
-		public CatalogRepository()
+		public CatalogRepository(IUnitOfWork db)
 		{
-			this.Entries = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer);
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="entries">initial items</param>
-		public CatalogRepository(IEnumerable<CatalogEntry> entries)
-		{
-			this.Entries = new MemoryTable<CatalogEntry>(entries, CatalogEntry.PathComparer); ;
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="entries">the backing CatalogEntry storage</param>
-		public CatalogRepository(ITable<CatalogEntry> entries)
-		{
-			this.Entries = entries;
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="db">LINQ-to-SQL DataContext</param>
-		public CatalogRepository(DataContext db)
-		{
-			// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
 			this.UnitOfWork = db;
-			this.Entries = new TableAdapter<CatalogEntry>(db);
+			this.Entries = db.GetEntries();
 		}
 
 		#endregion Init
@@ -93,6 +61,7 @@ namespace Shadow.Model
 		{
 			if (!this.Exists(n => n.Path.ToLower() == path.ToLower()))
 			{
+				// if has children then shouldn't be listed itself
 				if (!path.EndsWith("/"))
 				{
 					path += "/";
@@ -173,10 +142,9 @@ namespace Shadow.Model
 
 		private void SubmitChanges()
 		{
-			// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
 			if (this.UnitOfWork != null)
 			{
-				this.UnitOfWork.SubmitChanges(ConflictMode.ContinueOnConflict);
+				this.UnitOfWork.SubmitChanges();
 			}
 		}
 
@@ -194,15 +162,25 @@ namespace Shadow.Model
 			return this.Entries.Any(predicate);
 		}
 
+		public IQueryable<string> GetChildPaths(string parent)
+		{
+			if (String.IsNullOrEmpty(parent))
+			{
+				return this.GetExistingPaths();
+			}
+
+			parent = parent.ToLowerInvariant();
+			if (!parent.EndsWith("/"))
+			{
+				parent += "/";
+			}
+
+			return this.Entries.Where(n => n.Path.ToLower().StartsWith(parent)).Select(n => n.Path);
+		}
+
 		public IQueryable<string> GetExistingPaths()
 		{
 			return this.Entries.Select(n => n.Path);
-		}
-
-		// TODO: abstract out UnitOfWork from LINQ-to-SQL implementation
-		protected void SetUnitOfWorkLog(System.IO.TextWriter writer)
-		{
-			this.UnitOfWork.Log = writer;
 		}
 
 		#endregion Query Methods
