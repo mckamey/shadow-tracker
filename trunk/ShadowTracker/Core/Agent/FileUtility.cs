@@ -162,9 +162,10 @@ namespace Shadow.Agent
 							return;
 						}
 
-						// sync next node
-						string path = Path.Combine(rootPath, enumerator.Current);
-						if (!File.Exists(path) && !Directory.Exists(path))
+						// extras are any local entries not contained on disk
+						string path = enumerator.Current;
+						string fullPath = Path.Combine(rootPath, path);
+						if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 						{
 							catalog.DeleteEntryByPath(path);
 						}
@@ -180,8 +181,9 @@ namespace Shadow.Agent
 			{
 				foreach (string path in catalog.GetExistingPaths())
 				{
-					// extras are any local entries not contained in other
-					if (File.Exists(Path.Combine(rootPath, path)))
+					// extras are any local entries not contained on disk
+					string fullPath = Path.Combine(rootPath, path);
+					if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 					{
 						catalog.DeleteEntryByPath(path);
 					}
