@@ -11,7 +11,7 @@ namespace Shadow.Model
 	/// A queryable table adapter for LINQ-to-SQL tables.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public class TableAdapter<T> :
+	public class L2STable<T> :
 		ITable<T> where T:class
 	{
 		#region Fields
@@ -27,7 +27,7 @@ namespace Shadow.Model
 		/// Ctor
 		/// </summary>
 		/// <param name="source">initial items</param>
-		public TableAdapter(DataContext db)
+		public L2STable(DataContext db)
 		{
 			this.Items = db.GetTable<T>();
 			this.Queryable = this.Items;

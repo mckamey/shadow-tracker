@@ -13,7 +13,6 @@ namespace Shadow.Model
 	{
 		#region Fields
 
-		private readonly ITable<CatalogEntry> Entries;
 		private readonly IUnitOfWork UnitOfWork;
 
 		#endregion Fields
@@ -23,10 +22,15 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		public CatalogRepository(IUnitOfWork db)
+		/// <param name="unitOfWork">unit of work</param>
+		public CatalogRepository(IUnitOfWork unitOfWork)
 		{
-			this.UnitOfWork = db;
-			this.Entries = db.GetEntries();
+			if (unitOfWork == null)
+			{
+				throw new ArgumentNullException("unitOfWork", "IUnitOfWork was null.");
+			}
+
+			this.UnitOfWork = unitOfWork;
 		}
 
 		#endregion Init
@@ -39,8 +43,12 @@ namespace Shadow.Model
 		/// <param name="entry"></param>
 		public virtual void AddEntry(CatalogEntry entry)
 		{
-			this.Entries.Add(entry);
-			this.SubmitChanges();
+			lock (this.UnitOfWork)
+			{
+				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+				entries.Add(entry);
+				this.UnitOfWork.Save();
+			}
 		}
 
 		/// <summary>
@@ -50,6 +58,7 @@ namespace Shadow.Model
 		/// <param name="match"></param>
 		public virtual void CloneEntry(CatalogEntry entry, CatalogEntry data)
 		{
+			// TODO: expose this differently
 			this.AddEntry(entry);
 		}
 
@@ -59,22 +68,27 @@ namespace Shadow.Model
 		/// <param name="path"></param>
 		public virtual void DeleteEntryByPath(string path)
 		{
-			if (!this.Exists(n => n.Path.ToLower() == path.ToLower()))
+			lock (this.UnitOfWork)
 			{
-				// if has children then shouldn't be listed itself
-				if (!path.EndsWith("/"))
+				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+
+				if (!this.Exists(n => n.Path.ToLower() == path.ToLower()))
 				{
-					path += "/";
+					// if has children then shouldn't be listed itself
+					if (!path.EndsWith("/"))
+					{
+						path += "/";
+					}
+
+					entries.RemoveWhere(n => n.Path.ToLower().StartsWith(path.ToLower()));
+				}
+				else
+				{
+					entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
 				}
 
-				this.Entries.RemoveWhere(n => n.Path.ToLower().StartsWith(path.ToLower()));
+				this.UnitOfWork.Save();
 			}
-			else
-			{
-				this.Entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
-			}
-
-			this.SubmitChanges();
 		}
 
 		/// <summary>
@@ -84,15 +98,20 @@ namespace Shadow.Model
 		/// <param name="newPath"></param>
 		public virtual void RenameEntry(string oldPath, string newPath)
 		{
-			CatalogEntry entry = this.Entries.FirstOrDefault(n => n.Path == oldPath);
-			if (entry == null)
+			lock (this.UnitOfWork)
 			{
-				// TODO: log error
-				throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
-			}
+				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 
-			entry.Path = newPath;
-			this.SubmitChanges();
+				CatalogEntry entry = entries.FirstOrDefault(n => n.Path == oldPath);
+				if (entry == null)
+				{
+					// TODO: log error
+					throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
+				}
+
+				entry.Path = newPath;
+				this.UnitOfWork.Save();
+			}
 		}
 
 		/// <summary>
@@ -102,25 +121,29 @@ namespace Shadow.Model
 		/// <param name="data">the original entry</param>
 		public virtual void UpdateMeta(CatalogEntry entry, CatalogEntry original)
 		{
-			if (original == null || original.ID < 1)
+			lock (this.UnitOfWork)
 			{
-				this.Entries.Update(entry);
-			}
-			else
-			{
-				// TODO: figure out better way to manage DataContext restrictions
-				original.Attributes = entry.Attributes;
-				original.CreatedDate = entry.CreatedDate;
-				//original.ID = entry.ID;
-				original.Length = entry.Length;
-				original.ModifiedDate = entry.ModifiedDate;
-				original.Path = entry.Path;
-				original.Signature = entry.Signature;
+				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+				if (original == null || original.ID < 1)
+				{
+					entries.Update(entry);
+				}
+				else
+				{
+					// TODO: figure out better way to manage DataContext restrictions
+					original.Attributes = entry.Attributes;
+					original.CreatedDate = entry.CreatedDate;
+					//original.ID = entry.ID;
+					original.Length = entry.Length;
+					original.ModifiedDate = entry.ModifiedDate;
+					original.Path = entry.Path;
+					original.Signature = entry.Signature;
 
-				//this.Entries.Update(original);
-			}
+					entries.Update(original);
+				}
 
-			this.SubmitChanges();
+				this.UnitOfWork.Save();
+			}
 		}
 
 		/// <summary>
@@ -140,14 +163,6 @@ namespace Shadow.Model
 			this.UpdateMeta(entry, original);
 		}
 
-		private void SubmitChanges()
-		{
-			if (this.UnitOfWork != null)
-			{
-				this.UnitOfWork.SubmitChanges();
-			}
-		}
-
 		#endregion Action Methods
 
 		#region Query Methods
@@ -159,7 +174,8 @@ namespace Shadow.Model
 		/// <returns></returns>
 		public bool Exists(Expression<Func<CatalogEntry, bool>> predicate)
 		{
-			return this.Entries.Any(predicate);
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+			return entries.Any(predicate);
 		}
 
 		public IQueryable<string> GetChildPaths(string parent)
@@ -175,12 +191,14 @@ namespace Shadow.Model
 				parent += "/";
 			}
 
-			return this.Entries.Where(n => n.Path.ToLower().StartsWith(parent)).Select(n => n.Path);
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+			return entries.Where(n => n.Path.ToLower().StartsWith(parent)).Select(n => n.Path);
 		}
 
 		public IQueryable<string> GetExistingPaths()
 		{
-			return this.Entries.Select(n => n.Path);
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+			return entries.Select(n => n.Path);
 		}
 
 		#endregion Query Methods
@@ -210,9 +228,10 @@ namespace Shadow.Model
 		{
 			string path = target.Path != null ? target.Path.ToLowerInvariant() : null;
 			string hash = target.Signature != null ? target.Signature.ToLowerInvariant() : null;
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 
 			var query =
-				(from entry in this.Entries
+				(from entry in entries
 				 let rank =
 					(int)(entry.Path.ToLower() == path ? MatchRank.Path : MatchRank.None) |
 					(int)((entry.Signature != null && entry.Signature.ToLower() == hash) ? MatchRank.Hash : MatchRank.None)
@@ -366,7 +385,7 @@ namespace Shadow.Model
 			// TODO: reconcile this with trickle-updates
 
 			// apply any deltas since last sync
-			foreach (CatalogEntry entry in that.Entries)
+			foreach (CatalogEntry entry in that.UnitOfWork.Entries)
 			{
 				this.ApplyChanges(entry);
 			}

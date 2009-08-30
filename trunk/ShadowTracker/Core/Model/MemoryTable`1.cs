@@ -16,7 +16,8 @@ namespace Shadow.Model
 	/// from remote persistent storage system such as a RDBMS.
 	/// </remarks>
 	public class MemoryTable<T> :
-		ITable<T> where T : class
+		ITable<T>
+		where T : class
 	{
 		#region Fields
 
@@ -30,30 +31,10 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		public MemoryTable()
-		{
-			this.Items = new HashSet<T>();
-			this.Queryable = this.Items.AsQueryable();
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="source">initial items</param>
-		public MemoryTable(IEnumerable<T> items)
-		{
-			this.Items = new HashSet<T>(items);
-			this.Queryable = this.Items.AsQueryable();
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="comparer">determines if two objects represent the same item</param>
+		/// <param name="comparer"></param>
 		public MemoryTable(IEqualityComparer<T> comparer)
+			: this(comparer, null)
 		{
-			this.Items = new HashSet<T>(comparer);
-			this.Queryable = this.Items.AsQueryable();
 		}
 
 		/// <summary>
@@ -61,9 +42,31 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="source">initial items</param>
 		/// <param name="comparer">determines if two objects represent the same item</param>
-		public MemoryTable(IEnumerable<T> items, IEqualityComparer<T> comparer)
+		public MemoryTable(IEqualityComparer<T> comparer, IEnumerable<T> items)
 		{
-			this.Items = new HashSet<T>(items, comparer);
+			if (items == null)
+			{
+				if (comparer == null)
+				{
+					this.Items = new HashSet<T>();
+				}
+				else
+				{
+					this.Items = new HashSet<T>(comparer);
+				}
+			}
+			else
+			{
+				if (comparer == null)
+				{
+					this.Items = new HashSet<T>(items);
+				}
+				else
+				{
+					this.Items = new HashSet<T>(items, comparer);
+				}
+			}
+
 			this.Queryable = this.Items.AsQueryable();
 		}
 

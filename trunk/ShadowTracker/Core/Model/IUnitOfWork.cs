@@ -1,14 +1,11 @@
 ﻿using System;
-using System.IO;
 
 namespace Shadow.Model
 {
 	public interface IUnitOfWork
 	{
-		void SubmitChanges();
+		ITable<CatalogEntry> Entries { get; }
 
-		ITable<CatalogEntry> GetEntries();
-
-		void SetDiagnosticsLog(TextWriter writer);
+		void Save();
 	}
 }
