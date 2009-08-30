@@ -263,7 +263,7 @@ namespace Shadow.Agent
 				{
 					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
 					if (info is DirectoryInfo &&
-						FileIterator.GetFiles(e.FullPath, true).Any())
+						FileIterator.GetFiles(e.FullPath, true).Where(this.fileFilter).Any())
 					{
 						break;
 					}

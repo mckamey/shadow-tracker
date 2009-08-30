@@ -26,6 +26,12 @@ namespace Shadow.Agent
 				FileSystemInfo[] files = dir.GetFileSystemInfos();
 				if (listEmptyDirs && files.Length == 0)
 				{
+					if (StringComparer.OrdinalIgnoreCase.Equals(dir.FullName, root))
+					{
+						// do not return the root directory itself
+						continue;
+					}
+
 					// create a node for empty directories
 					yield return dir;
 				}
