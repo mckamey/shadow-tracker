@@ -14,6 +14,12 @@ namespace Shadow.Model
 		INotifyPropertyChanging,
 		INotifyPropertyChanged
 	{
+		#region Constants
+
+		private static readonly DateTime SqlDateTimeMinValue = new DateTime(1753, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+		#endregion Constants
+
 		#region EqualityComparer
 
 		/// <summary>
@@ -245,7 +251,7 @@ namespace Shadow.Model
 		/// </summary>
 		public bool HasCreatedDate
 		{
-			get { return (this.CreatedDate != default(DateTime)); }
+			get { return this.CreatedDate >= CatalogEntry.SqlDateTimeMinValue; }
 		}
 
 		/// <summary>
@@ -273,7 +279,7 @@ namespace Shadow.Model
 		/// </summary>
 		public bool HasModifiedDate
 		{
-			get { return (this.ModifiedDate != default(DateTime)); }
+			get { return this.ModifiedDate >= CatalogEntry.SqlDateTimeMinValue; }
 		}
 
 		/// <summary>
@@ -329,12 +335,18 @@ namespace Shadow.Model
 		/// <returns></returns>
 		/// <remarks>
 		/// Converts to UTC and only stores accurately to the second.
+		/// Disregards dates before 1753-01-01T00:00:00z which is DateTime.MinValue for SQL DateTime
 		/// </remarks>
 		private static DateTime ScrubDate(DateTime value)
 		{
 			if (value.Kind == DateTimeKind.Local)
 			{
 				value = value.ToUniversalTime();
+			}
+
+			if (value < CatalogEntry.SqlDateTimeMinValue)
+			{
+				return CatalogEntry.SqlDateTimeMinValue;
 			}
 
 			return new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, DateTimeKind.Utc);
