@@ -164,8 +164,7 @@ namespace Shadow.Agent
 
 						// extras are any local entries not contained on disk
 						string path = enumerator.Current;
-						string fullPath = Path.Combine(rootPath, path);
-						if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
+						if (!Exists(rootPath, path))
 						{
 							catalog.DeleteEntryByPath(path);
 						}
@@ -182,8 +181,7 @@ namespace Shadow.Agent
 				foreach (string path in catalog.GetExistingPaths())
 				{
 					// extras are any local entries not contained on disk
-					string fullPath = Path.Combine(rootPath, path);
-					if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
+					if (!Exists(rootPath, path))
 					{
 						catalog.DeleteEntryByPath(path);
 					}
@@ -195,6 +193,13 @@ namespace Shadow.Agent
 					completedCallback(catalog);
 				}
 			}
+		}
+
+		private static bool Exists(string rootPath, string path)
+		{
+			string fullPath = Path.Combine(rootPath, path);
+
+			return File.Exists(fullPath) || Directory.Exists(fullPath);
 		}
 
 		/// <summary>
