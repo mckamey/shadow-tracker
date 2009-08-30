@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 
 namespace Shadow.Model
 {
@@ -8,7 +8,8 @@ namespace Shadow.Model
 	{
 		#region Fields
 
-		private MemoryTable<CatalogEntry> Entries;
+		private IEnumerable<CatalogEntry> Storage;
+		private MemoryTable<CatalogEntry> IdentityMap;
 
 		#endregion Fields
 
@@ -17,38 +18,48 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <remarks>Defaults to in-memory backing storage</remarks>
+		/// <param name="comparer"></param>
 		public MemoryUnitOfWork()
+			: this(null)
 		{
-			this.Entries = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer);
 		}
 
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <param name="entries">initial items</param>
-		public MemoryUnitOfWork(IEnumerable<CatalogEntry> entries)
+		/// <param name="comparer"></param>
+		/// <param name="entities">initial items</param>
+		public MemoryUnitOfWork(IEnumerable<CatalogEntry> entities)
 		{
-			this.Entries = new MemoryTable<CatalogEntry>(entries, CatalogEntry.PathComparer); ;
+			this.Storage = entities != null ? entities : Enumerable.Empty<CatalogEntry>();
 		}
 
 		#endregion Init
 
 		#region IUnitOfWork Members
 
-		public void SubmitChanges()
+		public void Save()
 		{
-			// NOOP
+			if (this.IdentityMap != null)
+			{
+				// save contents to "storage"
+				this.Storage = this.IdentityMap.AsEnumerable();
+			}
+
+			// reset change tracking
+			this.IdentityMap = null;
 		}
 
-		public void SetDiagnosticsLog(TextWriter writer)
+		public ITable<CatalogEntry> Entries
 		{
-			// NOOP
-		}
-
-		public ITable<CatalogEntry> GetEntries()
-		{
-			return this.Entries;
+			get
+			{
+				if (this.IdentityMap == null)
+				{
+					this.IdentityMap = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer, this.Storage);
+				}
+				return this.IdentityMap;
+			}
 		}
 
 		#endregion IUnitOfWork Members

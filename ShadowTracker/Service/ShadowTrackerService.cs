@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Data.Linq.Mapping;
 using System.IO;
 using System.ServiceProcess;
 
@@ -80,7 +81,7 @@ namespace Shadow.Service
 				this.Out.WriteLine("Connecting to database...");
 				this.Out.WriteLine("__________________________");
 
-				IUnitOfWork db = this.GetDataContext(connection, mappings);
+				IUnitOfWork db = this.GetUnitOfWork(connection, mappings);
 				AnnotatedCatalog catalog = new AnnotatedCatalog(db);
 
 				catalog.Log = this.Out;
@@ -137,16 +138,14 @@ namespace Shadow.Service
 
 		#region Utility Methods
 
-		private DBUnitOfWork GetDataContext(string connection, string mappings)
+		private IUnitOfWork GetUnitOfWork(string connection, string mappings)
 		{
 			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
 			{
 				connection = connection.Replace("|DataDirectory|", Environment.CurrentDirectory);
 			}
 
-			DBUnitOfWork.InitSettings(connection, mappings);
-
-			DBUnitOfWork db = new DBUnitOfWork();
+			L2SUnitOfWork db = new L2SUnitOfWork(connection, XmlMappingSource.FromUrl(mappings));
 
 			if (!db.CanConnect())
 			{
