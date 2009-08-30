@@ -72,6 +72,7 @@ namespace Shadow.Agent
 			{
 				throw new ArgumentNullException("catalog", "Catalog is null.");
 			}
+
 			if (String.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
 			{
 				throw new ArgumentNullException("rootPath", "Root path is invalid.");
@@ -105,8 +106,7 @@ namespace Shadow.Agent
 						}
 
 						// sync next node
-						CatalogEntry entry = FileUtility.CreateEntry(rootPath, enumerator.Current);
-						catalog.ApplyChanges(entry);
+						CheckForChanges(catalog, rootPath, enumerator.Current);
 
 						// queue up next iteration
 						timer.Change(trickleRate, Timeout.Infinite);
@@ -120,8 +120,7 @@ namespace Shadow.Agent
 				foreach (FileSystemInfo file in files)
 				{
 					// sync each node
-					CatalogEntry entry = FileUtility.CreateEntry(rootPath, file);
-					catalog.ApplyChanges(entry);
+					CheckForChanges(catalog, rootPath, file);
 				}
 
 				// remove any extra files after, so more clones can happen
@@ -129,6 +128,12 @@ namespace Shadow.Agent
 			}
 
 			// TODO: try-catch around work and create a retry queue
+		}
+
+		private static void CheckForChanges(CatalogRepository catalog, string rootPath, FileSystemInfo file)
+		{
+			CatalogEntry entry = FileUtility.CreateEntry(rootPath, file);
+			catalog.ApplyChanges(entry);
 		}
 
 		private static void RemoveExtras(

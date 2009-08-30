@@ -45,8 +45,7 @@ namespace Shadow.Model
 		{
 			lock (this.UnitOfWork)
 			{
-				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-				entries.Add(entry);
+				this.UnitOfWork.Entries.Add(entry);
 				this.UnitOfWork.Save();
 			}
 		}
