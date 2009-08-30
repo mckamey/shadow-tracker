@@ -5,13 +5,13 @@ using System.IO;
 
 namespace Shadow.Model
 {
-	public class DBUnitOfWork : DataContext, IUnitOfWork
+	public class DBUnitOfWork : IUnitOfWork
 	{
 		#region Fields
 
 		private static string ConnectionString = null;
-
 		private static MappingSource Mappings;
+		private readonly DataContext DB;
 
 		#endregion Fields
 
@@ -21,8 +21,8 @@ namespace Shadow.Model
 		/// Ctor
 		/// </summary>
 		public DBUnitOfWork()
-			: base(DBUnitOfWork.ConnectionString, DBUnitOfWork.Mappings)
 		{
+			this.DB = new DataContext(DBUnitOfWork.ConnectionString, DBUnitOfWork.Mappings);
 		}
 
 		#endregion Init
@@ -42,21 +42,35 @@ namespace Shadow.Model
 
 		#endregion Settings Methods
 
+		#region Methods
+
+		public bool CanConnect()
+		{
+			return this.DB.DatabaseExists();
+		}
+
+		public void InitializeDatabase()
+		{
+			this.DB.CreateDatabase();
+		}
+
+		#endregion Methods
+
 		#region IUnitOfWork Members
 
 		void IUnitOfWork.SubmitChanges()
 		{
-			base.SubmitChanges(ConflictMode.ContinueOnConflict);
+			this.DB.SubmitChanges(ConflictMode.ContinueOnConflict);
 		}
 
 		public ITable<CatalogEntry> GetEntries()
 		{
-			return new TableAdapter<CatalogEntry>(this);
+			return new TableAdapter<CatalogEntry>(this.DB);
 		}
 
 		public void SetDiagnosticsLog(TextWriter writer)
 		{
-			this.Log = writer;
+			this.DB.Log = writer;
 		}
 
 		#endregion IUnitOfWork Members

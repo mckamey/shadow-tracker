@@ -148,7 +148,7 @@ namespace Shadow.Service
 
 			DBUnitOfWork db = new DBUnitOfWork();
 
-			if (!db.DatabaseExists())
+			if (!db.CanConnect())
 			{
 				string answer = "n";
 
@@ -165,7 +165,7 @@ namespace Shadow.Service
 
 				try
 				{
-					db.CreateDatabase();
+					db.InitializeDatabase();
 				}
 				catch (Exception ex)
 				{
