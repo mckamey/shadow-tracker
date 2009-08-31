@@ -51,7 +51,7 @@ namespace Shadow.Agent
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		public static void SyncCatalog(CatalogRepository catalog, string rootPath, Func<FileSystemInfo, bool> fileFilter)
 		{
-			FileUtility.SyncCatalog(catalog, rootPath, fileFilter, -1, null);
+			FileUtility.SyncCatalog(rootPath, fileFilter, -1, null);
 		}
 
 		/// <summary>
@@ -62,17 +62,11 @@ namespace Shadow.Agent
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
 		public static void SyncCatalog(
-			CatalogRepository catalog,
 			string rootPath,
 			Func<FileSystemInfo, bool> fileFilter,
 			int trickleRate,
-			Action<CatalogRepository> completedCallback)
+			Action completedCallback)
 		{
-			if (catalog == null)
-			{
-				throw new ArgumentNullException("catalog", "Catalog is null.");
-			}
-
 			if (String.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
 			{
 				throw new ArgumentNullException("rootPath", "Root path is invalid.");
@@ -101,12 +95,12 @@ namespace Shadow.Agent
 							files = null;
 
 							// remove any extra files after, so more clones can happen
-							FileUtility.RemoveExtras(catalog, rootPath, trickleRate, completedCallback);
+							FileUtility.RemoveExtras(rootPath, trickleRate, completedCallback);
 							return;
 						}
 
 						// sync next node
-						CheckForChanges(catalog, rootPath, enumerator.Current);
+						CheckForChanges(rootPath, enumerator.Current);
 
 						// queue up next iteration
 						timer.Change(trickleRate, Timeout.Infinite);
@@ -120,28 +114,35 @@ namespace Shadow.Agent
 				foreach (FileSystemInfo file in files)
 				{
 					// sync each node
-					CheckForChanges(catalog, rootPath, file);
+					CheckForChanges(rootPath, file);
 				}
 
 				// remove any extra files after, so more clones can happen
-				FileUtility.RemoveExtras(catalog, rootPath, trickleRate, completedCallback);
+				FileUtility.RemoveExtras(rootPath, trickleRate, completedCallback);
 			}
 
 			// TODO: try-catch around work and create a retry queue
 		}
 
-		private static void CheckForChanges(CatalogRepository catalog, string rootPath, FileSystemInfo file)
+		private static void CheckForChanges(string rootPath, FileSystemInfo file)
 		{
 			CatalogEntry entry = FileUtility.CreateEntry(rootPath, file);
-			catalog.ApplyChanges(entry);
+
+			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			CatalogRepository catalog = new CatalogRepository(unitOfWork);
+
+			if (catalog.ApplyChanges(entry))
+			{
+				unitOfWork.Save();
+			}
 		}
 
 		private static void RemoveExtras(
-			CatalogRepository catalog,
 			string rootPath,
 			int trickleRate,
-			Action<CatalogRepository> completedCallback)
+			Action completedCallback)
 		{
+			CatalogRepository catalog = new CatalogRepository(UnitOfWorkFactory.Create());
 			if (trickleRate > 0)
 			{
 				var enumerator = catalog.GetExistingPaths().GetEnumerator();
@@ -162,17 +163,14 @@ namespace Shadow.Agent
 							// signal sync is complete
 							if (completedCallback != null)
 							{
-								completedCallback(catalog);
+								completedCallback();
 							}
 							return;
 						}
 
 						// extras are any local entries not contained on disk
 						string path = enumerator.Current;
-						if (!Exists(rootPath, path))
-						{
-							catalog.DeleteEntryByPath(path);
-						}
+						CheckIfMissing(rootPath, path);
 
 						// queue up next iteration
 						timer.Change(trickleRate, Timeout.Infinite);
@@ -186,25 +184,28 @@ namespace Shadow.Agent
 				foreach (string path in catalog.GetExistingPaths())
 				{
 					// extras are any local entries not contained on disk
-					if (!Exists(rootPath, path))
-					{
-						catalog.DeleteEntryByPath(path);
-					}
+					CheckIfMissing(rootPath, path);
 				}
 
 				// signal sync is complete
 				if (completedCallback != null)
 				{
-					completedCallback(catalog);
+					completedCallback();
 				}
 			}
 		}
 
-		private static bool Exists(string rootPath, string path)
+		private static void CheckIfMissing(string rootPath, string path)
 		{
 			string fullPath = Path.Combine(rootPath, path);
+			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
+			{
+				IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+				CatalogRepository catalog = new CatalogRepository(unitOfWork);
 
-			return File.Exists(fullPath) || Directory.Exists(fullPath);
+				catalog.DeleteEntryByPath(path);
+				unitOfWork.Save();
+			}
 		}
 
 		/// <summary>

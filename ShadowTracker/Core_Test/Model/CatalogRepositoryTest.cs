@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Shadow.Model.Memory;
 
 namespace Shadow.Model.Test
 {
@@ -120,8 +123,7 @@ namespace Shadow.Model.Test
 
 			CatalogRepository target = this.catalog;
 			IQueryable<string> expected = null; // TODO: Initialize to an appropriate value
-			IQueryable<string> actual;
-			actual = target.GetExistingPaths();
+			IEnumerable<string> actual = target.GetExistingPaths();
 			Assert.AreEqual(expected, actual);
 		}
 

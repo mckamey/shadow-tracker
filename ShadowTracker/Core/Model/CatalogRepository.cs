@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -43,11 +43,7 @@ namespace Shadow.Model
 		/// <param name="entry"></param>
 		public virtual void AddEntry(CatalogEntry entry)
 		{
-			lock (this.UnitOfWork)
-			{
-				this.UnitOfWork.Entries.Add(entry);
-				this.UnitOfWork.Save();
-			}
+			this.UnitOfWork.Entries.Add(entry);
 		}
 
 		/// <summary>
@@ -67,26 +63,21 @@ namespace Shadow.Model
 		/// <param name="path"></param>
 		public virtual void DeleteEntryByPath(string path)
 		{
-			lock (this.UnitOfWork)
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+
+			if (!this.Exists(n => n.Path.ToLower() == path.ToLower()))
 			{
-				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-
-				if (!this.Exists(n => n.Path.ToLower() == path.ToLower()))
+				// if has children then shouldn't be listed itself
+				if (!path.EndsWith("/"))
 				{
-					// if has children then shouldn't be listed itself
-					if (!path.EndsWith("/"))
-					{
-						path += "/";
-					}
-
-					entries.RemoveWhere(n => n.Path.ToLower().StartsWith(path.ToLower()));
-				}
-				else
-				{
-					entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
+					path += "/";
 				}
 
-				this.UnitOfWork.Save();
+				entries.RemoveWhere(n => n.Path.ToLower().StartsWith(path.ToLower()));
+			}
+			else
+			{
+				entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
 			}
 		}
 
@@ -97,20 +88,16 @@ namespace Shadow.Model
 		/// <param name="newPath"></param>
 		public virtual void RenameEntry(string oldPath, string newPath)
 		{
-			lock (this.UnitOfWork)
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+
+			CatalogEntry entry = entries.FirstOrDefault(n => n.Path == oldPath);
+			if (entry == null)
 			{
-				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-
-				CatalogEntry entry = entries.FirstOrDefault(n => n.Path == oldPath);
-				if (entry == null)
-				{
-					// TODO: log error
-					throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
-				}
-
-				entry.Path = newPath;
-				this.UnitOfWork.Save();
+				// TODO: log error
+				throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
 			}
+
+			entry.Path = newPath;
 		}
 
 		/// <summary>
@@ -120,28 +107,23 @@ namespace Shadow.Model
 		/// <param name="data">the original entry</param>
 		public virtual void UpdateMeta(CatalogEntry entry, CatalogEntry original)
 		{
-			lock (this.UnitOfWork)
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+			if (original == null || original.ID < 1)
 			{
-				ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-				if (original == null || original.ID < 1)
-				{
-					entries.Update(entry);
-				}
-				else
-				{
-					// TODO: figure out better way to manage DataContext restrictions
-					original.Attributes = entry.Attributes;
-					original.CreatedDate = entry.CreatedDate;
-					//original.ID = entry.ID;
-					original.Length = entry.Length;
-					original.ModifiedDate = entry.ModifiedDate;
-					original.Path = entry.Path;
-					original.Signature = entry.Signature;
+				entries.Update(entry);
+			}
+			else
+			{
+				// TODO: figure out better way to manage DataContext restrictions
+				original.Attributes = entry.Attributes;
+				original.CreatedDate = entry.CreatedDate;
+				//original.ID = entry.ID;
+				original.Length = entry.Length;
+				original.ModifiedDate = entry.ModifiedDate;
+				original.Path = entry.Path;
+				original.Signature = entry.Signature;
 
-					entries.Update(original);
-				}
-
-				this.UnitOfWork.Save();
+				entries.Update(original);
 			}
 		}
 
@@ -177,7 +159,7 @@ namespace Shadow.Model
 			return entries.Any(predicate);
 		}
 
-		public IQueryable<string> GetChildPaths(string parent)
+		public IEnumerable<string> GetChildPaths(string parent)
 		{
 			if (String.IsNullOrEmpty(parent))
 			{
@@ -323,22 +305,28 @@ namespace Shadow.Model
 			}
 		}
 
-		public void ApplyChanges(CatalogEntry entry)
+		/// <summary>
+		/// Checks for changes.
+		/// </summary>
+		/// <param name="entry"></param>
+		/// <returns>true if changes were found</returns>
+		public bool ApplyChanges(CatalogEntry entry)
 		{
 			CatalogEntry data, meta;
+
 			switch (this.CalcEntryDelta(entry, out meta, out data))
 			{
 				case DeltaAction.Add:
 				{
 					// does not exist (requires expensive bit transfer)
 					this.AddEntry(entry);
-					break;
+					return true;
 				}
 				case DeltaAction.Clone:
 				{
 					// bits exist need to add or update entry (no transfer required)
 					this.CloneEntry(entry, data);
-					break;
+					return true;
 				}
 				case DeltaAction.Delete:
 				{
@@ -346,7 +334,7 @@ namespace Shadow.Model
 
 					// file is being removed
 					this.DeleteEntryByPath(entry.Path);
-					break;
+					return true;
 				}
 				case DeltaAction.Meta:
 				{
@@ -354,23 +342,24 @@ namespace Shadow.Model
 					if (meta == null)
 					{
 						this.AddEntry(entry);
-						break;
 					}
-
-					this.UpdateMeta(entry, meta);
-					break;
+					else
+					{
+						this.UpdateMeta(entry, meta);
+					}
+					return true;
 				}
 				case DeltaAction.Update:
 				{
 					// path exists but bits are different (requires expensive bit transfer)
 					this.UpdateData(entry, meta, data);
-					break;
+					return true;
 				}
 				default:
 				case DeltaAction.None:
 				{
 					// no change required
-					break;
+					return false;
 				}
 			}
 		}

@@ -6,6 +6,7 @@ using System.ServiceProcess;
 
 using Shadow.Agent;
 using Shadow.Model;
+using Shadow.Model.L2S;
 
 namespace Shadow.Service
 {
@@ -81,11 +82,7 @@ namespace Shadow.Service
 				this.Out.WriteLine("Connecting to database...");
 				this.Out.WriteLine("__________________________");
 
-				IUnitOfWork db = this.GetUnitOfWork(connection, mappings);
-				AnnotatedCatalog catalog = new AnnotatedCatalog(db);
-
-				catalog.Log = this.Out;
-				catalog.Error = this.Error;
+				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, mappings));
 
 				this.Out.WriteLine();
 				this.Out.WriteLine("Beginning trickle update...");
@@ -94,11 +91,10 @@ namespace Shadow.Service
 				var watch = System.Diagnostics.Stopwatch.StartNew();
 
 				FileUtility.SyncCatalog(
-					catalog,
 					watchFolder,
 					callback,
 					FileUtility.DefaultTrickleRate,
-					delegate(CatalogRepository c)
+					delegate()
 					{
 						watch.Stop();
 						this.Out.WriteLine();
@@ -109,7 +105,7 @@ namespace Shadow.Service
 				this.Out.WriteLine();
 				this.Out.WriteLine("Tracking started...");
 				this.Out.WriteLine("__________________________");
-				this.Tracker.Start(catalog, watchFolder, callback);
+				this.Tracker.Start(watchFolder, callback);
 			}
 			catch (Exception ex)
 			{
@@ -138,15 +134,16 @@ namespace Shadow.Service
 
 		#region Utility Methods
 
-		private IUnitOfWork GetUnitOfWork(string connection, string mappings)
+		private Func<IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
 		{
 			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
 			{
 				connection = connection.Replace("|DataDirectory|", Environment.CurrentDirectory);
 			}
+			MappingSource map = XmlMappingSource.FromUrl(mappings);
 
-			L2SUnitOfWork db = new L2SUnitOfWork(connection, XmlMappingSource.FromUrl(mappings));
-
+			// create one to test out
+			L2SUnitOfWork db = new L2SUnitOfWork(connection, map);
 			if (!db.CanConnect())
 			{
 				string answer = "n";
@@ -173,7 +170,10 @@ namespace Shadow.Service
 				}
 			}
 
-			return db;
+			return delegate()
+			{
+				return new L2SUnitOfWork(connection, map);
+			};
 		}
 
 		#endregion Utility Methods

@@ -9,10 +9,10 @@ using Shadow.Model;
 namespace Shadow.Agent
 {
 	/// <summary>
-	/// 
+	/// Monitors the file system and updates the CatalogRepository accordingly.
 	/// </summary>
 	/// <remarks>
-	/// FileSystemWatcher: http://stackoverflow.com/questions/449993/vb-net-filesystemwatcher-multiple-change-events
+	/// FileSystemWatcher: http://stackoverflow.com/questions/449993
 	/// Timers: http://msdn.microsoft.com/en-us/magazine/cc164015.aspx
 	/// </remarks>
 	public class FileTracker
@@ -26,7 +26,6 @@ namespace Shadow.Agent
 
 		#region Fields
 
-		private CatalogRepository catalog;
 		private readonly FileSystemWatcher Watcher = new FileSystemWatcher();
 		private readonly Dictionary<string, Timer> Timers = new Dictionary<string, Timer>(StringComparer.OrdinalIgnoreCase);
 		private Func<FileSystemInfo, bool> fileFilter;
@@ -199,7 +198,10 @@ namespace Shadow.Agent
 			{
 				case WatcherChangeTypes.Deleted:
 				{
-					this.catalog.DeleteEntryByPath(this.NormalizePath(e.FullPath));
+					IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+					CatalogRepository catalog = new CatalogRepository(unitOfWork);
+					catalog.DeleteEntryByPath(this.NormalizePath(e.FullPath));
+					unitOfWork.Save();
 					break;
 				}
 				case WatcherChangeTypes.Renamed:
@@ -232,7 +234,10 @@ namespace Shadow.Agent
 									continue;
 								}
 
-								this.catalog.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
+								IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+								CatalogRepository catalog = new CatalogRepository(unitOfWork);
+								catalog.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
+								unitOfWork.Save();
 								hasChildren = true;
 							}
 							catch (Exception ex)
@@ -244,7 +249,10 @@ namespace Shadow.Agent
 
 						if (!hasChildren)
 						{
-							this.catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+							IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+							CatalogRepository catalog = new CatalogRepository(unitOfWork);
+							catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+							unitOfWork.Save();
 						}
 					}
 					catch (ArgumentException ex)
@@ -269,7 +277,10 @@ namespace Shadow.Agent
 					}
 
 					CatalogEntry entry = FileUtility.CreateEntry(this.Watcher.Path, info);
-					this.catalog.ApplyChanges(entry);
+					IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+					CatalogRepository catalog = new CatalogRepository(unitOfWork);
+					catalog.ApplyChanges(entry);
+					unitOfWork.Save();
 					break;
 				}
 			}
@@ -282,22 +293,20 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Sends updates to a catalog
 		/// </summary>
-		/// <param name="catalog"></param>
+		/// 
 		/// <param name="watchFolder"></param>
-		public void Start(CatalogRepository catalog, string watchFolder)
+		public void Start(string watchFolder)
 		{
-			this.Start(catalog, watchFolder, null);
+			this.Start(watchFolder, null);
 		}
 
 		/// <summary>
 		/// Sends updates to a catalog
 		/// </summary>
-		/// <param name="catalog"></param>
 		/// <param name="watchFolder"></param>
 		/// <param name="fileFilter"></param>
-		public void Start(CatalogRepository catalog, string watchFolder, Func<FileSystemInfo, bool> fileFilter)
+		public void Start(string watchFolder, Func<FileSystemInfo, bool> fileFilter)
 		{
-			this.catalog = catalog;
 			this.fileFilter = fileFilter;
 
 			this.Watcher.Path = watchFolder;

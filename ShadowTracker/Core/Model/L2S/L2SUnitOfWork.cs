@@ -2,7 +2,7 @@
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 
-namespace Shadow.Model
+namespace Shadow.Model.L2S
 {
 	/// <summary>
 	/// A unit-of-work adapter for LINQ-to-SQL DataContexts.
