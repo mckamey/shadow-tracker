@@ -139,19 +139,30 @@ namespace Shadow.Agent
 				return;
 			}
 
-			this.ApplyChange(e);
+			lock (this.Timers)
+			{
+				if (this.Timers.ContainsKey(e.FullPath))
+				{
+					//Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
+					return;
+				}
+
+				this.Timers[e.FullPath] = new Timer(this.UpdateTimerCallback, e, 2*UpdateDelay, Timeout.Infinite);
+			}
 		}
 
 		private void OnFileRenamed(object sender, RenamedEventArgs e)
 		{
 			if (this.IsFiltered(e.OldFullPath))
 			{
+				// simulate create since old path was filtered
 				this.OnFileCreated(sender, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath), Path.GetFileName(e.FullPath)));
 				return;
 			}
 
 			if (this.IsFiltered(e.FullPath))
 			{
+				// simulate delete since new path is filtered
 				this.OnFileDeleted(sender, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath), Path.GetFileName(e.OldFullPath)));
 				return;
 			}
@@ -183,7 +194,12 @@ namespace Shadow.Agent
 
 			FileSystemInfo info = FileUtility.CreateFileSystemInfo(fullPath);
 
-			return !this.fileFilter(info);
+			bool filtered = !this.fileFilter(info);
+			if (filtered)
+			{
+				Console.WriteLine("FILTERED "+fullPath);
+			}
+			return filtered;
 		}
 
 		private string NormalizePath(string path)
