@@ -15,17 +15,20 @@ namespace Shadow.Service
 
 			if (args.Length < 1)
 			{
+				string logName = DateTime.Now.ToString("yyyy-MM-dd-HHmm")+"_ShadowTrackerService.txt";
+
 				try
 				{
-					service.Error = File.AppendText("ShadowTrackerService_Error.txt");
+					service.Error = File.AppendText(logName);
 				}
 				catch (Exception ex)
 				{
 					service.Error.WriteLine(ex);
 				}
+
 				try
 				{
-					service.Out = File.AppendText("ShadowTrackerService_Log.txt");
+					service.Out = File.AppendText(logName);
 				}
 				catch (Exception ex)
 				{
