@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Shadow.Model
+namespace Shadow.Model.Memory
 {
 	public class MemoryUnitOfWork : IUnitOfWork
 	{

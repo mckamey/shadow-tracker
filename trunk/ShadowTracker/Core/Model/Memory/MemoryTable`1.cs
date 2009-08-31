@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace Shadow.Model
+namespace Shadow.Model.Memory
 {
 	/// <summary>
 	/// An in-memory representation of a queryable table.
