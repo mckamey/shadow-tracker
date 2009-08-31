@@ -139,16 +139,19 @@ namespace Shadow.Agent
 				return;
 			}
 
-			lock (this.Timers)
-			{
-				if (this.Timers.ContainsKey(e.FullPath))
-				{
-					//Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
-					return;
-				}
+			// apply change immediately since should be no other updates
+			this.ApplyChange(e);
 
-				this.Timers[e.FullPath] = new Timer(this.UpdateTimerCallback, e, 2*UpdateDelay, Timeout.Infinite);
-			}
+			//lock (this.Timers)
+			//{
+			//    if (this.Timers.ContainsKey(e.FullPath))
+			//    {
+			//        //Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
+			//        return;
+			//    }
+
+			//    this.Timers[e.FullPath] = new Timer(this.UpdateTimerCallback, e, 2*UpdateDelay, Timeout.Infinite);
+			//}
 		}
 
 		private void OnFileRenamed(object sender, RenamedEventArgs e)
@@ -202,6 +205,7 @@ namespace Shadow.Agent
 			return filtered;
 		}
 
+		[System.Diagnostics.DebuggerStepThrough]
 		private string NormalizePath(string path)
 		{
 			return FileUtility.NormalizePath(this.Watcher.Path, path);
@@ -232,6 +236,8 @@ namespace Shadow.Agent
 
 					try
 					{
+						IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+						CatalogRepository catalog = new CatalogRepository(unitOfWork);
 						bool hasChildren = false;
 						foreach (FileSystemInfo info in FileIterator.GetFiles(e2.FullPath, true))
 						{
@@ -250,10 +256,7 @@ namespace Shadow.Agent
 									continue;
 								}
 
-								IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
-								CatalogRepository catalog = new CatalogRepository(unitOfWork);
 								catalog.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
-								unitOfWork.Save();
 								hasChildren = true;
 							}
 							catch (Exception ex)
@@ -265,11 +268,9 @@ namespace Shadow.Agent
 
 						if (!hasChildren)
 						{
-							IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
-							CatalogRepository catalog = new CatalogRepository(unitOfWork);
 							catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
-							unitOfWork.Save();
 						}
+						unitOfWork.Save();
 					}
 					catch (ArgumentException ex)
 					{
@@ -285,17 +286,30 @@ namespace Shadow.Agent
 				case WatcherChangeTypes.Changed:
 				default:
 				{
-					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
-					if (info is DirectoryInfo &&
-						FileIterator.GetFiles(e.FullPath, true).Where(this.fileFilter).Any())
-					{
-						break;
-					}
-
-					CatalogEntry entry = FileUtility.CreateEntry(this.Watcher.Path, info);
 					IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
 					CatalogRepository catalog = new CatalogRepository(unitOfWork);
-					catalog.ApplyChanges(entry);
+
+					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
+
+					CatalogEntry entry;
+					bool hasChildren = false;
+					if (info is DirectoryInfo)
+					{
+						// add any children
+						foreach (FileSystemInfo child in FileIterator.GetFiles(e.FullPath, true).Where(this.fileFilter))
+						{
+							entry = FileUtility.CreateEntry(this.Watcher.Path, child);
+							catalog.ApplyChanges(entry);
+							hasChildren = true;
+						}
+					}
+
+					if (!hasChildren)
+					{
+						// add the file or the empty directory if no children
+						entry = FileUtility.CreateEntry(this.Watcher.Path, info);
+						catalog.ApplyChanges(entry);
+					}
 					unitOfWork.Save();
 					break;
 				}
