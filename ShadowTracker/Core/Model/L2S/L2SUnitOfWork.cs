@@ -59,9 +59,12 @@ namespace Shadow.Model.L2S
 		{
 			if (this.Log != null)
 			{
+				bool hasChanges = false;
 				ChangeSet changes = this.DB.GetChangeSet();
 				foreach (var insert in changes.Inserts)
 				{
+					hasChanges = true;
+
 					CatalogEntry entry = insert as CatalogEntry;
 					if (entry != null)
 					{
@@ -74,6 +77,8 @@ namespace Shadow.Model.L2S
 				}
 				foreach (var update in changes.Updates)
 				{
+					hasChanges = true;
+
 					CatalogEntry entry = update as CatalogEntry;
 					if (entry != null)
 					{
@@ -86,6 +91,8 @@ namespace Shadow.Model.L2S
 				}
 				foreach (var delete in changes.Deletes)
 				{
+					hasChanges = true;
+
 					CatalogEntry entry = delete as CatalogEntry;
 					if (entry != null)
 					{
@@ -95,6 +102,10 @@ namespace Shadow.Model.L2S
 					{
 						Console.WriteLine("REMOVE "+delete);
 					}
+				}
+				if (!hasChanges)
+				{
+					Console.WriteLine("NO CHANGES");
 				}
 			}
 
