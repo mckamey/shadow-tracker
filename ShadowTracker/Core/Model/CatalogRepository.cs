@@ -123,7 +123,7 @@ namespace Shadow.Model
 				original.Path = entry.Path;
 				original.Signature = entry.Signature;
 
-				entries.Update(original);
+				//entries.Update(original);
 			}
 		}
 
