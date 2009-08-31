@@ -103,10 +103,10 @@ namespace Shadow.Model.L2S
 						Console.WriteLine("REMOVE "+delete);
 					}
 				}
-				if (!hasChanges)
-				{
-					Console.WriteLine("NO CHANGES");
-				}
+				//if (!hasChanges)
+				//{
+				//    Console.WriteLine("NO CHANGES");
+				//}
 			}
 
 			this.DB.SubmitChanges(ConflictMode.ContinueOnConflict);

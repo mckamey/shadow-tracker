@@ -213,15 +213,15 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
+			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			CatalogRepository catalog = new CatalogRepository(unitOfWork);
+
 			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
 			switch (e.ChangeType)
 			{
 				case WatcherChangeTypes.Deleted:
 				{
-					IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
-					CatalogRepository catalog = new CatalogRepository(unitOfWork);
 					catalog.DeleteEntryByPath(this.NormalizePath(e.FullPath));
-					unitOfWork.Save();
 					break;
 				}
 				case WatcherChangeTypes.Renamed:
@@ -236,8 +236,6 @@ namespace Shadow.Agent
 
 					try
 					{
-						IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
-						CatalogRepository catalog = new CatalogRepository(unitOfWork);
 						bool hasChildren = false;
 						foreach (FileSystemInfo info in FileIterator.GetFiles(e2.FullPath, true))
 						{
@@ -270,7 +268,6 @@ namespace Shadow.Agent
 						{
 							catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
 						}
-						unitOfWork.Save();
 					}
 					catch (ArgumentException ex)
 					{
@@ -286,9 +283,6 @@ namespace Shadow.Agent
 				case WatcherChangeTypes.Changed:
 				default:
 				{
-					IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
-					CatalogRepository catalog = new CatalogRepository(unitOfWork);
-
 					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
 
 					CatalogEntry entry;
@@ -310,10 +304,11 @@ namespace Shadow.Agent
 						entry = FileUtility.CreateEntry(this.Watcher.Path, info);
 						catalog.ApplyChanges(entry);
 					}
-					unitOfWork.Save();
 					break;
 				}
 			}
+
+			unitOfWork.Save();
 		}
 
 		#endregion Events
@@ -327,7 +322,7 @@ namespace Shadow.Agent
 		/// <param name="watchFolder"></param>
 		public void Start(string watchFolder)
 		{
-			this.Start(watchFolder, null);
+			this.Start(watchFolder, n => true);
 		}
 
 		/// <summary>
@@ -340,7 +335,6 @@ namespace Shadow.Agent
 			this.fileFilter = fileFilter;
 
 			this.Watcher.Path = watchFolder;
-
 			this.Watcher.EnableRaisingEvents = true;
 		}
 
