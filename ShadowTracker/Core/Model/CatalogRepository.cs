@@ -64,21 +64,15 @@ namespace Shadow.Model
 		public virtual void DeleteEntryByPath(string path)
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+			entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
 
-			if (!this.Exists(n => n.Path.ToLower() == path.ToLower()))
+			// if has children then remove them as well
+			string asDir = path;
+			if (!asDir.EndsWith("/"))
 			{
-				// if has children then shouldn't be listed itself
-				if (!path.EndsWith("/"))
-				{
-					path += "/";
-				}
-
-				entries.RemoveWhere(n => n.Path.ToLower().StartsWith(path.ToLower()));
+				asDir += "/";
 			}
-			else
-			{
-				entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
-			}
+			entries.RemoveWhere(n => n.Path.ToLower().StartsWith(asDir.ToLower()));
 		}
 
 		/// <summary>
