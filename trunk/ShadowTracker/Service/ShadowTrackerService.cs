@@ -25,7 +25,6 @@ namespace Shadow.Service
 		/// </summary>
 		public ShadowTrackerService()
 		{
-			this.In = TextReader.Null;
 			this.Out = this.Error = TextWriter.Null;
 
 			this.InitializeComponent();
@@ -148,7 +147,7 @@ namespace Shadow.Service
 			{
 				string answer = "n";
 
-				if (this.In != TextReader.Null)
+				if (this.In != null)
 				{
 					this.Out.Write("Specified database does not exist. Want to create it? (y/n): ");
 					answer = this.In.ReadLine();
@@ -172,7 +171,12 @@ namespace Shadow.Service
 
 			return delegate()
 			{
-				return new L2SUnitOfWork(connection, map);
+				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(connection, map);
+				if (this.Out != TextWriter.Null)
+				{
+					unitOfWork.Log = this.Out;
+				}
+				return unitOfWork;
 			};
 		}
 
