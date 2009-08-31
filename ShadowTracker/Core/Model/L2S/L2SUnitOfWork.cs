@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
+using System.IO;
 
 namespace Shadow.Model.L2S
 {
@@ -28,6 +29,16 @@ namespace Shadow.Model.L2S
 
 		#endregion Init
 
+		#region Properties
+
+		public TextWriter Log
+		{
+			get;
+			set;
+		}
+
+		#endregion Properties
+
 		#region Methods
 
 		public bool CanConnect()
@@ -46,6 +57,47 @@ namespace Shadow.Model.L2S
 
 		public void Save()
 		{
+			if (this.Log != null)
+			{
+				ChangeSet changes = this.DB.GetChangeSet();
+				foreach (var insert in changes.Inserts)
+				{
+					CatalogEntry entry = insert as CatalogEntry;
+					if (entry != null)
+					{
+						Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
+					}
+					else
+					{
+						Console.WriteLine("ADD "+insert);
+					}
+				}
+				foreach (var update in changes.Updates)
+				{
+					CatalogEntry entry = update as CatalogEntry;
+					if (entry != null)
+					{
+						Console.WriteLine("UPDATE \"{0}\"", entry.Path);
+					}
+					else
+					{
+						Console.WriteLine("UPDATE "+update);
+					}
+				}
+				foreach (var delete in changes.Deletes)
+				{
+					CatalogEntry entry = delete as CatalogEntry;
+					if (entry != null)
+					{
+						Console.WriteLine("REMOVE \"{0}\"", entry.Path);
+					}
+					else
+					{
+						Console.WriteLine("REMOVE "+delete);
+					}
+				}
+			}
+
 			this.DB.SubmitChanges(ConflictMode.ContinueOnConflict);
 		}
 

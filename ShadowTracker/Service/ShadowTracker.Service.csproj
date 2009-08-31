@@ -62,7 +62,6 @@
     <Reference Include="System.ServiceProcess" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AnnotatedCatalog.cs" />
     <Compile Include="ShadowTrackerService.cs">
       <SubType>Component</SubType>
     </Compile>
