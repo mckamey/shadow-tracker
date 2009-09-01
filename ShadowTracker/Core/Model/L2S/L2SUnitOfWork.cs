@@ -103,10 +103,10 @@ namespace Shadow.Model.L2S
 						Console.WriteLine("REMOVE "+delete);
 					}
 				}
-				//if (!hasChanges)
-				//{
-				//    Console.WriteLine("NO CHANGES");
-				//}
+				if (!hasChanges)
+				{
+					//Console.WriteLine("NO CHANGES");
+				}
 			}
 
 			this.DB.SubmitChanges(ConflictMode.ContinueOnConflict);
@@ -118,7 +118,7 @@ namespace Shadow.Model.L2S
 			{
 				if (this.entries == null)
 				{
-					this.entries = new L2STable<CatalogEntry>(this.DB);
+					this.entries = new L2SSoftDeleteTable<CatalogEntry>(this.DB);
 				}
 				return this.entries;
 			}

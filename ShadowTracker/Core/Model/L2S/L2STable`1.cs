@@ -26,33 +26,43 @@ namespace Shadow.Model.L2S
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <param name="source">initial items</param>
+		/// <param name="db">DataContext</param>
 		public L2STable(DataContext db)
 		{
 			this.Items = db.GetTable<T>();
-			this.Queryable = this.Items;
+
+			this.Queryable = this.GetQueryable(this.Items);
 		}
 
 		#endregion Init
 
+		#region Methods
+
+		protected virtual IQueryable<T> GetQueryable(Table<T> items)
+		{
+			return items;
+		}
+
+		#endregion Methods
+
 		#region ITable<TItem> Members
 
-		public void Add(T item)
+		public virtual void Add(T item)
 		{
 			this.Items.InsertOnSubmit(item);
 		}
 
-		public void Update(T item)
+		public virtual void Update(T item)
 		{
 			this.Items.Attach(item, true);
 		}
 
-		public void Remove(T item)
+		public virtual void Remove(T item)
 		{
 			this.Items.DeleteOnSubmit(item);
 		}
 
-		public void RemoveWhere(Expression<Func<T,bool>> match)
+		public virtual void RemoveWhere(Expression<Func<T,bool>> match)
 		{
 			this.Items.DeleteAllOnSubmit(this.Items.Where(match));
 		}
@@ -63,7 +73,7 @@ namespace Shadow.Model.L2S
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			return this.Items.GetEnumerator();
+			return this.Queryable.GetEnumerator();
 		}
 
 		#endregion IEnumerable<TItem> Members
@@ -72,7 +82,7 @@ namespace Shadow.Model.L2S
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return this.Items.GetEnumerator();
+			return this.Queryable.GetEnumerator();
 		}
 
 		#endregion IEnumerable Members
