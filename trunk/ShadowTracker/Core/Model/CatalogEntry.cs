@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
+using Shadow.Model.L2S;
+
 namespace Shadow.Model
 {
 	/// <summary>
@@ -12,7 +14,8 @@ namespace Shadow.Model
 	/// </summary>
 	public class CatalogEntry :
 		INotifyPropertyChanging,
-		INotifyPropertyChanged
+		INotifyPropertyChanged,
+		IL2SSoftDeleteEntity
 	{
 		#region Constants
 
@@ -131,6 +134,7 @@ namespace Shadow.Model
 
 		#region Fields
 
+		private bool isDeleted;
 		private long id;
 		private string path;
 		private long length;
@@ -414,5 +418,25 @@ namespace Shadow.Model
 		}
 
 		#endregion Object Overrides
+
+		#region IL2SSoftDeleteEntity Members
+
+		public bool IsDeleted
+		{
+			get { return this.isDeleted; }
+			set
+			{
+				if (this.isDeleted == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("IsDeleted");
+				this.isDeleted = value;
+				this.OnPropertyChanged("IsDeleted");
+			}
+		}
+
+		#endregion IL2SSoftDeleteEntity Members
 	}
 }

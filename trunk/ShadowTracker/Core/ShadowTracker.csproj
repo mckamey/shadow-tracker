@@ -49,6 +49,7 @@
     <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\CatalogRepository.cs" />
     <Compile Include="Model\IUnitOfWork.cs" />
+    <Compile Include="Model\L2S\L2SSoftDeleteTable`1.cs" />
     <Compile Include="Model\L2S\L2STable`1.cs" />
     <Compile Include="Model\L2S\L2SUnitOfWork.cs" />
     <Compile Include="Model\Memory\MemoryTable`1.cs" />
