@@ -7,7 +7,9 @@ namespace Shadow.Model.L2S
 {
 	public interface IL2SSoftDeleteEntity
 	{
-		bool IsDeleted { get; set; }
+		DateTime? DeletedDate { get; set; }
+		string Signature { get; set; }
+		void CopyValuesFrom(IL2SSoftDeleteEntity item);
 	}
 
 	/// <summary>
@@ -33,32 +35,66 @@ namespace Shadow.Model.L2S
 
 		protected override IQueryable<T> GetQueryable(Table<T> items)
 		{
-			// TODO: add where clause that filters soft-deleted here
-			return base.GetQueryable(items);
+			// add a permanent where clause that filters soft-deleted here
+			return base.GetQueryable(items).Where(n => !n.DeletedDate.HasValue);
 		}
 
+		/// <summary>
+		/// Adds by first checking if a deleted version exists
+		/// </summary>
+		/// <param name="item"></param>
 		public override void Add(T item)
 		{
-			// TODO: add ability to soft-undelete here
+			T match;
 
-			// first look for closest deleted version of item
-			// if found just undelete and update?
+			// first look for most recent deleted version of item
+			match =
+				(from n in this.Items
+				 where
+					n.DeletedDate.HasValue &&
+					n.Signature.ToLower() == item.Signature.ToLower()
+				 orderby n.DeletedDate descending
+				 select n).FirstOrDefault();
 
-			base.Add(item);
+			if (match != null)
+			{
+				// if found just undelete and update
+				match.CopyValuesFrom(item);
+			}
+			else
+			{
+				// otherwise add the new item
+				base.Add(item);
+			}
 		}
 
 		public override void Remove(T item)
 		{
-			// TODO: update as soft-deleted
+			if (String.IsNullOrEmpty(item.Signature))
+			{
+				// cannot reliably undelete without a signature
+				base.Remove(item);
+				return;
+			}
 
-			base.Remove(item);
+			// update as soft-deleted
+			item.DeletedDate = DateTime.UtcNow;
 		}
 
 		public override void RemoveWhere(Expression<Func<T, bool>> match)
 		{
-			// TODO: update as soft-deleted
+			foreach (var item in this.Where(match))
+			{
+				if (String.IsNullOrEmpty(item.Signature))
+				{
+					// cannot reliably undelete without a signature
+					base.Remove(item);
+					continue;
+				}
 
-			base.RemoveWhere(match);
+				// update as soft-deleted
+				item.DeletedDate = DateTime.UtcNow;
+			}
 		}
 
 		#endregion L2STable<T> Methods

@@ -16,7 +16,7 @@ namespace Shadow.Model.L2S
 	{
 		#region Fields
 
-		private readonly Table<T> Items;
+		protected readonly Table<T> Items;
 		private readonly IQueryable<T> Queryable;
 
 		#endregion Fields

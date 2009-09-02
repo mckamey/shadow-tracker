@@ -108,14 +108,7 @@ namespace Shadow.Model
 			}
 			else
 			{
-				// TODO: figure out better way to manage DataContext restrictions
-				original.Attributes = entry.Attributes;
-				original.CreatedDate = entry.CreatedDate;
-				//original.ID = entry.ID;
-				original.Length = entry.Length;
-				original.ModifiedDate = entry.ModifiedDate;
-				original.Path = entry.Path;
-				original.Signature = entry.Signature;
+				original.CopyValuesFrom(entry);
 
 				//entries.Update(original);
 			}
