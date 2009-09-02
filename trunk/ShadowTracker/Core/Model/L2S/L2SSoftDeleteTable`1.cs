@@ -19,14 +19,32 @@ namespace Shadow.Model.L2S
 	public class L2SSoftDeleteTable<T> :
 		L2STable<T> where T : class, IL2SSoftDeleteEntity
 	{
+		#region Fields
+
+		private readonly bool OnlySoftDelete;
+
+		#endregion Fields
+
 		#region Init
 
 		/// <summary>
 		/// Ctor
 		/// </summary>
 		/// <param name="db">DataContext</param>
-		public L2SSoftDeleteTable(DataContext db) : base(db)
+		public L2SSoftDeleteTable(DataContext db)
+			: this(db, true)
 		{
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="db">DataContext</param>
+		/// <param name="onlySoftDelete">determines if should soft-delete even entries without a signature</param>
+		public L2SSoftDeleteTable(DataContext db, bool onlySoftDelete)
+			: base(db)
+		{
+			this.OnlySoftDelete = onlySoftDelete;
 		}
 
 		#endregion Init
@@ -70,7 +88,7 @@ namespace Shadow.Model.L2S
 
 		public override void Remove(T item)
 		{
-			if (String.IsNullOrEmpty(item.Signature))
+			if (!this.OnlySoftDelete && String.IsNullOrEmpty(item.Signature))
 			{
 				// cannot reliably undelete without a signature
 				base.Remove(item);
@@ -85,7 +103,7 @@ namespace Shadow.Model.L2S
 		{
 			foreach (var item in this.Where(match))
 			{
-				if (String.IsNullOrEmpty(item.Signature))
+				if (!this.OnlySoftDelete && String.IsNullOrEmpty(item.Signature))
 				{
 					// cannot reliably undelete without a signature
 					base.Remove(item);
