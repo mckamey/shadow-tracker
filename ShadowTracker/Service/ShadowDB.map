@@ -9,7 +9,7 @@
 			<Column Name="Modified" Member="ModifiedDate" Storage="modifiedDate" DbType="DateTime NOT NULL" UpdateCheck="Never" />
 			<Column Name="Size" Member="Length" Storage="length" DbType="BigInt NOT NULL" UpdateCheck="Never" />
 			<Column Name="Hash" Member="Signature" Storage="signature" DbType="Char(40)" UpdateCheck="Never" />
-			<Column Name="Deleted" Member="IsDeleted" Storage="isDeleted" DbType="Bit NOT NULL" UpdateCheck="Never" />
+			<Column Name="Deleted" Member="DeletedDate" Storage="deletedDate" DbType="DateTime" UpdateCheck="Never" />
 		</Type>
 	</Table>
 </Database>

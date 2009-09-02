@@ -134,7 +134,7 @@ namespace Shadow.Model
 
 		#region Fields
 
-		private bool isDeleted;
+		private DateTime? deletedDate;
 		private long id;
 		private string path;
 		private long length;
@@ -251,14 +251,6 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
-		/// Gets if this node has an associated CreatedDate
-		/// </summary>
-		public bool HasCreatedDate
-		{
-			get { return this.CreatedDate >= CatalogEntry.SqlDateTimeMinValue; }
-		}
-
-		/// <summary>
 		/// Gets and sets modified date
 		/// </summary>
 		public DateTime ModifiedDate
@@ -276,14 +268,6 @@ namespace Shadow.Model
 				this.modifiedDate = value;
 				this.OnPropertyChanged("ModifiedDate");
 			}
-		}
-
-		/// <summary>
-		/// Gets if this node has an associated ModifiedDate
-		/// </summary>
-		public bool HasModifiedDate
-		{
-			get { return this.ModifiedDate >= CatalogEntry.SqlDateTimeMinValue; }
 		}
 
 		/// <summary>
@@ -313,14 +297,6 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
-		/// Gets if this node has an associated hash signature
-		/// </summary>
-		public bool HasSignature
-		{
-			get { return !String.IsNullOrEmpty(this.Signature); }
-		}
-
-		/// <summary>
 		/// Gets if this node represents a directory
 		/// </summary>
 		public bool IsDirectory
@@ -329,6 +305,55 @@ namespace Shadow.Model
 		}
 
 		#endregion Properties
+
+		#region IL2SSoftDeleteEntity Members
+
+		public DateTime? DeletedDate
+		{
+			get { return this.deletedDate; }
+			set
+			{
+				if (this.deletedDate == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("DeletedDate");
+				this.deletedDate = value;
+				this.OnPropertyChanged("DeletedDate");
+			}
+		}
+
+		/// <summary>
+		/// Updates the values of one entry with those of another
+		/// </summary>
+		/// <param name="entry"></param>
+		public void CopyValuesFrom(IL2SSoftDeleteEntity entity)
+		{
+			if (entity == null)
+			{
+				return;
+			}
+
+			CatalogEntry that = entity as CatalogEntry;
+			if (that == null)
+			{
+				this.Signature = entity.Signature;
+				return;
+			}
+
+			//this.ID = that.ID;
+
+			this.Attributes = that.Attributes;
+			this.CreatedDate = that.CreatedDate;
+			this.DeletedDate = that.DeletedDate;
+			this.Length = that.Length;
+			this.ModifiedDate = that.ModifiedDate;
+			this.Path = that.Path;
+			this.Signature = that.Signature;
+		}
+
+		#endregion IL2SSoftDeleteEntity Members
 
 		#region Utility Methods
 
@@ -397,17 +422,17 @@ namespace Shadow.Model
 			builder.Append(this.Path);
 			builder.Append(", Attributes = ");
 			builder.Append(this.Attributes);
-			if (this.HasCreatedDate)
+			if (this.CreatedDate >= CatalogEntry.SqlDateTimeMinValue)
 			{
 				builder.Append(", CreatedDate = ");
 				builder.Append(this.CreatedDate);
 			}
-			if (this.HasModifiedDate)
+			if (this.ModifiedDate >= CatalogEntry.SqlDateTimeMinValue)
 			{
 				builder.Append(", ModifiedDate = ");
 				builder.Append(this.ModifiedDate);
 			}
-			if (this.HasSignature)
+			if (!String.IsNullOrEmpty(this.Signature))
 			{
 				builder.Append(", Signature = ");
 				builder.Append(this.Signature);
@@ -418,25 +443,5 @@ namespace Shadow.Model
 		}
 
 		#endregion Object Overrides
-
-		#region IL2SSoftDeleteEntity Members
-
-		public bool IsDeleted
-		{
-			get { return this.isDeleted; }
-			set
-			{
-				if (this.isDeleted == value)
-				{
-					return;
-				}
-
-				this.OnPropertyChanging("IsDeleted");
-				this.isDeleted = value;
-				this.OnPropertyChanged("IsDeleted");
-			}
-		}
-
-		#endregion IL2SSoftDeleteEntity Members
 	}
 }
