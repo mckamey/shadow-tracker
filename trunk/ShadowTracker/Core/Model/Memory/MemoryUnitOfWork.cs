@@ -8,8 +8,11 @@ namespace Shadow.Model.Memory
 	{
 		#region Fields
 
-		private IEnumerable<CatalogEntry> Storage;
-		private MemoryTable<CatalogEntry> IdentityMap;
+		private IEnumerable<Catalog> CatalogsStorage;
+		private MemoryTable<Catalog> CatalogsIdentityMap;
+
+		private IEnumerable<CatalogEntry> EntriesStorage;
+		private MemoryTable<CatalogEntry> EntriesIdentityMap;
 
 		#endregion Fields
 
@@ -18,7 +21,6 @@ namespace Shadow.Model.Memory
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <param name="comparer"></param>
 		public MemoryUnitOfWork()
 			: this(null)
 		{
@@ -27,11 +29,21 @@ namespace Shadow.Model.Memory
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <param name="comparer"></param>
-		/// <param name="entities">initial items</param>
-		public MemoryUnitOfWork(IEnumerable<CatalogEntry> entities)
+		/// <param name="catalogs">initial catalogs</param>
+		public MemoryUnitOfWork(IEnumerable<Catalog> catalogs)
+			: this(null, null)
 		{
-			this.Storage = entities != null ? entities : Enumerable.Empty<CatalogEntry>();
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="catalogs">initial catalogs</param>
+		/// <param name="entities">initial entries</param>
+		public MemoryUnitOfWork(IEnumerable<Catalog> catalogs, IEnumerable<CatalogEntry> entities)
+		{
+			this.CatalogsStorage = catalogs != null ? catalogs : Enumerable.Empty<Catalog>();
+			this.EntriesStorage = entities != null ? entities : Enumerable.Empty<CatalogEntry>();
 		}
 
 		#endregion Init
@@ -40,25 +52,48 @@ namespace Shadow.Model.Memory
 
 		public void Save()
 		{
-			if (this.IdentityMap != null)
+			// "save" catalogs
+			if (this.CatalogsIdentityMap != null)
 			{
 				// save contents to "storage"
-				this.Storage = this.IdentityMap.AsEnumerable();
+				this.CatalogsStorage = this.CatalogsIdentityMap.AsEnumerable();
 			}
 
 			// reset change tracking
-			this.IdentityMap = null;
+			this.CatalogsIdentityMap = null;
+
+			// "save" entries
+			if (this.EntriesIdentityMap != null)
+			{
+				// save contents to "storage"
+				this.EntriesStorage = this.EntriesIdentityMap.AsEnumerable();
+			}
+
+			// reset change tracking
+			this.EntriesIdentityMap = null;
+		}
+
+		public ITable<Catalog> Catalogs
+		{
+			get
+			{
+				if (this.CatalogsIdentityMap == null)
+				{
+					this.CatalogsIdentityMap = new MemoryTable<Catalog>(Catalog.PathComparer, this.CatalogsStorage);
+				}
+				return this.CatalogsIdentityMap;
+			}
 		}
 
 		public ITable<CatalogEntry> Entries
 		{
 			get
 			{
-				if (this.IdentityMap == null)
+				if (this.EntriesIdentityMap == null)
 				{
-					this.IdentityMap = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer, this.Storage);
+					this.EntriesIdentityMap = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer, this.EntriesStorage);
 				}
-				return this.IdentityMap;
+				return this.EntriesIdentityMap;
 			}
 		}
 

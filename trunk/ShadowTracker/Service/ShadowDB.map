@@ -10,6 +10,13 @@
 			<Column Name="Size" Member="Length" Storage="length" DbType="BigInt NOT NULL" UpdateCheck="Never" />
 			<Column Name="Hash" Member="Signature" Storage="signature" DbType="Char(40)" UpdateCheck="Never" />
 			<Column Name="Deleted" Member="DeletedDate" Storage="deletedDate" DbType="DateTime" UpdateCheck="Never" />
+			<Column Name="CatalogID" Member="CatalogID" Storage="catalogID" DbType="BigInt NOT NULL" UpdateCheck="Never" />
+		</Type>
+	</Table>
+	<Table Name="dbo.Catalog" Member="Catalogs">
+		<Type Name="Shadow.Model.Catalog">
+			<Column Name="CatalogID" Member="ID" Storage="id" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" AutoSync="OnInsert" UpdateCheck="Never" />
+			<Column Name="Path" Member="Path" Storage="path" DbType="VarChar(450) NOT NULL" CanBeNull="false" UpdateCheck="Never" />
 		</Type>
 	</Table>
 </Database>

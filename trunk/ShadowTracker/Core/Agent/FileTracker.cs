@@ -29,6 +29,7 @@ namespace Shadow.Agent
 		private readonly FileSystemWatcher Watcher = new FileSystemWatcher();
 		private readonly Dictionary<string, Timer> Timers = new Dictionary<string, Timer>(StringComparer.OrdinalIgnoreCase);
 		private Func<FileSystemInfo, bool> fileFilter;
+		private Catalog catalog;
 
 		#endregion Fields
 
@@ -214,14 +215,14 @@ namespace Shadow.Agent
 		private void ApplyChange(FileSystemEventArgs e)
 		{
 			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
-			CatalogRepository catalog = new CatalogRepository(unitOfWork);
+			CatalogRepository repos = new CatalogRepository(unitOfWork, this.catalog);
 
 			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
 			switch (e.ChangeType)
 			{
 				case WatcherChangeTypes.Deleted:
 				{
-					catalog.DeleteEntryByPath(this.NormalizePath(e.FullPath));
+					repos.DeleteEntryByPath(this.NormalizePath(e.FullPath));
 					break;
 				}
 				case WatcherChangeTypes.Renamed:
@@ -254,7 +255,7 @@ namespace Shadow.Agent
 									continue;
 								}
 
-								catalog.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
+								repos.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
 								hasChildren = true;
 							}
 							catch (Exception ex)
@@ -266,7 +267,7 @@ namespace Shadow.Agent
 
 						if (!hasChildren)
 						{
-							catalog.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+							repos.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
 						}
 					}
 					catch (ArgumentException ex)
@@ -292,8 +293,8 @@ namespace Shadow.Agent
 						// add any children
 						foreach (FileSystemInfo child in FileIterator.GetFiles(e.FullPath, true).Where(this.fileFilter))
 						{
-							entry = FileUtility.CreateEntry(this.Watcher.Path, child);
-							catalog.ApplyChanges(entry);
+							entry = FileUtility.CreateEntry(this.catalog, child);
+							repos.ApplyChanges(entry);
 							hasChildren = true;
 						}
 					}
@@ -301,8 +302,8 @@ namespace Shadow.Agent
 					if (!hasChildren)
 					{
 						// add the file or the empty directory if no children
-						entry = FileUtility.CreateEntry(this.Watcher.Path, info);
-						catalog.ApplyChanges(entry);
+						entry = FileUtility.CreateEntry(this.catalog, info);
+						repos.ApplyChanges(entry);
 					}
 					break;
 				}
@@ -318,11 +319,10 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Sends updates to a catalog
 		/// </summary>
-		/// 
 		/// <param name="watchFolder"></param>
-		public void Start(string watchFolder)
+		public void Start(Catalog catalog)
 		{
-			this.Start(watchFolder, n => true);
+			this.Start(catalog, n => true);
 		}
 
 		/// <summary>
@@ -330,11 +330,12 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="watchFolder"></param>
 		/// <param name="fileFilter"></param>
-		public void Start(string watchFolder, Func<FileSystemInfo, bool> fileFilter)
+		public void Start(Catalog catalog, Func<FileSystemInfo, bool> fileFilter)
 		{
+			this.catalog = catalog;
 			this.fileFilter = fileFilter;
 
-			this.Watcher.Path = watchFolder;
+			this.Watcher.Path = this.catalog.Path;
 			this.Watcher.EnableRaisingEvents = true;
 		}
 

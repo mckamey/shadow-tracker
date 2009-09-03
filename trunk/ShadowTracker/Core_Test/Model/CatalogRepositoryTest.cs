@@ -15,7 +15,7 @@ namespace Shadow.Model.Test
 		#region Fields
 
 		private TestContext testContextInstance;
-		private CatalogRepository catalog;
+		private CatalogRepository repos;
 
 		#endregion Fields
 
@@ -47,6 +47,17 @@ namespace Shadow.Model.Test
 		[TestInitialize()]
 		public void CatalogInitialize()
 		{
+			const string FakeRoot = @"C:\FakeRoot\";
+
+			Catalog[] catalogs =
+			{
+				new Catalog
+				{
+					ID = 1L,
+					Path = FakeRoot,
+				}
+			};
+
 			CatalogEntry[] entries =
 			{
 				new CatalogEntry
@@ -55,11 +66,12 @@ namespace Shadow.Model.Test
 					CreatedDate = new DateTime(2009, 8, 21, 23, 42, 37, DateTimeKind.Local),
 					ModifiedDate = new DateTime(2009, 8, 21, 23, 42, 37, DateTimeKind.Local),
 					Path = "Foo.txt",
-					Signature = ""
+					Signature = "",
+					CatalogID = 1L
 				}
 			};
 
-			this.catalog = new CatalogRepository(new MemoryUnitOfWork(entries));
+			this.repos = new CatalogRepository(new MemoryUnitOfWork(catalogs, entries), catalogs[0]);
 		}
 
 		[TestMethod()]
@@ -68,7 +80,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			//CatalogRepository_Accessor target = this.catalog;
+			//CatalogRepository_Accessor target = this.repos;
 			//CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			//CatalogEntry meta = null; // TODO: Initialize to an appropriate value
 			//CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
@@ -87,7 +99,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			//CatalogRepository target = this.catalog;
+			//CatalogRepository target = this.repos;
 			//CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			//CatalogEntry data = null; // TODO: Initialize to an appropriate value
 			//target.CloneEntry(entry, data);
@@ -96,11 +108,11 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void DeleteEntryByPathTest()
 		{
-			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Foo.txt"));
+			Assert.IsTrue(this.repos.Exists(n => n.Path == "Foo.txt"));
 
-			this.catalog.DeleteEntryByPath("Foo.txt");
+			this.repos.DeleteEntryByPath("Foo.txt");
 
-			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Foo.txt"));
+			Assert.IsFalse(this.repos.Exists(n => n.Path == "Foo.txt"));
 		}
 
 		[TestMethod()]
@@ -108,7 +120,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.catalog;
+			CatalogRepository target = this.repos;
 			Expression<Func<CatalogEntry, bool>> predicate = null; // TODO: Initialize to an appropriate value
 			bool expected = false; // TODO: Initialize to an appropriate value
 			bool actual;
@@ -121,7 +133,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.catalog;
+			CatalogRepository target = this.repos;
 			IQueryable<string> expected = null; // TODO: Initialize to an appropriate value
 			IEnumerable<string> actual = target.GetExistingPaths();
 			Assert.AreEqual(expected, actual);
@@ -130,13 +142,13 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void RenameEntryTest()
 		{
-			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Foo.txt"));
-			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Bar.txt"));
+			Assert.IsTrue(this.repos.Exists(n => n.Path == "Foo.txt"));
+			Assert.IsFalse(this.repos.Exists(n => n.Path == "Bar.txt"));
 
-			this.catalog.RenameEntry("Foo.txt", "Bar.txt");
+			this.repos.RenameEntry("Foo.txt", "Bar.txt");
 
-			Assert.IsFalse(this.catalog.Exists(n => n.Path == "Foo.txt"));
-			Assert.IsTrue(this.catalog.Exists(n => n.Path == "Bar.txt"));
+			Assert.IsFalse(this.repos.Exists(n => n.Path == "Foo.txt"));
+			Assert.IsTrue(this.repos.Exists(n => n.Path == "Bar.txt"));
 		}
 
 		[TestMethod()]
@@ -144,7 +156,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.catalog;
+			CatalogRepository target = this.repos;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			CatalogEntry original = null; // TODO: Initialize to an appropriate value
 			target.UpdateMeta(entry, original);
@@ -155,7 +167,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.catalog;
+			CatalogRepository target = this.repos;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			CatalogEntry original = null; // TODO: Initialize to an appropriate value
 			CatalogEntry data = null; // TODO: Initialize to an appropriate value
@@ -167,7 +179,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.catalog;
+			CatalogRepository target = this.repos;
 			CatalogRepository that = null; // TODO: Initialize to an appropriate value
 			target.Sync(that);
 		}
@@ -178,7 +190,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			//CatalogRepository_Accessor target = this.catalog;
+			//CatalogRepository_Accessor target = this.repos;
 			//CatalogEntry target1 = null; // TODO: Initialize to an appropriate value
 			//CatalogEntry meta = null; // TODO: Initialize to an appropriate value
 			//CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
@@ -197,7 +209,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.catalog;
+			CatalogRepository target = this.repos;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			target.ApplyChanges(entry);
 		}
@@ -207,7 +219,7 @@ namespace Shadow.Model.Test
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.catalog;
+			CatalogRepository target = this.repos;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			target.AddEntry(entry);
 		}
