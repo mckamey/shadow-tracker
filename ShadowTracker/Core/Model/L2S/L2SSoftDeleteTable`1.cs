@@ -8,7 +8,7 @@ namespace Shadow.Model.L2S
 	public interface IL2SSoftDeleteEntity
 	{
 		DateTime? DeletedDate { get; set; }
-		string Signature { get; set; }
+		string Signature { get; }
 		void CopyValuesFrom(IL2SSoftDeleteEntity item);
 	}
 

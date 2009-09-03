@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace Shadow.Model
 {
 	/// <summary>
-	/// Implements a repository pattern for Catalog Entries which
+	/// Implements a repository pattern for CatalogEntry which
 	/// can be backed by a number of different storage mechanisms.
 	/// </summary>
 	public class CatalogRepository
@@ -14,6 +14,7 @@ namespace Shadow.Model
 		#region Fields
 
 		private readonly IUnitOfWork UnitOfWork;
+		private readonly Catalog Catalog;
 
 		#endregion Fields
 
@@ -23,14 +24,40 @@ namespace Shadow.Model
 		/// Ctor
 		/// </summary>
 		/// <param name="unitOfWork">unit of work</param>
-		public CatalogRepository(IUnitOfWork unitOfWork)
+		public CatalogRepository(IUnitOfWork unitOfWork, string rootPath)
 		{
 			if (unitOfWork == null)
 			{
 				throw new ArgumentNullException("unitOfWork", "IUnitOfWork was null.");
 			}
+			if (String.IsNullOrEmpty(rootPath))
+			{
+				throw new ArgumentNullException("rootPath", "root path was missing.");
+			}
 
 			this.UnitOfWork = unitOfWork;
+
+			rootPath = rootPath.ToLower();
+			this.Catalog = CatalogRepository.EnsureCatalog(unitOfWork, rootPath);
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="unitOfWork">unit of work</param>
+		public CatalogRepository(IUnitOfWork unitOfWork, Catalog catalog)
+		{
+			if (unitOfWork == null)
+			{
+				throw new ArgumentNullException("unitOfWork", "IUnitOfWork was null.");
+			}
+			if (catalog == null)
+			{
+				throw new ArgumentNullException("catalog", "Catalog was null.");
+			}
+
+			this.UnitOfWork = unitOfWork;
+			this.Catalog = catalog;
 		}
 
 		#endregion Init
@@ -134,6 +161,19 @@ namespace Shadow.Model
 		#endregion Action Methods
 
 		#region Query Methods
+
+		public static Catalog EnsureCatalog(IUnitOfWork unitOfWork, string path)
+		{
+			Catalog catalog = unitOfWork.Catalogs.Where(c => c.Path == path.ToLower()).FirstOrDefault();
+			if (catalog == null)
+			{
+				catalog = new Catalog();
+				catalog.Path = path;
+				unitOfWork.Catalogs.Add(catalog);
+				unitOfWork.Save();
+			}
+			return catalog;
+		}
 
 		/// <summary>
 		/// Allows simple checking for existance.

@@ -10,7 +10,7 @@ using Shadow.Model.L2S;
 namespace Shadow.Model
 {
 	/// <summary>
-	/// Represents a single catalog data node
+	/// Represents a single catalog entry
 	/// </summary>
 	public class CatalogEntry :
 		INotifyPropertyChanging,
@@ -108,7 +108,8 @@ namespace Shadow.Model
 					EqualityComparer<Int64>.Default.Equals(x.Length, y.Length) &&
 					(x.CreatedDate.Ticks == y.CreatedDate.Ticks) &&
 					(x.ModifiedDate.Ticks == y.ModifiedDate.Ticks) &&
-					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature);
+					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature) &&
+					(x.CatalogID == y.CatalogID);
 			}
 
 			int IEqualityComparer<CatalogEntry>.GetHashCode(CatalogEntry obj)
@@ -142,6 +143,8 @@ namespace Shadow.Model
 		private DateTime createdDate;
 		private DateTime modifiedDate;
 		private string signature;
+
+		private long catalogID;
 
 		#endregion Fields
 
@@ -297,6 +300,25 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
+		/// Gets and sets the ID of the owning catalog
+		/// </summary>
+		public long CatalogID
+		{
+			get { return this.catalogID; }
+			set
+			{
+				if (this.catalogID == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("CatalogID");
+				this.catalogID = value;
+				this.OnPropertyChanged("CatalogID");
+			}
+		}
+
+		/// <summary>
 		/// Gets if this node represents a directory
 		/// </summary>
 		public bool IsDirectory
@@ -351,6 +373,9 @@ namespace Shadow.Model
 			this.ModifiedDate = that.ModifiedDate;
 			this.Path = that.Path;
 			this.Signature = that.Signature;
+
+			// TODO: evaluate whether this is needed
+			this.CatalogID = that.CatalogID;
 		}
 
 		#endregion IL2SSoftDeleteEntity Members

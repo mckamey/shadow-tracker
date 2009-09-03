@@ -13,6 +13,7 @@ namespace Shadow.Model.L2S
 		#region Fields
 
 		private readonly DataContext DB;
+		private ITable<Catalog> catalogs;
 		private ITable<CatalogEntry> entries;
 
 		#endregion Fields
@@ -110,6 +111,18 @@ namespace Shadow.Model.L2S
 			}
 
 			this.DB.SubmitChanges(ConflictMode.ContinueOnConflict);
+		}
+
+		public ITable<Catalog> Catalogs
+		{
+			get
+			{
+				if (this.catalogs == null)
+				{
+					this.catalogs = new L2STable<Catalog>(this.DB);
+				}
+				return this.catalogs;
+			}
 		}
 
 		public ITable<CatalogEntry> Entries

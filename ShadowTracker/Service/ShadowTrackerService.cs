@@ -14,6 +14,7 @@ namespace Shadow.Service
 	{
 		#region Fields
 
+		private static readonly char[] ConfigDelims = { ';', '|' };
 		private readonly FileTracker Tracker = new FileTracker();
 
 		#endregion Fields
@@ -65,9 +66,11 @@ namespace Shadow.Service
 		{
 			try
 			{
-				string watchFolder = ConfigurationManager.AppSettings["WatchFolder"];
-				string fileFilter = ConfigurationManager.AppSettings["FileFilter"] ?? "";
-				var callback = FileUtility.CreateFileFilter(fileFilter.Split(',', '|'));
+				string watchFolder = ConfigurationManager.AppSettings["WatchFolder"] ?? String.Empty;
+				string[] folders = watchFolder.Split(ConfigDelims, StringSplitOptions.RemoveEmptyEntries);
+
+				string fileFilter = ConfigurationManager.AppSettings["FileFilter"] ?? String.Empty;
+				var filterCallback = FileUtility.CreateFileFilter(fileFilter.Split(ConfigDelims, StringSplitOptions.RemoveEmptyEntries));
 
 				string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
 				string mappings = ConfigurationManager.AppSettings["SqlMapping"];
@@ -89,22 +92,25 @@ namespace Shadow.Service
 
 				var watch = System.Diagnostics.Stopwatch.StartNew();
 
-				FileUtility.SyncCatalog(
-					watchFolder,
-					callback,
-					FileUtility.DefaultTrickleRate,
-					delegate()
-					{
-						watch.Stop();
-						this.Out.WriteLine();
-						this.Out.WriteLine("Elapsed trickle update: "+watch.Elapsed);
-						this.Out.WriteLine("__________________________");
-					});
+				foreach (string folder in folders)
+				{
+					FileUtility.SyncCatalog(
+						folder,
+						filterCallback,
+						FileUtility.DefaultTrickleRate,
+						delegate(string syncFolder)
+						{
+							this.Out.WriteLine();
+							this.Out.WriteLine(syncFolder+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
+							this.Out.WriteLine("__________________________");
+						});
+
+					this.Tracker.Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folder), filterCallback);
+				}
 
 				this.Out.WriteLine();
 				this.Out.WriteLine("Tracking started...");
 				this.Out.WriteLine("__________________________");
-				this.Tracker.Start(watchFolder, callback);
 			}
 			catch (Exception ex)
 			{
