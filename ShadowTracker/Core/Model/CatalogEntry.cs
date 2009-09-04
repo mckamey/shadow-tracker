@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -145,6 +146,7 @@ namespace Shadow.Model
 		private string signature;
 
 		private long catalogID;
+		private EntityRef<Catalog> catalog = default(EntityRef<Catalog>);
 
 		#endregion Fields
 
@@ -312,9 +314,32 @@ namespace Shadow.Model
 					return;
 				}
 
+				if (this.catalog.HasLoadedOrAssignedValue)
+				{
+					throw new ForeignKeyReferenceAlreadyHasValueException("Catalog already assigned to CatalogEntry.");
+				}
 				this.OnPropertyChanging("CatalogID");
 				this.catalogID = value;
 				this.OnPropertyChanged("CatalogID");
+			}
+		}
+
+		/// <summary>
+		/// Gets and sets the owning catalog
+		/// </summary>
+		internal Catalog Catalog
+		{
+			get { return this.catalog.Entity; }
+			set
+			{
+				if (this.catalog.Entity == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("Catalog");
+				this.catalog.Entity = value;
+				this.OnPropertyChanged("Catalog");
 			}
 		}
 

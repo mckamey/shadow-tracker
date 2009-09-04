@@ -1,22 +1,95 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Database Name="ShadowDB" xmlns="http://schemas.microsoft.com/linqtosql/mapping/2007">
-	<Table Name="dbo.File" Member="Entries">
-		<Type Name="Shadow.Model.CatalogEntry">
-			<Column Name="FileID" Member="ID" Storage="id" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" AutoSync="OnInsert" UpdateCheck="Never" />
-			<Column Name="Path" Member="Path" Storage="path" DbType="VarChar(450) NOT NULL" CanBeNull="false" UpdateCheck="Never" />
-			<Column Name="Attribs" Member="Attributes" Storage="attributes" DbType="Int NOT NULL" UpdateCheck="Never" />
-			<Column Name="Created" Member="CreatedDate" Storage="createdDate" DbType="DateTime NOT NULL" UpdateCheck="Never" />
-			<Column Name="Modified" Member="ModifiedDate" Storage="modifiedDate" DbType="DateTime NOT NULL" UpdateCheck="Never" />
-			<Column Name="Size" Member="Length" Storage="length" DbType="BigInt NOT NULL" UpdateCheck="Never" />
-			<Column Name="Hash" Member="Signature" Storage="signature" DbType="Char(40)" UpdateCheck="Never" />
-			<Column Name="Deleted" Member="DeletedDate" Storage="deletedDate" DbType="DateTime" UpdateCheck="Never" />
-			<Column Name="CatalogID" Member="CatalogID" Storage="catalogID" DbType="BigInt NOT NULL" UpdateCheck="Never" />
-		</Type>
-	</Table>
+<Database Name="ShadowDB"
+		  xmlns="http://schemas.microsoft.com/linqtosql/mapping/2007">
+
 	<Table Name="dbo.Catalog" Member="Catalogs">
 		<Type Name="Shadow.Model.Catalog">
-			<Column Name="CatalogID" Member="ID" Storage="id" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" AutoSync="OnInsert" UpdateCheck="Never" />
-			<Column Name="Path" Member="Path" Storage="path" DbType="VarChar(450) NOT NULL" CanBeNull="false" UpdateCheck="Never" />
+
+			<Column Name="CatalogID"
+					Member="ID"
+					Storage="id"
+					DbType="BigInt NOT NULL IDENTITY"
+					IsPrimaryKey="true"
+					IsDbGenerated="true"
+					AutoSync="OnInsert"
+					UpdateCheck="Never" />
+
+			<Column Name="Path"
+					Member="Path"
+					Storage="path"
+					DbType="VarChar(450) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+		</Type>
+	</Table>
+
+	<Table Name="dbo.File" Member="Entries">
+		<Type Name="Shadow.Model.CatalogEntry">
+
+			<Column Name="FileID"
+					Member="ID"
+					Storage="id"
+					DbType="BigInt NOT NULL IDENTITY"
+					IsPrimaryKey="true"
+					IsDbGenerated="true"
+					AutoSync="OnInsert"
+					UpdateCheck="Never" />
+
+			<Column Name="Path"
+					Member="Path"
+					Storage="path"
+					DbType="VarChar(450) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
+			<Column Name="Attribs"
+					Member="Attributes"
+					Storage="attributes"
+					DbType="Int NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Created"
+					Member="CreatedDate"
+					Storage="createdDate"
+					DbType="DateTime NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Modified"
+					Member="ModifiedDate"
+					Storage="modifiedDate"
+					DbType="DateTime NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Size"
+					Member="Length"
+					Storage="length"
+					DbType="BigInt NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Hash"
+					Member="Signature"
+					Storage="signature"
+					DbType="Char(40)"
+					UpdateCheck="Never" />
+
+			<Column Name="Deleted"
+					Member="DeletedDate"
+					Storage="deletedDate"
+					DbType="DateTime"
+					UpdateCheck="Never" />
+
+			<Column Name="CatalogID"
+					Member="CatalogID"
+					Storage="catalogID"
+					DbType="BigInt NOT NULL"
+					UpdateCheck="Never" />
+
+			<Association Name="FK_File_Catalog"
+						 Member="Catalog"
+						 Storage="catalog"
+						 ThisKey="CatalogID"
+						 OtherKey="ID"
+						 IsForeignKey="true" />
 		</Type>
 	</Table>
 </Database>

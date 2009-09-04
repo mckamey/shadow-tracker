@@ -70,6 +70,7 @@ namespace Shadow.Model
 		/// <param name="entry"></param>
 		public virtual void AddEntry(CatalogEntry entry)
 		{
+			entry.CatalogID = this.Catalog.ID;
 			this.UnitOfWork.Entries.Add(entry);
 		}
 
@@ -91,7 +92,7 @@ namespace Shadow.Model
 		public virtual void DeleteEntryByPath(string path)
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-			entries.RemoveWhere(n => n.Path.ToLower() == path.ToLower());
+			entries.RemoveWhere(n => (n.CatalogID == this.Catalog.ID) && (n.Path.ToLower() == path.ToLower()));
 
 			// if has children then remove them as well
 			string asDir = path;
@@ -111,7 +112,7 @@ namespace Shadow.Model
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 
-			CatalogEntry entry = entries.FirstOrDefault(n => n.Path == oldPath);
+			CatalogEntry entry = entries.FirstOrDefault(n => n.CatalogID == this.Catalog.ID && n.Path == oldPath);
 			if (entry == null)
 			{
 				// TODO: log error
@@ -183,7 +184,9 @@ namespace Shadow.Model
 		public bool Exists(Expression<Func<CatalogEntry, bool>> predicate)
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-			return entries.Any(predicate);
+			return entries
+				.Where(n => n.CatalogID == this.Catalog.ID)
+				.Any(predicate);
 		}
 
 		public IEnumerable<string> GetChildPaths(string parent)
@@ -200,13 +203,17 @@ namespace Shadow.Model
 			}
 
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-			return entries.Where(n => n.Path.ToLower().StartsWith(parent)).Select(n => n.Path);
+			return entries
+				.Where(n => (n.CatalogID == this.Catalog.ID) && n.Path.ToLower().StartsWith(parent))
+				.Select(n => n.Path);
 		}
 
 		public IQueryable<string> GetExistingPaths()
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-			return entries.Select(n => n.Path);
+			return entries
+				.Where(n => n.CatalogID == this.Catalog.ID)
+				.Select(n => n.Path);
 		}
 
 		#endregion Query Methods
@@ -236,10 +243,12 @@ namespace Shadow.Model
 		{
 			string path = target.Path != null ? target.Path.ToLowerInvariant() : null;
 			string hash = target.Signature != null ? target.Signature.ToLowerInvariant() : null;
+			long catalogID = this.Catalog.ID;
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 
 			var query =
 				(from entry in entries
+				 where entry.CatalogID == catalogID
 				 let rank =
 					(int)(entry.Path.ToLower() == path ? MatchRank.Path : MatchRank.None) |
 					(int)((entry.Signature != null && entry.Signature.ToLower() == hash) ? MatchRank.Hash : MatchRank.None)
@@ -400,7 +409,7 @@ namespace Shadow.Model
 			// TODO: reconcile this with trickle-updates
 
 			// apply any deltas since last sync
-			foreach (CatalogEntry entry in that.UnitOfWork.Entries)
+			foreach (CatalogEntry entry in that.UnitOfWork.Entries.Where(n => n.CatalogID == this.Catalog.ID))
 			{
 				this.ApplyChanges(entry);
 			}
