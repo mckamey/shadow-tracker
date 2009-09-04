@@ -62,46 +62,58 @@ namespace Shadow.Model.L2S
 			{
 				bool hasChanges = false;
 				ChangeSet changes = this.DB.GetChangeSet();
-				foreach (var insert in changes.Inserts)
+				foreach (var inserted in changes.Inserts)
 				{
 					hasChanges = true;
 
-					CatalogEntry entry = insert as CatalogEntry;
+					CatalogEntry entry = inserted as CatalogEntry;
 					if (entry != null)
 					{
 						Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Path);
 					}
+					else if (inserted is Catalog)
+					{
+						Console.WriteLine("ADD Catalog at \"{0}\"", ((Catalog)inserted).Path);
+					}
 					else
 					{
-						Console.WriteLine("ADD "+insert);
+						Console.WriteLine("ADD "+inserted);
 					}
 				}
-				foreach (var update in changes.Updates)
+				foreach (var updated in changes.Updates)
 				{
 					hasChanges = true;
 
-					CatalogEntry entry = update as CatalogEntry;
+					CatalogEntry entry = updated as CatalogEntry;
 					if (entry != null)
 					{
 						Console.WriteLine("UPDATE \"{0}\"", entry.Path);
 					}
+					else if (updated is Catalog)
+					{
+						Console.WriteLine("UPDATE Catalog \"{0}\"", ((Catalog)updated).Path);
+					}
 					else
 					{
-						Console.WriteLine("UPDATE "+update);
+						Console.WriteLine("UPDATE "+updated);
 					}
 				}
-				foreach (var delete in changes.Deletes)
+				foreach (var deleted in changes.Deletes)
 				{
 					hasChanges = true;
 
-					CatalogEntry entry = delete as CatalogEntry;
+					CatalogEntry entry = deleted as CatalogEntry;
 					if (entry != null)
 					{
 						Console.WriteLine("REMOVE \"{0}\"", entry.Path);
 					}
+					else if (deleted is Catalog)
+					{
+						Console.WriteLine("REMOVE Catalog \"{0}\"", ((Catalog)deleted).Path);
+					}
 					else
 					{
-						Console.WriteLine("REMOVE "+delete);
+						Console.WriteLine("REMOVE "+deleted);
 					}
 				}
 				if (!hasChanges)
