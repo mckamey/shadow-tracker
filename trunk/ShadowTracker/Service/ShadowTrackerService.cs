@@ -15,7 +15,7 @@ namespace Shadow.Service
 		#region Fields
 
 		private static readonly char[] ConfigDelims = { ';', '|' };
-		private readonly FileTracker Tracker = new FileTracker();
+		private FileTracker[] Trackers;
 
 		#endregion Fields
 
@@ -92,10 +92,11 @@ namespace Shadow.Service
 
 				var watch = System.Diagnostics.Stopwatch.StartNew();
 
-				foreach (string folder in folders)
+				this.Trackers = new FileTracker[folders.Length];
+				for (int i=0; i<folders.Length; i++)
 				{
 					FileUtility.SyncCatalog(
-						folder,
+						folders[i],
 						filterCallback,
 						FileUtility.DefaultTrickleRate,
 						delegate(string syncFolder)
@@ -105,7 +106,8 @@ namespace Shadow.Service
 							this.Out.WriteLine("__________________________");
 						});
 
-					this.Tracker.Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folder), filterCallback);
+					this.Trackers[i] = new FileTracker();
+					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folders[i]), filterCallback);
 				}
 
 				this.Out.WriteLine();
@@ -129,7 +131,15 @@ namespace Shadow.Service
 
 		protected override void OnStop()
 		{
-			this.Tracker.Stop();
+			foreach (FileTracker tracker in this.Trackers)
+			{
+				if (tracker == null)
+				{
+					continue;
+				}
+
+				tracker.Stop();
+			}
 
 			this.Out.WriteLine();
 			this.Out.WriteLine("Tracking stopped.");
