@@ -104,11 +104,12 @@ namespace Shadow.Model
 				}
 
 				return
-					StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path) &&
 					EqualityComparer<FileAttributes>.Default.Equals(x.Attributes, y.Attributes) &&
-					EqualityComparer<Int64>.Default.Equals(x.Length, y.Length) &&
 					(x.CreatedDate.Ticks == y.CreatedDate.Ticks) &&
+					EqualityComparer<Int64>.Default.Equals(x.Length, y.Length) &&
 					(x.ModifiedDate.Ticks == y.ModifiedDate.Ticks) &&
+					StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path) &&
+					StringComparer.OrdinalIgnoreCase.Equals(x.Parent, y.Parent) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature) &&
 					(x.CatalogID == y.CatalogID);
 			}
@@ -120,13 +121,15 @@ namespace Shadow.Model
 					return StringComparer.OrdinalIgnoreCase.GetHashCode(null);
 				}
 
+				const int ShiftValue = -1521134295;
 				int hashcode = 0x23f797e3;
-				hashcode = (-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
-				hashcode = (-1521134295 * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(obj.Attributes);
-				hashcode = (-1521134295 * hashcode) + EqualityComparer<Int64>.Default.GetHashCode(obj.Length);
-				hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.CreatedDate);
-				hashcode = (-1521134295 * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.ModifiedDate);
-				return ((-1521134295 * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature));
+				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
+				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Parent);
+				hashcode = (ShiftValue * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(obj.Attributes);
+				hashcode = (ShiftValue * hashcode) + EqualityComparer<Int64>.Default.GetHashCode(obj.Length);
+				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.CreatedDate);
+				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.ModifiedDate);
+				return ((ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature));
 			}
 
 			#endregion IEqualityComparer<T> Members
@@ -139,6 +142,7 @@ namespace Shadow.Model
 		private DateTime? deletedDate;
 		private long id;
 		private string path;
+		private string parent;
 		private long length;
 		private FileAttributes attributes;
 		private DateTime createdDate;
@@ -187,6 +191,25 @@ namespace Shadow.Model
 				this.OnPropertyChanging("Path");
 				this.path = value;
 				this.OnPropertyChanged("Path");
+			}
+		}
+
+		/// <summary>
+		/// Gets and sets the relative path of the parent directory
+		/// </summary>
+		public string Parent
+		{
+			get { return this.parent; }
+			set
+			{
+				if (StringComparer.OrdinalIgnoreCase.Equals(this.parent, value))
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("Parent");
+				this.parent = value;
+				this.OnPropertyChanged("Parent");
 			}
 		}
 
@@ -396,6 +419,7 @@ namespace Shadow.Model
 			this.DeletedDate = that.DeletedDate;
 			this.Length = that.Length;
 			this.ModifiedDate = that.ModifiedDate;
+			this.Parent = that.Parent;
 			this.Path = that.Path;
 			this.Signature = that.Signature;
 
@@ -486,6 +510,11 @@ namespace Shadow.Model
 			{
 				builder.Append(", Signature = ");
 				builder.Append(this.Signature);
+			}
+			if (!String.IsNullOrEmpty(this.Parent))
+			{
+				builder.Append(", Parent = ");
+				builder.Append(this.Parent);
 			}
 			builder.Append(" }");
 
