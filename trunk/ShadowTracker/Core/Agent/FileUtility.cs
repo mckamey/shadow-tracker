@@ -216,7 +216,6 @@ namespace Shadow.Agent
 		{
 			return new CatalogEntry
 			{
-				Path = FileUtility.NormalizePath(catalog.Path, file.FullName),
 				Attributes = (file.Attributes&FileUtility.AttribMask),
 				CatalogID = catalog.ID,
 				CreatedDate = file.CreationTimeUtc,
@@ -224,6 +223,8 @@ namespace Shadow.Agent
 					((FileInfo)file).Length :
 					0L,
 				ModifiedDate = file.LastWriteTimeUtc,
+				Path = FileUtility.NormalizePath(catalog.Path, file.FullName),
+				Parent = FileUtility.NormalizePath(catalog.Path, Path.GetDirectoryName(file.FullName)),
 				Signature = (file is FileInfo) ?
 					FileHash.ComputeHash((FileInfo)file) :
 					null,
