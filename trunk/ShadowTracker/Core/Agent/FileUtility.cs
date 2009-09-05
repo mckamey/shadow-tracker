@@ -214,6 +214,11 @@ namespace Shadow.Agent
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
 		public static CatalogEntry CreateEntry(Catalog catalog, FileSystemInfo file)
 		{
+			DirectoryInfo parent =
+				file is FileInfo ?
+				((FileInfo)file).Directory :
+				((DirectoryInfo)file).Parent;
+
 			return new CatalogEntry
 			{
 				Attributes = (file.Attributes&FileUtility.AttribMask),
@@ -224,7 +229,7 @@ namespace Shadow.Agent
 					0L,
 				ModifiedDate = file.LastWriteTimeUtc,
 				Path = FileUtility.NormalizePath(catalog.Path, file.FullName),
-				Parent = FileUtility.NormalizePath(catalog.Path, Path.GetDirectoryName(file.FullName)),
+				Parent = FileUtility.NormalizePath(catalog.Path, parent.FullName),
 				Signature = (file is FileInfo) ?
 					FileHash.ComputeHash((FileInfo)file) :
 					null,
