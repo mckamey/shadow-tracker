@@ -151,7 +151,9 @@ namespace Shadow.Model
 		{
 			StringBuilder builder = new StringBuilder();
 
-			builder.Append("{ Path = ");
+			builder.Append("{ Name = ");
+			builder.Append(this.Name);
+			builder.Append(", Path = ");
 			builder.Append(this.Path);
 			builder.Append(" }");
 
