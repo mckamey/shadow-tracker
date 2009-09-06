@@ -24,21 +24,25 @@ namespace Shadow.Model
 		/// Ctor
 		/// </summary>
 		/// <param name="unitOfWork">unit of work</param>
-		public CatalogRepository(IUnitOfWork unitOfWork, string rootPath)
+		public CatalogRepository(IUnitOfWork unitOfWork, string name, string rootPath)
 		{
 			if (unitOfWork == null)
 			{
 				throw new ArgumentNullException("unitOfWork", "IUnitOfWork was null.");
 			}
+			if (String.IsNullOrEmpty(name))
+			{
+				throw new ArgumentNullException("name", "Catalog name was empty.");
+			}
 			if (String.IsNullOrEmpty(rootPath))
 			{
-				throw new ArgumentNullException("rootPath", "root path was missing.");
+				throw new ArgumentNullException("rootPath", "Catalog path was empty.");
 			}
 
 			this.UnitOfWork = unitOfWork;
 
 			rootPath = rootPath.ToLower();
-			this.Catalog = CatalogRepository.EnsureCatalog(unitOfWork, rootPath);
+			this.Catalog = CatalogRepository.EnsureCatalog(unitOfWork, name, rootPath);
 		}
 
 		/// <summary>
@@ -163,12 +167,45 @@ namespace Shadow.Model
 
 		#region Query Methods
 
-		public static Catalog EnsureCatalog(IUnitOfWork unitOfWork, string path)
+		public static Catalog EnsureCatalog(IUnitOfWork unitOfWork, string name, string path)
 		{
-			Catalog catalog = unitOfWork.Catalogs.Where(c => c.Path == path.ToLower()).FirstOrDefault();
+			if (String.IsNullOrEmpty(name))
+			{
+				throw new ArgumentNullException("name", "Catalog name was empty.");
+			}
+			if (String.IsNullOrEmpty(path))
+			{
+				throw new ArgumentNullException("path", "Catalog path was empty.");
+			}
+
+			path = Shadow.Agent.FileUtility.EnsureTrailingSlash(path);
+
+			// TODO do the ranked order by for this query so only query once
+			Catalog catalog = unitOfWork.Catalogs.Where(c => c.Name == name.ToLower()).FirstOrDefault();
+			if (catalog != null)
+			{
+				if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Path, path))
+				{
+					// update the root to match
+					catalog.Path = path;
+					unitOfWork.Save();
+				}
+			}
+			else
+			{
+				catalog = unitOfWork.Catalogs.Where(c => c.Path == path.ToLower()).FirstOrDefault();
+				if (catalog != null)
+				{
+					// update the name to match
+					catalog.Name = name;
+					unitOfWork.Save();
+				}
+			}
+
 			if (catalog == null)
 			{
 				catalog = new Catalog();
+				catalog.Name = name;
 				catalog.Path = path;
 				unitOfWork.Catalogs.Add(catalog);
 				unitOfWork.Save();

@@ -5,6 +5,7 @@ using System.IO;
 using System.ServiceProcess;
 
 using Shadow.Agent;
+using Shadow.Configuration;
 using Shadow.Model;
 using Shadow.Model.L2S;
 
@@ -14,7 +15,6 @@ namespace Shadow.Service
 	{
 		#region Fields
 
-		private static readonly char[] ConfigDelims = { ';', '|' };
 		private FileTracker[] Trackers;
 
 		#endregion Fields
@@ -66,25 +66,21 @@ namespace Shadow.Service
 		{
 			try
 			{
-				string watchFolder = ConfigurationManager.AppSettings["WatchFolder"] ?? String.Empty;
-				string[] folders = watchFolder.Split(ConfigDelims, StringSplitOptions.RemoveEmptyEntries);
+				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
 
-				string fileFilter = ConfigurationManager.AppSettings["FileFilter"] ?? String.Empty;
-				var filterCallback = FileUtility.CreateFileFilter(fileFilter.Split(ConfigDelims, StringSplitOptions.RemoveEmptyEntries));
+				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
 				string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
-				string mappings = ConfigurationManager.AppSettings["SqlMapping"];
 
 				this.Out.WriteLine("ShadowTracker");
-				this.Out.WriteLine(watchFolder);
-				this.Out.WriteLine(fileFilter);
+				this.Out.WriteLine(settings.FileFilter);
 				this.Out.WriteLine("__________________________");
 
 				this.Out.WriteLine();
 				this.Out.WriteLine("Connecting to database...");
 				this.Out.WriteLine("__________________________");
 
-				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, mappings));
+				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, settings.SqlMapping));
 
 				this.Out.WriteLine();
 				this.Out.WriteLine("Beginning trickle update...");
@@ -92,11 +88,13 @@ namespace Shadow.Service
 
 				var watch = System.Diagnostics.Stopwatch.StartNew();
 
-				this.Trackers = new FileTracker[folders.Length];
-				for (int i=0; i<folders.Length; i++)
+				WatchFolderSettingsCollection folders = settings.WatchFolders;
+				this.Trackers = new FileTracker[folders.Count];
+				for (int i=0; i<folders.Count; i++)
 				{
 					FileUtility.SyncCatalog(
-						folders[i],
+						folders[i].Name,
+						folders[i].Path,
 						filterCallback,
 						FileUtility.DefaultTrickleRate,
 						delegate(string syncFolder)
@@ -107,7 +105,7 @@ namespace Shadow.Service
 						});
 
 					this.Trackers[i] = new FileTracker();
-					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folders[i]), filterCallback);
+					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folders[i].Name, folders[i].Path), filterCallback);
 				}
 
 				this.Out.WriteLine();

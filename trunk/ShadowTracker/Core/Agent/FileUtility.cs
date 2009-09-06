@@ -37,9 +37,9 @@ namespace Shadow.Agent
 		/// Syncs an existing catalog with the file system.
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public static void SyncCatalog(string rootPath)
+		public static void SyncCatalog(string name, string rootPath)
 		{
-			FileUtility.SyncCatalog(rootPath, FileUtility.CreateFileFilter());
+			FileUtility.SyncCatalog(name, rootPath, FileUtility.CreateFileFilter());
 		}
 
 		/// <summary>
@@ -47,9 +47,9 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
-		public static void SyncCatalog(string rootPath, Func<FileSystemInfo, bool> fileFilter)
+		public static void SyncCatalog(string name, string rootPath, Func<FileSystemInfo, bool> fileFilter)
 		{
-			FileUtility.SyncCatalog(rootPath, fileFilter, -1, null);
+			FileUtility.SyncCatalog(name, rootPath, fileFilter, -1, null);
 		}
 
 		/// <summary>
@@ -59,6 +59,7 @@ namespace Shadow.Agent
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
 		public static void SyncCatalog(
+			string name,
 			string rootPath,
 			Func<FileSystemInfo, bool> fileFilter,
 			int trickleRate,
@@ -69,8 +70,8 @@ namespace Shadow.Agent
 				throw new ArgumentNullException("rootPath", "Root path is invalid.");
 			}
 
-			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar);
-			Catalog catalog = CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), rootPath);
+			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
+			Catalog catalog = CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), name, rootPath);
 
 			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
@@ -289,7 +290,8 @@ namespace Shadow.Agent
 		/// <returns>root-relative paths</returns>
 		public static string NormalizePath(string rootPath, string fullPath)
 		{
-			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+			rootPath = FileUtility.TrimTrailingSlash(rootPath);
+
 			if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
 			{
 				throw new InvalidOperationException("Unexpected path format.");
@@ -307,14 +309,24 @@ namespace Shadow.Agent
 		/// <returns></returns>
 		public static string ReplaceRoot(string rootPath, string fullPath, string newRoot)
 		{
-			rootPath = rootPath.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
-			newRoot = newRoot.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
+			newRoot = FileUtility.EnsureTrailingSlash(newRoot);
 			if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
 			{
 				throw new InvalidOperationException("Unexpected path format.");
 			}
 
 			return Path.Combine(newRoot, fullPath.Substring(rootPath.Length));
+		}
+
+		public static string EnsureTrailingSlash(string path)
+		{
+			return path.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+		}
+
+		public static string TrimTrailingSlash(string path)
+		{
+			return path.TrimEnd(Path.DirectorySeparatorChar);
 		}
 
 		#endregion Utility Methods

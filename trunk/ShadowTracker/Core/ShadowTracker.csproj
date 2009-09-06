@@ -33,6 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -46,6 +47,9 @@
     <Compile Include="Agent\FileIterator.cs" />
     <Compile Include="Agent\FileTracker.cs" />
     <Compile Include="Agent\FileUtility.cs" />
+    <Compile Include="Configuration\WatchFolderSettings.cs" />
+    <Compile Include="Configuration\WatchFolderSettingsCollection.cs" />
+    <Compile Include="Configuration\TrackerSettingsSection.cs" />
     <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\CatalogRepository.cs" />
     <Compile Include="Model\Catalog.cs" />
