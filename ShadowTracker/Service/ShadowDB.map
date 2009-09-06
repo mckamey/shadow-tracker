@@ -14,6 +14,13 @@
 					AutoSync="OnInsert"
 					UpdateCheck="Never" />
 
+			<Column Name="Key"
+					Member="Name"
+					Storage="name"
+					DbType="VarChar(450) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
 			<Column Name="Path"
 					Member="Path"
 					Storage="path"

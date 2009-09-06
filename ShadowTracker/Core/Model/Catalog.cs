@@ -4,8 +4,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 
-using Shadow.Model.L2S;
-
 namespace Shadow.Model
 {
 	/// <summary>
@@ -52,6 +50,7 @@ namespace Shadow.Model
 		#region Fields
 
 		private long id;
+		private string name;
 		private string path;
 
 		#endregion Fields
@@ -74,6 +73,25 @@ namespace Shadow.Model
 				this.OnPropertyChanging("ID");
 				this.id = value;
 				this.OnPropertyChanged("ID");
+			}
+		}
+
+		/// <summary>
+		/// Gets and sets the name of the catalog
+		/// </summary>
+		public string Name
+		{
+			get { return this.name; }
+			set
+			{
+				if (StringComparer.OrdinalIgnoreCase.Equals(this.name, value))
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("Name");
+				this.name = value;
+				this.OnPropertyChanged("Name");
 			}
 		}
 
