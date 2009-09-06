@@ -196,7 +196,7 @@ namespace Shadow.Agent
 
 		private static void CheckIfMissing(Catalog catalog, string path)
 		{
-			string fullPath = Path.Combine(catalog.Path, path);
+			string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
 			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 			{
 				IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
@@ -298,6 +298,19 @@ namespace Shadow.Agent
 			}
 
 			return fullPath.Substring(rootPath.Length).Replace(Path.DirectorySeparatorChar, '/');
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="rootPath"></param>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		private static string DenormalizePath(string rootPath, string path)
+		{
+			path = path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
+			return Path.Combine(rootPath, path);
 		}
 
 		/// <summary>
