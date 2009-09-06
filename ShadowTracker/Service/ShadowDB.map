@@ -14,7 +14,7 @@
 					AutoSync="OnInsert"
 					UpdateCheck="Never" />
 
-			<Column Name="Key"
+			<Column Name="Name"
 					Member="Name"
 					Storage="name"
 					DbType="VarChar(450) NOT NULL"
