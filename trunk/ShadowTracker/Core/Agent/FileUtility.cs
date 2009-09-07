@@ -229,7 +229,7 @@ namespace Shadow.Agent
 					((FileInfo)file).Length :
 					0L,
 				ModifiedDate = file.LastWriteTimeUtc,
-				Path = FileUtility.NormalizePath(catalog.Path, file.FullName),
+				Name = file.Name,
 				Parent = FileUtility.NormalizePath(catalog.Path, parent.FullName),
 				Signature = (file is FileInfo) ?
 					FileHash.ComputeHash((FileInfo)file) :
@@ -311,6 +311,15 @@ namespace Shadow.Agent
 			path = path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
 
 			return Path.Combine(rootPath, path);
+		}
+
+		public static void SplitPath(string path, out string parent, out string name)
+		{
+			int index = path.LastIndexOf('/');
+			parent = 
+				(index < 0) ? "/" :
+				path.Substring(0, index);
+			name = path.Substring(index+1);
 		}
 
 		/// <summary>

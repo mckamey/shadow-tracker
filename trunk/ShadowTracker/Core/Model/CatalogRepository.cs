@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Shadow.Agent;
 
 namespace Shadow.Model
 {
@@ -89,22 +90,35 @@ namespace Shadow.Model
 			this.AddEntry(entry);
 		}
 
+		public virtual void DeleteEntryByPath(string path)
+		{
+			if (String.IsNullOrEmpty(path))
+			{
+				throw new ArgumentNullException("path", "Path is empty");
+			}
+
+			string parent, name;
+			FileUtility.SplitPath(path, out parent, out name);
+
+			this.DeleteEntryByPath(parent, name);
+		}
+
 		/// <summary>
 		/// Action where file is being removed (no transfer required).
 		/// </summary>
 		/// <param name="path"></param>
-		public virtual void DeleteEntryByPath(string path)
+		public virtual void DeleteEntryByPath(string parent, string name)
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-			entries.RemoveWhere(n => (n.CatalogID == this.Catalog.ID) && (n.Path.ToLower() == path.ToLower()));
+			entries.RemoveWhere(n =>
+				(n.CatalogID == this.Catalog.ID) &&
+				(n.Parent.ToLower() == parent.ToLower()) &&
+				(n.Name.ToLower() == name.ToLower()));
 
-			// if has children then remove them as well
-			string asDir = path;
-			if (!asDir.EndsWith("/"))
-			{
-				asDir += "/";
-			}
-			entries.RemoveWhere(n => n.Path.ToLower().StartsWith(asDir.ToLower()));
+			// if is directory with children then remove them as well
+			string asDir = parent+name+'/';
+
+			entries.RemoveWhere(n => n.Parent.ToLower().StartsWith(asDir.ToLower()));
 		}
 
 		/// <summary>
@@ -116,14 +130,23 @@ namespace Shadow.Model
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 
-			CatalogEntry entry = entries.FirstOrDefault(n => n.CatalogID == this.Catalog.ID && n.Path == oldPath);
+			string oldParent, oldName, newParent, newName;
+			FileUtility.SplitPath(oldPath, out oldParent, out oldName);
+
+			CatalogEntry entry = entries.FirstOrDefault(n =>
+				(n.CatalogID == this.Catalog.ID) &&
+				(n.Name == oldName) &&
+				(n.Parent == oldParent));
+
 			if (entry == null)
 			{
 				// TODO: log error
-				throw new ArgumentException("Entry was not found: "+oldPath, oldPath);
+				throw new ArgumentException("Entry was not found: "+oldPath, "oldPath");
 			}
 
-			entry.Path = newPath;
+			FileUtility.SplitPath(newPath, out newParent, out newName);
+			entry.Parent = newParent;
+			entry.Name = newName;
 		}
 
 		/// <summary>
@@ -241,8 +264,8 @@ namespace Shadow.Model
 
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			return entries
-				.Where(n => (n.CatalogID == this.Catalog.ID) && n.Path.ToLower().StartsWith(parent))
-				.Select(n => n.Path);
+				.Where(n => (n.CatalogID == this.Catalog.ID) && n.Parent.ToLower().StartsWith(parent))
+				.Select(n => n.Parent+n.Name);
 		}
 
 		public IQueryable<string> GetExistingPaths()
@@ -250,7 +273,7 @@ namespace Shadow.Model
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			return entries
 				.Where(n => n.CatalogID == this.Catalog.ID)
-				.Select(n => n.Path);
+				.Select(n => n.Parent+n.Name);
 		}
 
 		#endregion Query Methods
@@ -278,7 +301,9 @@ namespace Shadow.Model
 		/// <returns></returns>
 		private MatchRank FindMatch(CatalogEntry target, out CatalogEntry meta, out CatalogEntry data)
 		{
-			string path = target.Path != null ? target.Path.ToLowerInvariant() : null;
+			string name = target.Name != null ? target.Name.ToLowerInvariant() : null;
+			string parent = target.Parent != null ? target.Parent.ToLowerInvariant() : null;
+			string path = parent+name;
 			string hash = target.Signature != null ? target.Signature.ToLowerInvariant() : null;
 			long catalogID = this.Catalog.ID;
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
@@ -287,7 +312,7 @@ namespace Shadow.Model
 				(from entry in entries
 				 where entry.CatalogID == catalogID
 				 let rank =
-					(int)(entry.Path.ToLower() == path ? MatchRank.Path : MatchRank.None) |
+					(int)(entry.Parent.ToLower()+entry.Name.ToLower() == path ? MatchRank.Path : MatchRank.None) |
 					(int)((entry.Signature != null && entry.Signature.ToLower() == hash) ? MatchRank.Hash : MatchRank.None)
 				 where rank > (int)MatchRank.None
 				 orderby rank descending
@@ -406,7 +431,7 @@ namespace Shadow.Model
 					// NOTE: this actually would not be detected here
 
 					// file is being removed
-					this.DeleteEntryByPath(entry.Path);
+					this.DeleteEntryByPath(entry.Name);
 					return true;
 				}
 				case DeltaAction.Meta:
@@ -457,7 +482,7 @@ namespace Shadow.Model
 			foreach (string path in this.GetExistingPaths())
 			{
 				// extras are any local entries not contained in other
-				if (that.Exists(n => n.Path.ToLower() == path.ToLower()))
+				if (that.Exists(n => n.Name.ToLower() == path.ToLower()))
 				{
 					continue;
 				}
