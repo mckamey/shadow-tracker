@@ -67,7 +67,7 @@ namespace Shadow.Model.Test
 					ModifiedDate = new DateTime(2009, 8, 21, 23, 42, 37, DateTimeKind.Local),
 					Name = "Foo.txt",
 					Parent = "/",
-					Signature = "",
+					Signature = "1234567890ABCDEF",
 					CatalogID = 1L
 				}
 			};
@@ -109,11 +109,11 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void DeleteEntryByPathTest()
 		{
-			Assert.IsTrue(this.repos.Exists(n => n.Name == "Foo.txt"));
+			Assert.IsTrue(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
 
 			this.repos.DeleteEntryByPath("Foo.txt");
 
-			Assert.IsFalse(this.repos.Exists(n => n.Name == "Foo.txt"));
+			Assert.IsFalse(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
 		}
 
 		[TestMethod()]
@@ -143,13 +143,13 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void RenameEntryTest()
 		{
-			Assert.IsTrue(this.repos.Exists(n => n.Name == "Foo.txt"));
-			Assert.IsFalse(this.repos.Exists(n => n.Name == "Bar.txt"));
+			Assert.IsTrue(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
+			Assert.IsFalse(this.repos.Exists(n => n.Parent == "/" && n.Name == "Bar.txt"));
 
-			this.repos.RenameEntry("Foo.txt", "Bar.txt");
+			this.repos.RenameEntry("/Foo.txt", "/Bar.txt");
 
-			Assert.IsFalse(this.repos.Exists(n => n.Name == "Foo.txt"));
-			Assert.IsTrue(this.repos.Exists(n => n.Name == "Bar.txt"));
+			Assert.IsFalse(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
+			Assert.IsTrue(this.repos.Exists(n => n.Parent == "/" && n.Name == "Bar.txt"));
 		}
 
 		[TestMethod()]

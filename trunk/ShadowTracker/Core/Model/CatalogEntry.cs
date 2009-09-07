@@ -508,8 +508,10 @@ namespace Shadow.Model
 		{
 			StringBuilder builder = new StringBuilder();
 
-			builder.Append("{ Path = ");
+			builder.Append("{ Name = ");
 			builder.Append(this.Name);
+			builder.Append(", Parent = ");
+			builder.Append(this.Parent);
 			builder.Append(", Attributes = ");
 			builder.Append(this.Attributes);
 			if (this.CreatedDate >= CatalogEntry.SqlDateTimeMinValue)
