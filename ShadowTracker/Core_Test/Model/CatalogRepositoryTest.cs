@@ -67,7 +67,7 @@ namespace Shadow.Model.Test
 					ModifiedDate = new DateTime(2009, 8, 21, 23, 42, 37, DateTimeKind.Local),
 					Name = "Foo.txt",
 					Parent = "/",
-					Signature = "1234567890ABCDEF",
+					Signature = "0123456789ABCDEF0123456789ABCDEF01234567",
 					CatalogID = 1L
 				}
 			};
@@ -109,11 +109,13 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void DeleteEntryByPathTest()
 		{
-			Assert.IsTrue(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
+			const string path = "/Foo.txt";
 
-			this.repos.DeleteEntryByPath("Foo.txt");
+			Assert.IsTrue(this.repos.Exists(n => n.Parent+n.Name == path));
 
-			Assert.IsFalse(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
+			this.repos.DeleteEntryByPath(path);
+
+			Assert.IsFalse(this.repos.Exists(n => n.Parent+n.Name == path));
 		}
 
 		[TestMethod()]
