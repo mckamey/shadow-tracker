@@ -48,9 +48,9 @@
 					DbType="BigInt NOT NULL"
 					UpdateCheck="Never" />
 
-			<Column Name="Path"
-					Member="Path"
-					Storage="path"
+			<Column Name="Name"
+					Member="Name"
+					Storage="name"
 					DbType="VarChar(450) NOT NULL"
 					CanBeNull="false"
 					UpdateCheck="Never" />

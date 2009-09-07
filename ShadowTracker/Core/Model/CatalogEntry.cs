@@ -53,14 +53,15 @@ namespace Shadow.Model
 					return EqualityComparer<CatalogEntry>.Default.Equals(x, y);
 				}
 
-				return StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path);
+				return StringComparer.OrdinalIgnoreCase.Equals(x.Name, y.Name) &&
+					StringComparer.OrdinalIgnoreCase.Equals(x.Parent, y.Parent);
 			}
 
 			int IEqualityComparer<CatalogEntry>.GetHashCode(CatalogEntry obj)
 			{
 				return (obj == null) ?
 					StringComparer.OrdinalIgnoreCase.GetHashCode(null) :
-					StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
+					StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Parent+obj.Name);
 			}
 
 			#endregion IEqualityComparer<T> Members
@@ -108,7 +109,7 @@ namespace Shadow.Model
 					(x.CreatedDate.Ticks == y.CreatedDate.Ticks) &&
 					EqualityComparer<Int64>.Default.Equals(x.Length, y.Length) &&
 					(x.ModifiedDate.Ticks == y.ModifiedDate.Ticks) &&
-					StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path) &&
+					StringComparer.OrdinalIgnoreCase.Equals(x.Name, y.Name) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Parent, y.Parent) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature) &&
 					(x.CatalogID == y.CatalogID);
@@ -123,7 +124,7 @@ namespace Shadow.Model
 
 				const int ShiftValue = -1521134295;
 				int hashcode = 0x23f797e3;
-				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
+				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Name);
 				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Parent);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(obj.Attributes);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<Int64>.Default.GetHashCode(obj.Length);
@@ -141,7 +142,7 @@ namespace Shadow.Model
 
 		private DateTime? deletedDate;
 		private long id;
-		private string path;
+		private string name;
 		private string parent;
 		private long length;
 		private FileAttributes attributes;
@@ -176,32 +177,47 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
-		/// Gets and sets the relative path to the data
+		/// Gets and sets the file or directory name
 		/// </summary>
-		public string Path
+		/// <remarks>
+		/// Name and resulting path are case-insensitive.
+		/// </remarks>
+		public string Name
 		{
-			get { return this.path; }
+			get { return this.name; }
 			set
 			{
-				if (StringComparer.OrdinalIgnoreCase.Equals(this.path, value))
+				if (StringComparer.OrdinalIgnoreCase.Equals(this.name, value))
 				{
 					return;
 				}
 
-				this.OnPropertyChanging("Path");
-				this.path = value;
-				this.OnPropertyChanged("Path");
+				this.OnPropertyChanging("Name");
+				this.name = value;
+				this.OnPropertyChanged("Name");
 			}
 		}
 
 		/// <summary>
 		/// Gets and sets the relative path of the parent directory
 		/// </summary>
+		/// <remarks>
+		/// Parent and the resulting path are case-insensitive.
+		/// </remarks>
 		public string Parent
 		{
 			get { return this.parent; }
 			set
 			{
+				if (String.IsNullOrEmpty(value))
+				{
+					value = "/";
+				}
+				else if (!value.EndsWith("/"))
+				{
+					value += '/';
+				}
+
 				if (StringComparer.OrdinalIgnoreCase.Equals(this.parent, value))
 				{
 					return;
@@ -420,7 +436,7 @@ namespace Shadow.Model
 			this.Length = that.Length;
 			this.ModifiedDate = that.ModifiedDate;
 			this.Parent = that.Parent;
-			this.Path = that.Path;
+			this.Name = that.Name;
 			this.Signature = that.Signature;
 
 			// TODO: evaluate whether this is needed
@@ -493,7 +509,7 @@ namespace Shadow.Model
 			StringBuilder builder = new StringBuilder();
 
 			builder.Append("{ Path = ");
-			builder.Append(this.Path);
+			builder.Append(this.Name);
 			builder.Append(", Attributes = ");
 			builder.Append(this.Attributes);
 			if (this.CreatedDate >= CatalogEntry.SqlDateTimeMinValue)
