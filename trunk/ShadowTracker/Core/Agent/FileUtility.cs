@@ -27,7 +27,7 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Trickle update rate
 		/// </summary>
-		public const int DefaultTrickleRate = 100;//milliseconds
+		public const int DefaultTrickleRate = 250;//milliseconds
 
 		#endregion Constants
 
