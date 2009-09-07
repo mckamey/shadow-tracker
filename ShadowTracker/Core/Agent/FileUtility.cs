@@ -65,9 +65,13 @@ namespace Shadow.Agent
 			int trickleRate,
 			Action<string> completedCallback)
 		{
-			if (String.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
+			if (String.IsNullOrEmpty(rootPath))
 			{
 				throw new ArgumentNullException("rootPath", "Root path is invalid.");
+			}
+			if (!Directory.Exists(rootPath))
+			{
+				throw new ArgumentException("Root path is invalid.", "rootPath");
 			}
 
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
@@ -169,7 +173,7 @@ namespace Shadow.Agent
 
 						// extras are any local entries not contained on disk
 						string path = enumerator.Current;
-						CheckIfMissing(catalog, path);
+						FileUtility.CheckIfMissing(catalog, path);
 
 						// queue up next iteration
 						timer.Change(trickleRate, Timeout.Infinite);
@@ -183,7 +187,7 @@ namespace Shadow.Agent
 				foreach (string path in repos.GetExistingPaths())
 				{
 					// extras are any local entries not contained on disk
-					CheckIfMissing(catalog, path);
+					FileUtility.CheckIfMissing(catalog, path);
 				}
 
 				// signal sync is complete
@@ -316,9 +320,8 @@ namespace Shadow.Agent
 		public static void SplitPath(string path, out string parent, out string name)
 		{
 			int index = path.LastIndexOf('/');
-			parent = 
-				(index < 0) ? "/" :
-				path.Substring(0, index)+'/';
+
+			parent = path.Substring(0, index+1);
 			name = path.Substring(index+1);
 		}
 
