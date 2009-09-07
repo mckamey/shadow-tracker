@@ -318,7 +318,7 @@ namespace Shadow.Agent
 			int index = path.LastIndexOf('/');
 			parent = 
 				(index < 0) ? "/" :
-				path.Substring(0, index);
+				path.Substring(0, index)+'/';
 			name = path.Substring(index+1);
 		}
 
