@@ -129,11 +129,11 @@ namespace Shadow.Agent
 
 		private static void CheckForChanges(Catalog catalog, FileSystemInfo file)
 		{
-			CatalogEntry entry = FileUtility.CreateEntry(catalog, file);
-
 			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
+			// TODO: check against shallow entry (no hash) before calculating
+			CatalogEntry entry = FileUtility.CreateEntry(catalog, file);
 			if (repos.ApplyChanges(entry))
 			{
 				unitOfWork.Save();

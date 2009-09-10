@@ -69,7 +69,7 @@ namespace Shadow.Model.L2S
 					CatalogEntry entry = inserted as CatalogEntry;
 					if (entry != null)
 					{
-						Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.Parent+entry.Name);
+						Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.FullPath);
 					}
 					else if (inserted is Catalog)
 					{
@@ -87,7 +87,7 @@ namespace Shadow.Model.L2S
 					CatalogEntry entry = updated as CatalogEntry;
 					if (entry != null)
 					{
-						Console.WriteLine("UPDATE \"{0}\"", entry.Parent+entry.Name);
+						Console.WriteLine("UPDATE \"{0}\"", entry.FullPath);
 					}
 					else if (updated is Catalog)
 					{
@@ -105,7 +105,7 @@ namespace Shadow.Model.L2S
 					CatalogEntry entry = deleted as CatalogEntry;
 					if (entry != null)
 					{
-						Console.WriteLine("REMOVE \"{0}\"", entry.Parent+entry.Name);
+						Console.WriteLine("REMOVE \"{0}\"", entry.FullPath);
 					}
 					else if (deleted is Catalog)
 					{

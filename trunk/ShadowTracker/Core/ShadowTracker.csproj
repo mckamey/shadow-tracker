@@ -60,7 +60,6 @@
     <Compile Include="Model\Memory\MemoryTable`1.cs" />
     <Compile Include="Model\Memory\MemoryUnitOfWork.cs" />
     <Compile Include="Model\UnitOfWorkFactory.cs" />
-    <Compile Include="Model\DeltaAction.cs" />
     <Compile Include="Model\ITable`1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
