@@ -27,7 +27,7 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Trickle update rate
 		/// </summary>
-		public const int DefaultTrickleRate = 250;//milliseconds
+		public const int DefaultTrickleRate = 200;//milliseconds
 
 		#endregion Constants
 
@@ -133,8 +133,8 @@ namespace Shadow.Agent
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
 			// TODO: check against shallow entry (no hash) before calculating
-			CatalogEntry entry = FileUtility.CreateEntry(catalog, file);
-			if (repos.ApplyChanges(entry))
+			CatalogEntry entry = FileUtility.CreateEntry(catalog, file, !catalog.IsIndexed);
+			if (repos.ApplyChanges(entry, file as FileInfo))
 			{
 				unitOfWork.Save();
 			}
@@ -231,31 +231,54 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Builds a CatalogEntry from a file system descriptor. (Requires read access)
 		/// </summary>
+		/// <param name="catalog"></param>
+		/// <param name="file"></param>
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
 		public static CatalogEntry CreateEntry(Catalog catalog, FileSystemInfo file)
 		{
+			return FileUtility.CreateEntry(catalog, file, true);
+		}
+
+		/// <summary>
+		/// Builds a CatalogEntry from a file system descriptor. (Requires read access)
+		/// </summary>
+		/// <param name="catalog"></param>
+		/// <param name="file"></param>
+		/// <param name="calcHash"></param>
+		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
+		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
+		/// <exception cref="System.IO.IOException">The file is already open.</exception>
+		private static CatalogEntry CreateEntry(Catalog catalog, FileSystemInfo file, bool calcHash)
+		{
+			FileInfo fileInfo = file as FileInfo;
+
 			DirectoryInfo parent =
-				file is FileInfo ?
-				((FileInfo)file).Directory :
+				fileInfo != null ?
+				fileInfo.Directory :
 				((DirectoryInfo)file).Parent;
 
-			return new CatalogEntry
+			CatalogEntry entry = new CatalogEntry
 			{
 				Attributes = (file.Attributes&FileUtility.AttribMask),
 				CatalogID = catalog.ID,
 				CreatedDate = file.CreationTimeUtc,
-				Length = (file is FileInfo) ?
-					((FileInfo)file).Length :
+				Length =
+					(fileInfo != null) ?
+					fileInfo.Length :
 					0L,
 				ModifiedDate = file.LastWriteTimeUtc,
 				Name = file.Name,
-				Parent = FileUtility.NormalizePath(catalog.Path, parent.FullName),
-				Signature = (file is FileInfo) ?
-					FileHash.ComputeHash((FileInfo)file) :
-					null,
+				Parent = FileUtility.NormalizePath(catalog.Path, parent.FullName)
 			};
+
+			if (calcHash && fileInfo != null)
+			{
+				entry.Signature = FileHash.ComputeHash(fileInfo);
+			}
+
+			return entry;
 		}
 
 		public static Func<FileSystemInfo, bool> CreateFileFilter(params string[] trackedExtensions)

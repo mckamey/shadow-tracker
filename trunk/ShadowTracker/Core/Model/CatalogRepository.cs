@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+
 using Shadow.Agent;
 
 namespace Shadow.Model
@@ -317,6 +319,16 @@ namespace Shadow.Model
 		/// <returns>true if changes were found</returns>
 		internal bool ApplyChanges(CatalogEntry entry)
 		{
+			return this.ApplyChanges(entry, null);
+		}
+
+		/// <summary>
+		/// Checks for changes.
+		/// </summary>
+		/// <param name="entry"></param>
+		/// <returns>true if changes were found</returns>
+		internal bool ApplyChanges(CatalogEntry entry, FileInfo file)
+		{
 			if (entry == null)
 			{
 				return false;
@@ -333,14 +345,32 @@ namespace Shadow.Model
 				return true;
 			}
 
-			if (CatalogEntry.ValueComparer.Equals(entry, original))
+			if (entry.HasSignature)
 			{
-				// no changes, identical
-				return false;
+				if (CatalogEntry.ValueComparer.Equals(entry, original))
+				{
+					// no changes, identical
+					return false;
+				}
+			}
+			else
+			{
+				if (CatalogEntry.LiteValueComparer.Equals(entry, original))
+				{
+					// no changes, identical (except possibly Signature)
+					return false;
+				}
+
+				// ensure hash has been calculated
+				if (file == null)
+				{
+					throw new ArgumentNullException("file", "FileInfo was missing for CatalogEntry without signature.");
+				}
+
+				entry.Signature = FileHash.ComputeHash(file);
 			}
 
 			// file exists at correct path but metadata is different
-			// path exists but metadata different
 			this.Update(entry, original);
 			return true;
 		}
@@ -351,7 +381,7 @@ namespace Shadow.Model
 
 		public void Sync(CatalogRepository that)
 		{
-			// TODO: reconcile this with trickle-updates
+			// TODO: reconcile this with trickle-updates?
 
 			// apply any deltas since last sync
 			foreach (CatalogEntry entry in that.UnitOfWork.Entries.Where(n => n.CatalogID == this.Catalog.ID))
