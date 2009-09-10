@@ -63,7 +63,7 @@ namespace Shadow.Agent
 			string rootPath,
 			Func<FileSystemInfo, bool> fileFilter,
 			int trickleRate,
-			Action<string> completedCallback)
+			Action<Catalog> completedCallback)
 		{
 			if (String.IsNullOrEmpty(rootPath))
 			{
@@ -143,9 +143,10 @@ namespace Shadow.Agent
 		private static void RemoveExtras(
 			Catalog catalog,
 			int trickleRate,
-			Action<string> completedCallback)
+			Action<Catalog> completedCallback)
 		{
-			CatalogRepository repos = new CatalogRepository(UnitOfWorkFactory.Create(), catalog);
+			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 			if (trickleRate > 0)
 			{
 				var enumerator = repos.GetExistingPaths().GetEnumerator();
@@ -163,10 +164,18 @@ namespace Shadow.Agent
 							timer.Change(Timeout.Infinite, Timeout.Infinite);
 							timer = null;
 
+							// flag catalog as indexed
+							if (!catalog.IsIndexed)
+							{
+								catalog.IsIndexed = true;
+								unitOfWork.Catalogs.Update(catalog);
+								unitOfWork.Save();
+							}
+
 							// signal sync is complete
 							if (completedCallback != null)
 							{
-								completedCallback(catalog.Path);
+								completedCallback(catalog);
 							}
 							return;
 						}
@@ -190,10 +199,18 @@ namespace Shadow.Agent
 					FileUtility.CheckIfMissing(catalog, path);
 				}
 
+				// flag catalog as indexed
+				if (!catalog.IsIndexed)
+				{
+					catalog.IsIndexed = true;
+					unitOfWork.Catalogs.Update(catalog);
+					unitOfWork.Save();
+				}
+
 				// signal sync is complete
 				if (completedCallback != null)
 				{
-					completedCallback(catalog.Path);
+					completedCallback(catalog);
 				}
 			}
 		}

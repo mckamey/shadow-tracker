@@ -52,6 +52,7 @@ namespace Shadow.Model
 		private long id;
 		private string name;
 		private string path;
+		private bool isIndexed;
 
 		#endregion Fields
 
@@ -114,6 +115,25 @@ namespace Shadow.Model
 			}
 		}
 
+		/// <summary>
+		/// Gets and sets if catalog has been fully calculated
+		/// </summary>
+		public bool IsIndexed
+		{
+			get { return this.isIndexed; }
+			set
+			{
+				if (StringComparer.OrdinalIgnoreCase.Equals(this.isIndexed, value))
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("IsIndexed");
+				this.isIndexed = value;
+				this.OnPropertyChanged("IsIndexed");
+			}
+		}
+
 		#endregion Properties
 
 		#region INotifyPropertyChanging Members
@@ -155,6 +175,10 @@ namespace Shadow.Model
 			builder.Append(this.Name);
 			builder.Append(", Path = ");
 			builder.Append(this.Path);
+			if (this.IsIndexed)
+			{
+				builder.Append(", IsIndexed");
+			}
 			builder.Append(" }");
 
 			return builder.ToString();
