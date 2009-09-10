@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.Linq.Mapping;
+using System.Diagnostics;
 using System.IO;
 using System.ServiceProcess;
 
@@ -86,7 +87,7 @@ namespace Shadow.Service
 				this.Out.WriteLine("Beginning trickle update...");
 				this.Out.WriteLine("__________________________");
 
-				var watch = System.Diagnostics.Stopwatch.StartNew();
+				var watch = Stopwatch.StartNew();
 
 				WatchFolderSettingsCollection folders = settings.WatchFolders;
 				this.Trackers = new FileTracker[folders.Count];
@@ -97,10 +98,10 @@ namespace Shadow.Service
 						folders[i].Path,
 						filterCallback,
 						FileUtility.DefaultTrickleRate,
-						delegate(string syncFolder)
+						delegate(Catalog syncCatalog)
 						{
 							this.Out.WriteLine();
-							this.Out.WriteLine(syncFolder+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
+							this.Out.WriteLine(syncCatalog.Name+" ("+syncCatalog.Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
 							this.Out.WriteLine("__________________________");
 						});
 
