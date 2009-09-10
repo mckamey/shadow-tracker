@@ -93,15 +93,18 @@ namespace Shadow.Service
 				this.Trackers = new FileTracker[folders.Count];
 				for (int i=0; i<folders.Count; i++)
 				{
+					this.Out.WriteLine();
+					this.Out.WriteLine("Begin sync: "+folders[i].Name+" ("+folders[i].Path+")");
+
 					FileUtility.SyncCatalog(
 						folders[i].Name,
 						folders[i].Path,
 						filterCallback,
-						FileUtility.DefaultTrickleRate,
+						settings.TrickleRate,
 						delegate(Catalog syncCatalog)
 						{
 							this.Out.WriteLine();
-							this.Out.WriteLine(syncCatalog.Name+" ("+syncCatalog.Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
+							this.Out.WriteLine("End sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
 							this.Out.WriteLine("__________________________");
 						});
 
