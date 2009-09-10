@@ -17,3 +17,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: Guid("8195af82-1a28-44a8-9ed9-cb793ed53825")]
+
+[assembly: InternalsVisibleTo("ShadowTracker.Core.Test")]

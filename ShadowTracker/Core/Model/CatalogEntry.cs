@@ -229,6 +229,11 @@ namespace Shadow.Model
 			}
 		}
 
+		public string FullPath
+		{
+			get { return this.Parent+this.Name; }
+		}
+
 		/// <summary>
 		/// Gets and sets file size in bytes
 		/// </summary>
@@ -440,7 +445,10 @@ namespace Shadow.Model
 			this.Signature = that.Signature;
 
 			// TODO: evaluate whether this is needed
-			this.CatalogID = that.CatalogID;
+			if (that.CatalogID > 0)
+			{
+				this.CatalogID = that.CatalogID;
+			}
 		}
 
 		#endregion IL2SSoftDeleteEntity Members

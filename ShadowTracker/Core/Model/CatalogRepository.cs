@@ -79,17 +79,6 @@ namespace Shadow.Model
 			this.UnitOfWork.Entries.Add(entry);
 		}
 
-		/// <summary>
-		/// Action where bits exist, but need to add or update entry (no transfer required).
-		/// </summary>
-		/// <param name="entry"></param>
-		/// <param name="match"></param>
-		public virtual void CloneEntry(CatalogEntry entry, CatalogEntry data)
-		{
-			// TODO: expose this differently
-			this.AddEntry(entry);
-		}
-
 		public virtual void DeleteEntryByPath(string path)
 		{
 			if (String.IsNullOrEmpty(path))
@@ -154,7 +143,7 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="entry"></param>
 		/// <param name="data">the original entry</param>
-		public virtual void UpdateMeta(CatalogEntry entry, CatalogEntry original)
+		public virtual void Update(CatalogEntry entry, CatalogEntry original)
 		{
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			if (original == null || original.ID < 1)
@@ -164,31 +153,21 @@ namespace Shadow.Model
 			else
 			{
 				original.CopyValuesFrom(entry);
-
-				//entries.Update(original);
 			}
-		}
-
-		/// <summary>
-		/// Action where bits are different but entry exists (requires expensive bit transfer).
-		/// </summary>
-		/// <param name="entry"></param>
-		/// <param name="data">the entry with source data</param>
-		public virtual void UpdateData(CatalogEntry entry, CatalogEntry original, CatalogEntry data)
-		{
-			if (original == null)
-			{
-				this.CloneEntry(entry, data);
-				return;
-			}
-
-			// TODO: handle data changes
-			this.UpdateMeta(entry, original);
 		}
 
 		#endregion Action Methods
 
 		#region Query Methods
+
+		[Flags]
+		private enum MatchRank : int
+		{
+			None = 0x00,
+			Path = 0x01,
+			Name = 0x02,
+			Both = Name|Path
+		}
 
 		public static Catalog EnsureCatalog(IUnitOfWork unitOfWork, string name, string path)
 		{
@@ -201,31 +180,33 @@ namespace Shadow.Model
 				throw new ArgumentNullException("path", "Catalog path was empty.");
 			}
 
-			path = Shadow.Agent.FileUtility.EnsureTrailingSlash(path);
+			path = FileUtility.EnsureTrailingSlash(path);
 
-			// TODO do the ranked order by for this query so only query once
-			Catalog catalog = unitOfWork.Catalogs.Where(c => c.Name == name.ToLower()).FirstOrDefault();
+			string nameLower = name.ToLowerInvariant();
+			string pathLower = path.ToLowerInvariant();
+
+			var query =
+				from c in unitOfWork.Catalogs
+				let rank =
+					(int)((c.Name.ToLower() == name) ? MatchRank.Name : MatchRank.None) |
+					(int)(c.Path.ToLower() == path ? MatchRank.Path : MatchRank.None)
+				where rank > (int)MatchRank.None
+				orderby rank descending
+				select c;
+
+			Catalog catalog = query.FirstOrDefault();
 			if (catalog != null)
 			{
-				if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Path, path))
+				if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Path, path) ||
+					!StringComparer.OrdinalIgnoreCase.Equals(catalog.Name, name))
 				{
-					// update the root to match
+					// update to match
+					catalog.Name = name;
 					catalog.Path = path;
 					unitOfWork.Save();
 				}
 			}
 			else
-			{
-				catalog = unitOfWork.Catalogs.Where(c => c.Path == path.ToLower()).FirstOrDefault();
-				if (catalog != null)
-				{
-					// update the name to match
-					catalog.Name = name;
-					unitOfWork.Save();
-				}
-			}
-
-			if (catalog == null)
 			{
 				catalog = new Catalog();
 				catalog.Name = name;
@@ -237,16 +218,65 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
-		/// Allows simple checking for existance.
+		/// Finds the first matching CatalogEntry.
 		/// </summary>
-		/// <param name="predicate"></param>
+		/// <param name="predicate">an expression to look up</param>
 		/// <returns></returns>
-		public bool Exists(Expression<Func<CatalogEntry, bool>> predicate)
+		public CatalogEntry FindEntry(Expression<Func<CatalogEntry, bool>> predicate)
 		{
+			long catalogID = this.Catalog.ID;
 			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			return entries
-				.Where(n => n.CatalogID == this.Catalog.ID)
+				.Where(n => n.CatalogID == catalogID)
+				.FirstOrDefault(predicate);
+		}
+
+		/// <summary>
+		/// Finds the first matching CatalogEntry.
+		/// </summary>
+		/// <param name="path">the full path to look up</param>
+		/// <returns></returns>
+		public CatalogEntry FindEntry(string path)
+		{
+			if (String.IsNullOrEmpty(path))
+			{
+				throw new ArgumentNullException("path", "path was empty");
+			}
+
+			path = path.ToLowerInvariant();
+
+			return this.FindEntry(n => n.Parent.ToLower()+n.Name.ToLower() == path);
+		}
+
+		/// <summary>
+		/// Allows simple checking for existance.
+		/// </summary>
+		/// <param name="predicate">an expression to check existance</param>
+		/// <returns></returns>
+		public bool EntryExists(Expression<Func<CatalogEntry, bool>> predicate)
+		{
+			long catalogID = this.Catalog.ID;
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
+			return entries
+				.Where(n => n.CatalogID == catalogID)
 				.Any(predicate);
+		}
+
+		/// <summary>
+		/// Allows simple checking for existance by path.
+		/// </summary>
+		/// <param name="path">the full path to look up</param>
+		/// <returns></returns>
+		public bool EntryExists(string path)
+		{
+			if (String.IsNullOrEmpty(path))
+			{
+				throw new ArgumentNullException("path", "path was empty");
+			}
+
+			path = path.ToLowerInvariant();
+
+			return this.EntryExists(n => n.Parent.ToLower()+n.Name.ToLower() == path);
 		}
 
 		public IEnumerable<string> GetChildPaths(string parent)
@@ -280,186 +310,39 @@ namespace Shadow.Model
 
 		#region Delta Methods
 
-		[Flags]
-		private enum MatchRank : int
-		{
-			None = 0x00,
-			Hash = 0x01,
-			Path = 0x02,
-			Both = Path|Hash
-		}
-
-		/// <summary>
-		/// Finds the nearest matching existing CatalogEntry.
-		/// Exact match (path & hash) is best.
-		/// A matching path is next (however requires expensive copying of bits).
-		/// Same file signature is next (can clone).
-		/// </summary>
-		/// <param name="path"></param>
-		/// <param name="hash"></param>
-		/// <param name="match"></param>
-		/// <returns></returns>
-		private MatchRank FindMatch(CatalogEntry target, out CatalogEntry meta, out CatalogEntry data)
-		{
-			string name = target.Name != null ? target.Name.ToLowerInvariant() : null;
-			string parent = target.Parent != null ? target.Parent.ToLowerInvariant() : null;
-			string path = parent+name;
-			string hash = target.Signature != null ? target.Signature.ToLowerInvariant() : null;
-			long catalogID = this.Catalog.ID;
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-
-			var query =
-				(from entry in entries
-				 where entry.CatalogID == catalogID
-				 let rank =
-					(int)(entry.Parent.ToLower()+entry.Name.ToLower() == path ? MatchRank.Path : MatchRank.None) |
-					(int)((entry.Signature != null && entry.Signature.ToLower() == hash) ? MatchRank.Hash : MatchRank.None)
-				 where rank > (int)MatchRank.None
-				 orderby rank descending
-				 select new
-				 {
-					 Rank = (MatchRank)rank,
-					 Entry = entry
-				 }).Take(2);
-
-			var result = query.ToArray();
-			if (result == null || result.Length < 1)
-			{
-				meta = data = null;
-				return MatchRank.None;
-			}
-
-			switch (result[0].Rank)
-			{
-				case MatchRank.Both:
-				{
-					meta = data = result[0].Entry;
-					return MatchRank.Both;
-				}
-				case MatchRank.Path:
-				{
-					meta = result[0].Entry;
-					data = (result.Length > 1) ? result[1].Entry : null;
-					return MatchRank.Path;
-				}
-				case MatchRank.Hash:
-				{
-					meta = null;
-					data = result[0].Entry;
-					return MatchRank.Hash;
-				}
-				default:
-				{
-					// this should not happen
-					throw new InvalidOperationException("Unexpected result from FindMatch query.");
-				}
-			}
-		}
-
-		protected DeltaAction CalcEntryDelta(CatalogEntry entry, out CatalogEntry meta, out CatalogEntry data)
-		{
-			if (entry == null)
-			{
-				meta = data = null;
-				return DeltaAction.None;
-			}
-
-			// look for closest matching node
-			switch(this.FindMatch(entry, out meta, out data))
-			{
-				case MatchRank.Both:
-				{
-					if (CatalogEntry.ValueComparer.Equals(entry, meta))
-					{
-						// no changes, identical
-						return DeltaAction.None;
-					}
-
-					// correct bits exist at correct path but metadata is different
-					return DeltaAction.Meta;
-				}
-				case MatchRank.Hash:
-				{
-					if (entry.IsDirectory)
-					{
-						// add empty directories (no data to clone)
-						return DeltaAction.Add;
-					}
-
-					// equivalent file found
-					return DeltaAction.Clone;
-				}
-				case MatchRank.Path:
-				{
-					// file exists but bits are different
-					return DeltaAction.Update;
-				}
-				default:
-				case MatchRank.None:
-				{
-					// completely missing file, need to add
-					return DeltaAction.Add;
-				}
-			}
-		}
-
 		/// <summary>
 		/// Checks for changes.
 		/// </summary>
 		/// <param name="entry"></param>
 		/// <returns>true if changes were found</returns>
-		public bool ApplyChanges(CatalogEntry entry)
+		internal bool ApplyChanges(CatalogEntry entry)
 		{
-			CatalogEntry data, meta;
-
-			switch (this.CalcEntryDelta(entry, out meta, out data))
+			if (entry == null)
 			{
-				case DeltaAction.Add:
-				{
-					// does not exist (requires expensive bit transfer)
-					this.AddEntry(entry);
-					return true;
-				}
-				case DeltaAction.Clone:
-				{
-					// bits exist need to add or update entry (no transfer required)
-					this.CloneEntry(entry, data);
-					return true;
-				}
-				case DeltaAction.Delete:
-				{
-					// NOTE: this actually would not be detected here
-
-					// file is being removed
-					this.DeleteEntryByPath(entry.Name);
-					return true;
-				}
-				case DeltaAction.Meta:
-				{
-					// bits are same but metadata different
-					if (meta == null)
-					{
-						this.AddEntry(entry);
-					}
-					else
-					{
-						this.UpdateMeta(entry, meta);
-					}
-					return true;
-				}
-				case DeltaAction.Update:
-				{
-					// path exists but bits are different (requires expensive bit transfer)
-					this.UpdateData(entry, meta, data);
-					return true;
-				}
-				default:
-				case DeltaAction.None:
-				{
-					// no change required
-					return false;
-				}
+				return false;
 			}
+
+			// look for entry with matching path
+			CatalogEntry original = this.FindEntry(entry.FullPath);
+			if (original == null)
+			{
+				// entry does not exist
+				// if bits exist need to add or update entry (no transfer required)
+				// else requires expensive bit transfer
+				this.AddEntry(entry);
+				return true;
+			}
+
+			if (CatalogEntry.ValueComparer.Equals(entry, original))
+			{
+				// no changes, identical
+				return false;
+			}
+
+			// file exists at correct path but metadata is different
+			// path exists but metadata different
+			this.Update(entry, original);
+			return true;
 		}
 
 		#endregion Delta Methods
@@ -482,7 +365,7 @@ namespace Shadow.Model
 			foreach (string path in this.GetExistingPaths())
 			{
 				// extras are any local entries not contained in other
-				if (that.Exists(n => n.Name.ToLower() == path.ToLower()))
+				if (that.EntryExists(path))
 				{
 					continue;
 				}

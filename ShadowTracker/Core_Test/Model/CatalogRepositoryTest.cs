@@ -111,11 +111,11 @@ namespace Shadow.Model.Test
 		{
 			const string path = "/Foo.txt";
 
-			Assert.IsTrue(this.repos.Exists(n => n.Parent+n.Name == path));
+			Assert.IsTrue(this.repos.EntryExists(path));
 
 			this.repos.DeleteEntryByPath(path);
 
-			Assert.IsFalse(this.repos.Exists(n => n.Parent+n.Name == path));
+			Assert.IsFalse(this.repos.EntryExists(path));
 		}
 
 		[TestMethod()]
@@ -127,7 +127,7 @@ namespace Shadow.Model.Test
 			Expression<Func<CatalogEntry, bool>> predicate = null; // TODO: Initialize to an appropriate value
 			bool expected = false; // TODO: Initialize to an appropriate value
 			bool actual;
-			actual = target.Exists(predicate);
+			actual = target.EntryExists(predicate);
 			Assert.AreEqual(expected, actual);
 		}
 
@@ -145,36 +145,24 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void RenameEntryTest()
 		{
-			Assert.IsTrue(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
-			Assert.IsFalse(this.repos.Exists(n => n.Parent == "/" && n.Name == "Bar.txt"));
+			Assert.IsTrue(this.repos.EntryExists("/Foo.txt"));
+			Assert.IsFalse(this.repos.EntryExists("/Bar.txt"));
 
 			this.repos.RenameEntry("/Foo.txt", "/Bar.txt");
 
-			Assert.IsFalse(this.repos.Exists(n => n.Parent == "/" && n.Name == "Foo.txt"));
-			Assert.IsTrue(this.repos.Exists(n => n.Parent == "/" && n.Name == "Bar.txt"));
+			Assert.IsFalse(this.repos.EntryExists("/Foo.txt"));
+			Assert.IsTrue(this.repos.EntryExists("/Bar.txt"));
 		}
 
 		[TestMethod()]
-		public void UpdateMetaTest()
+		public void UpdateTest()
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
 			CatalogRepository target = this.repos;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			CatalogEntry original = null; // TODO: Initialize to an appropriate value
-			target.UpdateMeta(entry, original);
-		}
-
-		[TestMethod()]
-		public void UpdateDataTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
-
-			CatalogRepository target = this.repos;
-			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			CatalogEntry original = null; // TODO: Initialize to an appropriate value
-			CatalogEntry data = null; // TODO: Initialize to an appropriate value
-			target.UpdateData(entry, original, data);
+			target.Update(entry, original);
 		}
 
 		[TestMethod()]
@@ -185,26 +173,6 @@ namespace Shadow.Model.Test
 			CatalogRepository target = this.repos;
 			CatalogRepository that = null; // TODO: Initialize to an appropriate value
 			target.Sync(that);
-		}
-
-		[TestMethod()]
-		[DeploymentItem("ShadowTracker.Core.dll")]
-		public void FindMatchTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
-
-			//CatalogRepository_Accessor target = this.repos;
-			//CatalogEntry target1 = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry meta = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry data = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry dataExpected = null; // TODO: Initialize to an appropriate value
-			//CatalogRepository_Accessor.MatchRank expected = null; // TODO: Initialize to an appropriate value
-			//CatalogRepository_Accessor.MatchRank actual;
-			//actual = target.FindMatch(target1, out meta, out data);
-			//Assert.AreEqual(metaExpected, meta);
-			//Assert.AreEqual(dataExpected, data);
-			//Assert.AreEqual(expected, actual);
 		}
 
 		[TestMethod()]
