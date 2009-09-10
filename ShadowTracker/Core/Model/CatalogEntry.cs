@@ -27,17 +27,22 @@ namespace Shadow.Model
 		#region EqualityComparer
 
 		/// <summary>
-		/// Tests equality of two CatalogEntry objects on their paths
+		/// Tests equality of two CatalogEntry objects by paths
 		/// </summary>
 		public static readonly IEqualityComparer<CatalogEntry> PathComparer = new PathEqualityComparer();
 
 		/// <summary>
-		/// Tests equality of two CatalogEntry objects on their signatures
+		/// Tests equality of two CatalogEntry objects by signatures
 		/// </summary>
 		public static readonly IEqualityComparer<CatalogEntry> SignatureComparer = new SignatureEqualityComparer();
 
 		/// <summary>
-		/// Tests equality of two CatalogEntry objects on their non-identity fields
+		/// Tests equality of two CatalogEntry objects by non-identity/non-signature fields
+		/// </summary>
+		public static readonly IEqualityComparer<CatalogEntry> LiteValueComparer = new LiteValueEqualityComparer();
+
+		/// <summary>
+		/// Tests equality of two CatalogEntry objects by non-identity fields
 		/// </summary>
 		public static readonly IEqualityComparer<CatalogEntry> ValueComparer = new ValueEqualityComparer();
 
@@ -92,11 +97,17 @@ namespace Shadow.Model
 			#endregion IEqualityComparer<T> Members
 		}
 
-		private class ValueEqualityComparer : IEqualityComparer<CatalogEntry>
+		private class LiteValueEqualityComparer : IEqualityComparer<CatalogEntry>
 		{
+			#region Constants
+
+			protected const int ShiftValue = -1521134295;
+
+			#endregion Constants
+
 			#region IEqualityComparer<T> Members
 
-			bool IEqualityComparer<CatalogEntry>.Equals(CatalogEntry x, CatalogEntry y)
+			public virtual bool Equals(CatalogEntry x, CatalogEntry y)
 			{
 				if (x == null || y == null)
 				{
@@ -111,18 +122,16 @@ namespace Shadow.Model
 					(x.ModifiedDate.Ticks == y.ModifiedDate.Ticks) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Name, y.Name) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Parent, y.Parent) &&
-					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature) &&
 					(x.CatalogID == y.CatalogID);
 			}
 
-			int IEqualityComparer<CatalogEntry>.GetHashCode(CatalogEntry obj)
+			public virtual int GetHashCode(CatalogEntry obj)
 			{
 				if (obj == null)
 				{
-					return StringComparer.OrdinalIgnoreCase.GetHashCode(null);
+					return EqualityComparer<CatalogEntry>.Default.GetHashCode(null);
 				}
 
-				const int ShiftValue = -1521134295;
 				int hashcode = 0x23f797e3;
 				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Name);
 				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Parent);
@@ -130,7 +139,34 @@ namespace Shadow.Model
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<Int64>.Default.GetHashCode(obj.Length);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.CreatedDate);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.ModifiedDate);
-				return ((ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature));
+				return hashcode;
+			}
+
+			#endregion IEqualityComparer<T> Members
+		}
+
+		private class ValueEqualityComparer : LiteValueEqualityComparer
+		{
+			#region IEqualityComparer<T> Members
+
+			public override bool Equals(CatalogEntry x, CatalogEntry y)
+			{
+				if (x == null && y == null)
+				{
+					// return true if both null
+					return true;
+				}
+
+				return
+					base.Equals(x, y) &&
+					StringComparer.OrdinalIgnoreCase.Equals(x.Signature, y.Signature);
+			}
+
+			public override int GetHashCode(CatalogEntry obj)
+			{
+				int hashcode = base.GetHashCode(obj);
+				hashcode = ((ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Signature));
+				return hashcode;
 			}
 
 			#endregion IEqualityComparer<T> Members
@@ -346,6 +382,14 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
+		/// Gets if the Signature field has been loaded.
+		/// </summary>
+		public bool HasSignature
+		{
+			get { return this.Signature != null; }
+		}
+
+		/// <summary>
 		/// Gets and sets the ID of the owning catalog
 		/// </summary>
 		public long CatalogID
@@ -442,9 +486,11 @@ namespace Shadow.Model
 			this.ModifiedDate = that.ModifiedDate;
 			this.Parent = that.Parent;
 			this.Name = that.Name;
-			this.Signature = that.Signature;
+			if (that.HasSignature)
+			{
+				this.Signature = that.Signature;
+			}
 
-			// TODO: evaluate whether this is needed
 			if (that.CatalogID > 0)
 			{
 				this.CatalogID = that.CatalogID;
