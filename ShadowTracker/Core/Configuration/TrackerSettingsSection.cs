@@ -1,6 +1,8 @@
 using System;
 using System.Configuration;
 
+using Shadow.Agent;
+
 namespace Shadow.Configuration
 {
 	public sealed class TrackerSettingsSection : ConfigurationSection
@@ -13,6 +15,7 @@ namespace Shadow.Configuration
 
 		private const string Key_SqlMapping = "sqlMapping";
 		private const string Key_FileFilter = "fileFilter";
+		private const string Key_TrickleRate = "trickleRate";
 		private const string Key_WatchFolders = ""; // default so no key name
 
 		#endregion Constants
@@ -57,6 +60,23 @@ namespace Shadow.Configuration
 				}
 			}
 			set { this[Key_FileFilter] = value; }
+		}
+
+		[ConfigurationProperty(Key_TrickleRate, DefaultValue=FileUtility.DefaultTrickleRate, IsRequired=false)]
+		public int TrickleRate
+		{
+			get
+			{
+				try
+				{
+					return (int)this[Key_TrickleRate];
+				}
+				catch
+				{
+					return FileUtility.DefaultTrickleRate;
+				}
+			}
+			set { this[Key_TrickleRate] = value; }
 		}
 
 		[ConfigurationProperty(Key_WatchFolders, IsDefaultCollection=true)]
