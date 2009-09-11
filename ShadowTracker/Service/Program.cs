@@ -43,14 +43,81 @@ namespace Shadow.Service
 				service.Out = Console.Out;
 				service.Error = Console.Error;
 
-				// TODO: handle command line args
+				switch (args[0].ToLowerInvariant())
+				{
+					case "/?":
+					{
+						Console.WriteLine("USAGE:");
+						Console.WriteLine("\tShadowTracker.Service.exe [/? | /console | /install | /uninstall]");
+						Console.WriteLine();
+						Console.WriteLine("Options:");
+						Console.WriteLine("\t/?\t\tDisplay this help message");
+						Console.WriteLine("\t/console\tRun the tracker as a console application");
+						Console.WriteLine("\t/install\tInstall the tracker as a Windows Service");
+						Console.WriteLine("\t/uninstall\tUninstall the tracker as a Windows Service");
+						Console.WriteLine();
+						Console.WriteLine("Examples:");
+						Console.WriteLine("\t> ShadowTracker.Service.exe /console\t... Run as console");
+						Console.WriteLine("\t> ShadowTracker.Service.exe /install\t... Install service");
+						Console.WriteLine("\t> ShadowTracker.Service.exe /uninstall\t... Uninstall service");
+						Console.WriteLine();
+						break;
+					}
+					case "/console":
+					{
+						Console.WriteLine("Running ShadowTracker as Console");
 
-				service.Begin(args);
+						service.Begin(args);
 
-				Console.WriteLine("Press any key to exit.");
-				Console.ReadKey(true);
+						Console.WriteLine("Press any key to exit.");
+						Console.ReadKey(true);
 
-				service.End();
+						service.End();
+						break;
+					}
+					case "/install":
+					{
+						Console.WriteLine("Installing ShadowTracker as Windows Service");
+						Console.WriteLine("Press any key to continue.");
+						Console.ReadKey(true);
+
+						try
+						{
+							service.InstallDatabase();
+
+							// TODO: install service
+
+							Console.WriteLine("Installation successful");
+						}
+						catch (Exception ex)
+						{
+							Console.Error.WriteLine("Installation failed: "+ex);
+						}
+						Console.WriteLine("Press any key to exit.");
+						Console.ReadKey(true);
+						break;
+					}
+					case "/uninstall":
+					{
+						Console.WriteLine("Uninstalling ShadowTracker as Windows Service");
+						Console.WriteLine("Press any key to continue.");
+						Console.ReadKey(true);
+
+						try
+						{
+							// TODO: uninstall service
+
+							Console.WriteLine("Uninstallation successful.");
+						}
+						catch (Exception ex)
+						{
+							Console.Error.WriteLine("Uninstallation failed: "+ex);
+						}
+						Console.WriteLine("Press any key to exit.");
+						Console.ReadKey(true);
+						break;
+					}
+				}
 			}
 		}
 	}

@@ -69,12 +69,9 @@ namespace Shadow.Service
 			try
 			{
 				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-
-				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
-
 				string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
-
 				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, settings.SqlMapping));
+				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
 				var version = UnitOfWorkFactory.Create().Versions.OrderByDescending(v => v.ID).FirstOrDefault();
 
@@ -154,11 +151,33 @@ namespace Shadow.Service
 			this.Out.WriteLine("Tracking stopped.");
 		}
 
+		public void InstallDatabase()
+		{
+			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
+			string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
+			this.EnsureDatabase(ref connection, settings.SqlMapping);
+		}
+
 		#endregion Service Events
 
 		#region Utility Methods
 
 		private Func<IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
+		{
+			MappingSource map = this.EnsureDatabase(ref connection, mappings);
+
+			return delegate()
+			{
+				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(connection, map);
+				if (this.Out != TextWriter.Null)
+				{
+					unitOfWork.Log = this.Out;
+				}
+				return unitOfWork;
+			};
+		}
+
+		private MappingSource EnsureDatabase(ref string connection, string mappings)
 		{
 			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
 			{
@@ -172,7 +191,7 @@ namespace Shadow.Service
 			{
 				string answer = "n";
 
-				if (this.In != null)
+				if (this.In != null && this.In != TextReader.Null)
 				{
 					this.Out.Write("Specified database does not exist. Want to create it? (y/n): ");
 					answer = this.In.ReadLine();
@@ -195,16 +214,7 @@ namespace Shadow.Service
 					this.Error.WriteLine(ex.Message);
 				}
 			}
-
-			return delegate()
-			{
-				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(connection, map);
-				if (this.Out != TextWriter.Null)
-				{
-					unitOfWork.Log = this.Out;
-				}
-				return unitOfWork;
-			};
+			return map;
 		}
 
 		#endregion Utility Methods
