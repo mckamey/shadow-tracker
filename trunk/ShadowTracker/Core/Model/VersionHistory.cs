@@ -19,7 +19,7 @@ namespace Shadow.Model
 		#region Fields
 
 		private long id;
-		private Version label;
+		private string label;
 		private DateTime updatedDate;
 
 		#endregion Fields
@@ -35,7 +35,7 @@ namespace Shadow.Model
 		public static VersionHistory Create()
 		{
 			VersionHistory version = new VersionHistory();
-			version.label = VersionHistory.AssemblyVersion;
+			version.label = VersionHistory.AssemblyVersion.ToString();
 			version.UpdatedDate = DateTime.UtcNow;
 
 			return version;
@@ -67,7 +67,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets the Version label
 		/// </summary>
-		public Version Label
+		public string Label
 		{
 			get { return this.label; }
 			set

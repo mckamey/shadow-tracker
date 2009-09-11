@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Data.Linq.Mapping;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.ServiceProcess;
 
 using Shadow.Agent;
@@ -73,18 +74,24 @@ namespace Shadow.Service
 
 				string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
 
+				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, settings.SqlMapping));
+
+				var version = UnitOfWorkFactory.Create().Versions.OrderByDescending(v => v.ID).FirstOrDefault();
+
 				this.Out.WriteLine("ShadowTracker");
-				this.Out.WriteLine(settings.FileFilter);
+				if (version != null)
+				{
+					this.Out.WriteLine("v"+version.Label+" ("+version.UpdatedDate.ToString("yyyy-MM-dd HH:mm")+")");
+				}
 				this.Out.WriteLine("__________________________");
 
 				this.Out.WriteLine();
 				this.Out.WriteLine("Connecting to database...");
 				this.Out.WriteLine("__________________________");
 
-				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, settings.SqlMapping));
-
 				this.Out.WriteLine();
 				this.Out.WriteLine("Beginning trickle update...");
+				this.Out.WriteLine(settings.FileFilter);
 				this.Out.WriteLine("__________________________");
 
 				var watch = Stopwatch.StartNew();
