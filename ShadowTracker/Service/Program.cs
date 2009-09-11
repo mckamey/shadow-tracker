@@ -67,12 +67,26 @@ namespace Shadow.Service
 					{
 						Console.WriteLine("Running ShadowTracker as Console");
 
-						service.Begin(args);
+						try
+						{
+							service.Begin(args);
+						}
+						catch (Exception ex)
+						{
+							Console.Error.WriteLine(ex);
+						}
 
 						Console.WriteLine("Press any key to exit.");
 						Console.ReadKey(true);
 
-						service.End();
+						try
+						{
+							service.End();
+						}
+						catch (Exception ex)
+						{
+							Console.Error.WriteLine(ex);
+						}
 						break;
 					}
 					case "/install":

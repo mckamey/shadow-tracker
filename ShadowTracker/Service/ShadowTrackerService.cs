@@ -210,8 +210,8 @@ namespace Shadow.Service
 				}
 				catch (Exception ex)
 				{
-					// TODO: handle this situation
-					this.Error.WriteLine(ex.Message);
+					this.Error.WriteLine(ex);
+					throw;
 				}
 			}
 			return map;
