@@ -20,7 +20,7 @@ namespace Shadow.Model
 	{
 		#region Constants
 
-		private static readonly DateTime SqlDateTimeMinValue = new DateTime(1753, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		internal static readonly DateTime SqlDateTimeMinValue = new DateTime(1753, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 		#endregion Constants
 
@@ -510,7 +510,7 @@ namespace Shadow.Model
 		/// Converts to UTC and only stores accurately to the second.
 		/// Disregards dates before 1753-01-01T00:00:00z which is DateTime.MinValue for SQL DateTime
 		/// </remarks>
-		private static DateTime ScrubDate(DateTime value)
+		internal static DateTime ScrubDate(DateTime value)
 		{
 			if (value.Kind == DateTimeKind.Local)
 			{
