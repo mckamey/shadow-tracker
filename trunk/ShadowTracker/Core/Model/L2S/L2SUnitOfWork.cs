@@ -15,6 +15,7 @@ namespace Shadow.Model.L2S
 		private readonly DataContext DB;
 		private ITable<Catalog> catalogs;
 		private ITable<CatalogEntry> entries;
+		private ITable<VersionHistory> versions;
 
 		#endregion Fields
 
@@ -146,6 +147,18 @@ namespace Shadow.Model.L2S
 					this.entries = new L2SSoftDeleteTable<CatalogEntry>(this.DB);
 				}
 				return this.entries;
+			}
+		}
+
+		public ITable<VersionHistory> Versions
+		{
+			get
+			{
+				if (this.versions == null)
+				{
+					this.versions = new L2STable<VersionHistory>(this.DB);
+				}
+				return this.versions;
 			}
 		}
 

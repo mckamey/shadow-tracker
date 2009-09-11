@@ -179,6 +179,8 @@ namespace Shadow.Service
 				try
 				{
 					db.InitializeDatabase();
+					db.Versions.Add(VersionHistory.Create());
+					db.Save();
 				}
 				catch (Exception ex)
 				{

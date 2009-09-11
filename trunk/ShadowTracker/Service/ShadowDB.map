@@ -2,6 +2,32 @@
 <Database Name="ShadowDB"
 		  xmlns="http://schemas.microsoft.com/linqtosql/mapping/2007">
 
+	<Table Name="dbo.VersionHistory" Member="Versions">
+		<Type Name="Shadow.Model.VersionHistory">
+			<Column Name="VersionID"
+					Member="ID"
+					Storage="id"
+					DbType="BigInt NOT NULL IDENTITY"
+					IsPrimaryKey="true"
+					IsDbGenerated="true"
+					AutoSync="OnInsert"
+					UpdateCheck="Never" />
+
+			<Column Name="Label"
+					Member="Label"
+					Storage="label"
+					DbType="VarChar(50) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
+			<Column Name="Updated"
+					Member="UpdatedDate"
+					Storage="updatedDate"
+					DbType="DateTime NOT NULL"
+					UpdateCheck="Never" />
+		</Type>
+	</Table>
+
 	<Table Name="dbo.Catalog" Member="Catalogs">
 		<Type Name="Shadow.Model.Catalog">
 

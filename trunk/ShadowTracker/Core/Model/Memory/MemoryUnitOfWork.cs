@@ -14,6 +14,9 @@ namespace Shadow.Model.Memory
 		private IEnumerable<CatalogEntry> EntriesStorage;
 		private MemoryTable<CatalogEntry> EntriesIdentityMap;
 
+		private IEnumerable<VersionHistory> VersionsStorage;
+		private MemoryTable<VersionHistory> VersionsIdentityMap;
+
 		#endregion Fields
 
 		#region Init
@@ -71,6 +74,16 @@ namespace Shadow.Model.Memory
 
 			// reset change tracking
 			this.EntriesIdentityMap = null;
+
+			// "save" entries
+			if (this.VersionsIdentityMap != null)
+			{
+				// save contents to "storage"
+				this.VersionsStorage = this.VersionsIdentityMap.AsEnumerable();
+			}
+
+			// reset change tracking
+			this.VersionsIdentityMap = null;
 		}
 
 		public ITable<Catalog> Catalogs
@@ -94,6 +107,18 @@ namespace Shadow.Model.Memory
 					this.EntriesIdentityMap = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer, this.EntriesStorage);
 				}
 				return this.EntriesIdentityMap;
+			}
+		}
+
+		public ITable<VersionHistory> Versions
+		{
+			get
+			{
+				if (this.VersionsIdentityMap == null)
+				{
+					this.VersionsIdentityMap = new MemoryTable<VersionHistory>(EqualityComparer<VersionHistory>.Default, this.VersionsStorage);
+				}
+				return this.VersionsIdentityMap;
 			}
 		}
 

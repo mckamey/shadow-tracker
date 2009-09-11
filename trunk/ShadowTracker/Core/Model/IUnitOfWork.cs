@@ -8,6 +8,8 @@ namespace Shadow.Model
 
 		ITable<CatalogEntry> Entries { get; }
 
+		ITable<VersionHistory> Versions { get; }
+
 		void Save();
 	}
 }
