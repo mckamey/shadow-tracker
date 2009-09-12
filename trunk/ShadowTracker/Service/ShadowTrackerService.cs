@@ -4,6 +4,7 @@ using System.Data.Linq.Mapping;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.ServiceProcess;
 
 using Shadow.Agent;
@@ -15,6 +16,12 @@ namespace Shadow.Service
 {
 	public partial class ShadowTrackerService : ServiceBase
 	{
+		#region Constants
+
+		internal static readonly string ServiceDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+		#endregion Constants
+
 		#region Fields
 
 		private FileTracker[] Trackers;
@@ -123,6 +130,8 @@ namespace Shadow.Service
 			catch (Exception ex)
 			{
 				this.Error.WriteLine(ex);
+				this.Error.Flush();
+				this.Out.Flush();
 
 				// rethrow so SCM will stop and record in event log
 				this.ExitCode = 10;		// ERROR_BAD_ENVIRONMENT, "The environment is incorrect"
@@ -137,18 +146,34 @@ namespace Shadow.Service
 
 		protected override void OnStop()
 		{
-			foreach (FileTracker tracker in this.Trackers)
+			try
 			{
-				if (tracker == null)
+				foreach (FileTracker tracker in this.Trackers)
 				{
-					continue;
+					if (tracker == null)
+					{
+						continue;
+					}
+
+					tracker.Stop();
 				}
 
-				tracker.Stop();
+				this.Out.WriteLine();
+				this.Out.WriteLine("Tracking stopped.");
 			}
-
-			this.Out.WriteLine();
-			this.Out.WriteLine("Tracking stopped.");
+			finally
+			{
+				try
+				{
+					this.Error.Flush();
+				}
+				catch { }
+				try
+				{
+					this.Out.Flush();
+				}
+				catch { }
+			}
 		}
 
 		public void InstallDatabase()
@@ -181,8 +206,9 @@ namespace Shadow.Service
 		{
 			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
 			{
-				connection = connection.Replace("|DataDirectory|", Environment.CurrentDirectory);
+				connection = connection.Replace("|DataDirectory|", ShadowTrackerService.ServiceDirectory);
 			}
+			mappings = Path.Combine(ShadowTrackerService.ServiceDirectory, mappings);
 			MappingSource map = XmlMappingSource.FromUrl(mappings);
 
 			// create one to test out
@@ -211,6 +237,7 @@ namespace Shadow.Service
 				catch (Exception ex)
 				{
 					this.Error.WriteLine(ex);
+					this.Error.Flush();
 					throw;
 				}
 			}

@@ -33,7 +33,7 @@
 			// 
 			// ShadowTrackerServiceProcessInstaller
 			// 
-			this.ShadowTrackerServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.NetworkService;
+			this.ShadowTrackerServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
 			this.ShadowTrackerServiceProcessInstaller.Password = null;
 			this.ShadowTrackerServiceProcessInstaller.Username = null;
 			// 

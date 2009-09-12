@@ -1,11 +1,21 @@
 ﻿using System;
+using System.Configuration.Install;
 using System.IO;
+using System.Reflection;
 using System.ServiceProcess;
 
 namespace Shadow.Service
 {
 	static class Program
 	{
+		#region Constants
+
+		private static readonly string ServiceLocation = Assembly.GetExecutingAssembly().Location;
+
+		#endregion Constants
+
+		#region Main
+
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
@@ -15,23 +25,29 @@ namespace Shadow.Service
 
 			if (args.Length < 1)
 			{
-				string logName = DateTime.Now.ToString("yyyy-MM-dd-HHmm")+"_ShadowTrackerService.txt";
+				string logName = Path.Combine(ShadowTrackerService.ServiceDirectory, DateTime.Now.ToString("yyyy-MM-dd-HHmm_"));
 
 				try
 				{
-					service.Error = File.AppendText(logName);
+					service.Error = File.AppendText(logName+"Error.txt");
+					service.Error.WriteLine("Log created: " +logName+"Error.txt");
+					service.Error.WriteLine();
 				}
 				catch (Exception ex)
 				{
+					service.Error.WriteLine("Error creating Error log");
 					service.Error.WriteLine(ex);
 				}
 
 				try
 				{
-					service.Out = File.AppendText(logName);
+					service.Out = File.AppendText(logName+"Log.txt");
+					service.Out.WriteLine("Log created: " +logName+"Log.txt");
+					service.Out.WriteLine();
 				}
 				catch (Exception ex)
 				{
+					service.Error.WriteLine("Error creating Out log");
 					service.Error.WriteLine(ex);
 				}
 
@@ -43,27 +59,10 @@ namespace Shadow.Service
 				service.Out = Console.Out;
 				service.Error = Console.Error;
 
-				switch (args[0].ToLowerInvariant())
+				switch (args[0].Replace("/", "").Replace("-", "").Trim().ToLowerInvariant())
 				{
-					case "/?":
-					{
-						Console.WriteLine("USAGE:");
-						Console.WriteLine("\tShadowTracker.Service.exe [/? | /console | /install | /uninstall]");
-						Console.WriteLine();
-						Console.WriteLine("Options:");
-						Console.WriteLine("\t/?\t\tDisplay this help message");
-						Console.WriteLine("\t/console\tRun the tracker as a console application");
-						Console.WriteLine("\t/install\tInstall the tracker as a Windows Service");
-						Console.WriteLine("\t/uninstall\tUninstall the tracker as a Windows Service");
-						Console.WriteLine();
-						Console.WriteLine("Examples:");
-						Console.WriteLine("\t> ShadowTracker.Service.exe /console\t... Run as console");
-						Console.WriteLine("\t> ShadowTracker.Service.exe /install\t... Install service");
-						Console.WriteLine("\t> ShadowTracker.Service.exe /uninstall\t... Uninstall service");
-						Console.WriteLine();
-						break;
-					}
-					case "/console":
+					case "c":
+					case "console":
 					{
 						Console.WriteLine("Running ShadowTracker as Console");
 
@@ -89,7 +88,8 @@ namespace Shadow.Service
 						}
 						break;
 					}
-					case "/install":
+					case "i":
+					case "install":
 					{
 						Console.WriteLine("Installing ShadowTracker as Windows Service");
 						Console.WriteLine("Press any key to continue.");
@@ -99,7 +99,7 @@ namespace Shadow.Service
 						{
 							service.InstallDatabase();
 
-							// TODO: install service
+							ManagedInstallerClass.InstallHelper(new string[] { ServiceLocation });
 
 							Console.WriteLine("Installation successful");
 						}
@@ -111,7 +111,8 @@ namespace Shadow.Service
 						Console.ReadKey(true);
 						break;
 					}
-					case "/uninstall":
+					case "u":
+					case "uninstall":
 					{
 						Console.WriteLine("Uninstalling ShadowTracker as Windows Service");
 						Console.WriteLine("Press any key to continue.");
@@ -119,7 +120,7 @@ namespace Shadow.Service
 
 						try
 						{
-							// TODO: uninstall service
+							ManagedInstallerClass.InstallHelper(new string[] { "/u", ServiceLocation });
 
 							Console.WriteLine("Uninstallation successful.");
 						}
@@ -131,8 +132,31 @@ namespace Shadow.Service
 						Console.ReadKey(true);
 						break;
 					}
+					default:
+					case "?":
+					{
+						string serviceName = Path.GetFileName(ServiceLocation);
+
+						Console.WriteLine("USAGE:");
+						Console.WriteLine("\t"+serviceName+" [/? | /console | /install | /uninstall]");
+						Console.WriteLine();
+						Console.WriteLine("Options:");
+						Console.WriteLine("\t/?\t\tDisplay this help message");
+						Console.WriteLine("\t/console\tRun the tracker as a console application");
+						Console.WriteLine("\t/install\tInstall the tracker as a Windows Service");
+						Console.WriteLine("\t/uninstall\tUninstall the tracker as a Windows Service");
+						Console.WriteLine();
+						Console.WriteLine("Examples:");
+						Console.WriteLine("\t> "+serviceName+" /console\t... Run as console");
+						Console.WriteLine("\t> "+serviceName+" /install\t... Install service");
+						Console.WriteLine("\t> "+serviceName+" /uninstall\t... Uninstall service");
+						Console.WriteLine();
+						break;
+					}
 				}
 			}
 		}
+
+		#endregion Main
 	}
 }
