@@ -132,7 +132,6 @@ namespace Shadow.Agent
 			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
-			// TODO: check against shallow entry (no hash) before calculating
 			CatalogEntry entry = FileUtility.CreateEntry(catalog, file, !catalog.IsIndexed);
 			if (repos.ApplyChanges(entry, file as FileInfo))
 			{
