@@ -8,43 +8,38 @@ namespace Shadow.Agent
 	{
 		#region Methods
 
-		public static IEnumerable<FileSystemInfo> GetFiles(string root, bool listEmptyDirs)
+		public static IEnumerable<FileSystemInfo> GetFiles(string rootPath)
 		{
-			DirectoryInfo dir = new DirectoryInfo(root);
-			if (!dir.Exists)
+			return FileIterator.GetFiles(rootPath, true);
+		}
+
+		public static IEnumerable<FileSystemInfo> GetFiles(string rootPath, bool listDirs)
+		{
+			DirectoryInfo root = new DirectoryInfo(rootPath);
+			if (!root.Exists)
 			{
 				yield break;
 			}
 
 			Queue<DirectoryInfo> queue = new Queue<DirectoryInfo>(100);
-			queue.Enqueue(dir);
+			queue.Enqueue(root);
 
 			while (queue.Count > 0)
 			{
-				dir = queue.Dequeue();
-
-				FileSystemInfo[] files = dir.GetFileSystemInfos();
-				if (listEmptyDirs && files.Length == 0)
-				{
-					if (StringComparer.OrdinalIgnoreCase.Equals(dir.FullName, root))
-					{
-						// do not return the root directory itself
-						continue;
-					}
-
-					// create a node for empty directories
-					yield return dir;
-				}
-
-				foreach (FileSystemInfo info in files)
+				FileSystemInfo[] children = queue.Dequeue().GetFileSystemInfos();
+				foreach (FileSystemInfo info in children)
 				{
 					if (info is DirectoryInfo)
 					{
+						// queue up subtree
 						queue.Enqueue((DirectoryInfo)info);
-						continue;
+						if (listDirs)
+						{
+							// create a node for directories
+							yield return info;
+						}
 					}
-
-					if (info is FileInfo)
+					else if (info is FileInfo)
 					{
 						yield return info;
 					}

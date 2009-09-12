@@ -237,8 +237,9 @@ namespace Shadow.Agent
 
 					try
 					{
-						bool hasChildren = false;
-						foreach (FileSystemInfo info in FileIterator.GetFiles(e2.FullPath, true))
+						repos.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+
+						foreach (FileSystemInfo info in FileIterator.GetFiles(e2.FullPath))
 						{
 							try
 							{
@@ -256,18 +257,12 @@ namespace Shadow.Agent
 								}
 
 								repos.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
-								hasChildren = true;
 							}
 							catch (Exception ex)
 							{
 								// TODO: log as error
 								Console.Error.WriteLine(ex.Message);
 							}
-						}
-
-						if (!hasChildren)
-						{
-							repos.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
 						}
 					}
 					catch (ArgumentException ex)
@@ -286,24 +281,17 @@ namespace Shadow.Agent
 				{
 					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
 
-					CatalogEntry entry;
-					bool hasChildren = false;
+					CatalogEntry entry = FileUtility.CreateEntry(this.catalog, info);
+					repos.ApplyChanges(entry);
+
 					if (info is DirectoryInfo)
 					{
 						// add any children
-						foreach (FileSystemInfo child in FileIterator.GetFiles(e.FullPath, true).Where(this.fileFilter))
+						foreach (FileSystemInfo child in FileIterator.GetFiles(e.FullPath).Where(this.fileFilter))
 						{
 							entry = FileUtility.CreateEntry(this.catalog, child);
 							repos.ApplyChanges(entry);
-							hasChildren = true;
 						}
-					}
-
-					if (!hasChildren)
-					{
-						// add the file or the empty directory if no children
-						entry = FileUtility.CreateEntry(this.catalog, info);
-						repos.ApplyChanges(entry);
 					}
 					break;
 				}

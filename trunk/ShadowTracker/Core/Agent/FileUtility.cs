@@ -322,6 +322,7 @@ namespace Shadow.Agent
 			}
 			else
 			{
+				// is a file
 				return new FileInfo(path);
 			}
 		}
