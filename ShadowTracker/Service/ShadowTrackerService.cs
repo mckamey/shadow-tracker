@@ -9,6 +9,7 @@ using System.ServiceProcess;
 
 using Shadow.Agent;
 using Shadow.Configuration;
+using Shadow.IO;
 using Shadow.Model;
 using Shadow.Model.L2S;
 
@@ -25,6 +26,8 @@ namespace Shadow.Service
 		#region Fields
 
 		private FileTracker[] Trackers;
+		private TextWriter outWriter;
+		private TextWriter errorWriter;
 
 		#endregion Fields
 
@@ -52,14 +55,24 @@ namespace Shadow.Service
 
 		public TextWriter Out
 		{
-			get;
-			set;
+			get { return this.outWriter; }
+			set
+			{
+#if DEBUG
+				this.outWriter = FlushedWriter.Create(value);
+#else
+				this.outWriter = TextWriter.Synchronized(value);
+#endif
+			}
 		}
 
 		public TextWriter Error
 		{
-			get;
-			set;
+			get { return this.errorWriter; }
+			set
+			{
+				this.errorWriter = FlushedWriter.Create(value);
+			}
 		}
 
 		#endregion Properties
@@ -98,9 +111,6 @@ namespace Shadow.Service
 				this.Out.WriteLine(settings.FileFilter);
 				this.Out.WriteLine("__________________________");
 
-				this.Out.Flush();
-				this.Error.Flush();
-
 				var watch = Stopwatch.StartNew();
 
 				WatchFolderSettingsCollection folders = settings.WatchFolders;
@@ -120,9 +130,6 @@ namespace Shadow.Service
 							this.Out.WriteLine();
 							this.Out.WriteLine("End sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
 							this.Out.WriteLine("__________________________");
-
-							this.Out.Flush();
-							this.Error.Flush();
 						});
 
 					this.Trackers[i] = new FileTracker();
@@ -136,8 +143,6 @@ namespace Shadow.Service
 			catch (Exception ex)
 			{
 				this.Error.WriteLine(ex);
-				this.Error.Flush();
-				this.Out.Flush();
 
 				// rethrow so SCM will stop and record in event log
 				this.ExitCode = 10;		// ERROR_BAD_ENVIRONMENT, "The environment is incorrect"
@@ -152,34 +157,18 @@ namespace Shadow.Service
 
 		protected override void OnStop()
 		{
-			try
+			foreach (FileTracker tracker in this.Trackers)
 			{
-				foreach (FileTracker tracker in this.Trackers)
+				if (tracker == null)
 				{
-					if (tracker == null)
-					{
-						continue;
-					}
-
-					tracker.Stop();
+					continue;
 				}
 
-				this.Out.WriteLine();
-				this.Out.WriteLine("Tracking stopped.");
+				tracker.Stop();
 			}
-			finally
-			{
-				try
-				{
-					this.Error.Flush();
-				}
-				catch { }
-				try
-				{
-					this.Out.Flush();
-				}
-				catch { }
-			}
+
+			this.Out.WriteLine();
+			this.Out.WriteLine("Tracking stopped.");
 		}
 
 		public void InstallDatabase()
@@ -243,7 +232,6 @@ namespace Shadow.Service
 				catch (Exception ex)
 				{
 					this.Error.WriteLine(ex);
-					this.Error.Flush();
 					throw;
 				}
 			}

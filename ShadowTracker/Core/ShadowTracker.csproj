@@ -50,6 +50,7 @@
     <Compile Include="Configuration\WatchFolderSettings.cs" />
     <Compile Include="Configuration\WatchFolderSettingsCollection.cs" />
     <Compile Include="Configuration\TrackerSettingsSection.cs" />
+    <Compile Include="IO\FlushedWriter.cs" />
     <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\CatalogRepository.cs" />
     <Compile Include="Model\Catalog.cs" />
