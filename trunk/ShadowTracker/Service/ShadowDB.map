@@ -63,10 +63,10 @@
 		</Type>
 	</Table>
 
-	<Table Name="dbo.File" Member="Entries">
+	<Table Name="dbo.CatalogEntry" Member="Entries">
 		<Type Name="Shadow.Model.CatalogEntry">
 
-			<Column Name="FileID"
+			<Column Name="CatalogEntryID"
 					Member="ID"
 					Storage="id"
 					DbType="BigInt NOT NULL IDENTITY"
@@ -131,7 +131,7 @@
 					DbType="DateTime"
 					UpdateCheck="Never" />
 
-			<Association Name="FK_File_Catalog"
+			<Association Name="FK_CatalogEntry_Catalog"
 						 Member="Catalog"
 						 Storage="catalog"
 						 ThisKey="CatalogID"
