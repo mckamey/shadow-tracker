@@ -98,6 +98,9 @@ namespace Shadow.Service
 				this.Out.WriteLine(settings.FileFilter);
 				this.Out.WriteLine("__________________________");
 
+				this.Out.Flush();
+				this.Error.Flush();
+
 				var watch = Stopwatch.StartNew();
 
 				WatchFolderSettingsCollection folders = settings.WatchFolders;
@@ -117,6 +120,9 @@ namespace Shadow.Service
 							this.Out.WriteLine();
 							this.Out.WriteLine("End sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
 							this.Out.WriteLine("__________________________");
+
+							this.Out.Flush();
+							this.Error.Flush();
 						});
 
 					this.Trackers[i] = new FileTracker();

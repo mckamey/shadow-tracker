@@ -107,9 +107,9 @@ namespace Shadow.Model
 				(n.Name.ToLower() == name.ToLower()));
 
 			// if is directory with children then remove them as well
-			string asDir = parent+name+'/';
+			string asDir = (parent+name+'/').ToLowerInvariant();
 
-			entries.RemoveWhere(n => n.Parent.ToLower().StartsWith(asDir.ToLower()));
+			entries.RemoveWhere(n => n.Parent.ToLower().StartsWith(asDir));
 		}
 
 		/// <summary>
