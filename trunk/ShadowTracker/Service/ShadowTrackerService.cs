@@ -138,7 +138,7 @@ namespace Shadow.Service
 						});
 
 					this.Trackers[i] = new FileTracker();
-					this.Trackers[i].OnTrackerError += this.OnError;
+					this.Trackers[i].TrackerError += this.OnError;
 					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folders[i].Name, folders[i].Path), filterCallback);
 				}
 
