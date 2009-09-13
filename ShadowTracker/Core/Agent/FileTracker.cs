@@ -63,7 +63,20 @@ namespace Shadow.Agent
 
 		#region Events
 
-		public event ErrorEventHandler OnTrackerError;
+		public event ErrorEventHandler TrackerError;
+
+		private void OnTrackerError(Exception ex)
+		{
+			if (this.TrackerError != null)
+			{
+				this.TrackerError(this, new ErrorEventArgs(ex));
+			}
+			else
+			{
+				Console.Error.WriteLine("Tracker Error:");
+				Console.Error.WriteLine(ex);
+			}
+		}
 
 		private void UpdateTimerCallback(object state)
 		{
@@ -73,14 +86,13 @@ namespace Shadow.Agent
 				e = state as FileSystemEventArgs;
 				if (e == null)
 				{
-					// TODO: log as error
-					Console.Error.WriteLine("UpdateTimerCallback state was not FileSystemEventArgs");
+					this.OnTrackerError(new ArgumentNullException("state", "UpdateTimerCallback state was not FileSystemEventArgs"));
 					return;
 				}
 
 				if (!this.Timers.ContainsKey(e.FullPath))
 				{
-					Console.Error.WriteLine(e.ChangeType+" Timer empty: "+e.FullPath);
+					this.OnTrackerError(new InvalidOperationException(e.ChangeType+" Timer empty: "+e.FullPath));
 					return;
 				}
 
@@ -96,7 +108,7 @@ namespace Shadow.Agent
 					//"The process cannot access the file 'XYZ' because it is being used by another process."
 					// http://stackoverflow.com/questions/1314958
 
-					//Console.Error.WriteLine(ex.Message);
+					//this.OnTrackerError(ex);
 
 					// queue up for another check
 					//Console.WriteLine(e.ChangeType+" Timer reset: "+e.FullPath);
@@ -196,9 +208,9 @@ namespace Shadow.Agent
 
 		private void OnError(object sender, ErrorEventArgs e)
 		{
-			if (this.OnTrackerError != null)
+			if (this.TrackerError != null)
 			{
-				this.OnTrackerError(this, e);
+				this.TrackerError(this, e);
 			}
 		}
 
@@ -243,8 +255,7 @@ namespace Shadow.Agent
 					RenamedEventArgs e2 = e as RenamedEventArgs;
 					if (e2 == null)
 					{
-						// TODO: log as error
-						Console.Error.WriteLine("UpdateTimerCallback state was not FileSystemEventArgs");
+						this.OnTrackerError(new ArgumentNullException("state", "UpdateTimerCallback state was not FileSystemEventArgs"));
 						return;
 					}
 
@@ -273,15 +284,13 @@ namespace Shadow.Agent
 							}
 							catch (Exception ex)
 							{
-								// TODO: log as error
-								Console.Error.WriteLine(ex.Message);
+								this.OnTrackerError(ex);
 							}
 						}
 					}
 					catch (ArgumentException ex)
 					{
-						// TODO: log as error
-						Console.Error.WriteLine(ex.Message);
+						this.OnTrackerError(ex);
 
 						// recover by simply adding
 						goto case WatcherChangeTypes.Created;

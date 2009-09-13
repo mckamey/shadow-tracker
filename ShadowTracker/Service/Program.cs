@@ -32,6 +32,7 @@ namespace Shadow.Service
 					service.Error = File.AppendText(logName+"Error.txt");
 					service.Error.WriteLine("Log created: " +logName+"Error.txt");
 					service.Error.WriteLine();
+					Console.SetError(service.Error);
 				}
 				catch (Exception ex)
 				{
@@ -44,6 +45,7 @@ namespace Shadow.Service
 					service.Out = File.AppendText(logName+"Log.txt");
 					service.Out.WriteLine("Log created: " +logName+"Log.txt");
 					service.Out.WriteLine();
+					Console.SetOut(service.Out);
 				}
 				catch (Exception ex)
 				{
@@ -66,26 +68,12 @@ namespace Shadow.Service
 					{
 						Console.WriteLine("Running ShadowTracker as Console");
 
-						try
-						{
-							service.Begin(args);
-						}
-						catch (Exception ex)
-						{
-							Console.Error.WriteLine(ex);
-						}
+						service.Begin(args);
 
 						Console.WriteLine("Press any key to exit.");
 						Console.ReadKey(true);
 
-						try
-						{
-							service.End();
-						}
-						catch (Exception ex)
-						{
-							Console.Error.WriteLine(ex);
-						}
+						service.End();
 						break;
 					}
 					case "i":

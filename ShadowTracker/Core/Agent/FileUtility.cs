@@ -115,6 +115,8 @@ namespace Shadow.Agent
 								throw;
 							}
 							failureCallback(catalog, ex);
+
+							// TODO: create a retry queue
 						}
 
 						// queue up next iteration
@@ -140,14 +142,14 @@ namespace Shadow.Agent
 							throw;
 						}
 						failureCallback(catalog, ex);
+
+						// TODO: create a retry queue
 					}
 				}
 
 				// remove any extra files after, so more clones can happen
 				FileUtility.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
 			}
-
-			// TODO: try-catch around work and create a retry queue
 		}
 
 		private static void CheckForChanges(Catalog catalog, FileSystemInfo file)
@@ -216,6 +218,8 @@ namespace Shadow.Agent
 								throw;
 							}
 							failureCallback(catalog, ex);
+
+							// TODO: create a retry queue
 						}
 
 						// queue up next iteration
@@ -241,6 +245,8 @@ namespace Shadow.Agent
 							throw;
 						}
 						failureCallback(catalog, ex);
+
+						// TODO: create a retry queue
 					}
 				}
 
