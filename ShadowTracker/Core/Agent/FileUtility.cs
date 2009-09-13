@@ -49,7 +49,7 @@ namespace Shadow.Agent
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		public static void SyncCatalog(string name, string rootPath, Func<FileSystemInfo, bool> fileFilter)
 		{
-			FileUtility.SyncCatalog(name, rootPath, fileFilter, -1, null);
+			FileUtility.SyncCatalog(name, rootPath, fileFilter, -1, null, null);
 		}
 
 		/// <summary>
@@ -63,7 +63,8 @@ namespace Shadow.Agent
 			string rootPath,
 			Func<FileSystemInfo, bool> fileFilter,
 			int trickleRate,
-			Action<Catalog> completedCallback)
+			Action<Catalog> completedCallback,
+			Action<Catalog, Exception> failureCallback)
 		{
 			if (String.IsNullOrEmpty(rootPath))
 			{
@@ -89,21 +90,32 @@ namespace Shadow.Agent
 				timer = new Timer(
 					delegate(object state)
 					{
-						// check if any files left
-						if (!enumerator.MoveNext())
+						try
 						{
-							// free closure references
-							timer.Change(Timeout.Infinite, Timeout.Infinite);
-							timer = null;
-							files = null;
+							// check if any files left
+							if (!enumerator.MoveNext())
+							{
+								// free closure references
+								timer.Change(Timeout.Infinite, Timeout.Infinite);
+								timer = null;
+								files = null;
 
-							// remove any extra files after, so more clones can happen
-							FileUtility.RemoveExtras(catalog, trickleRate, completedCallback);
-							return;
+								// remove any extra files after, so more clones can happen
+								FileUtility.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
+								return;
+							}
+
+							// sync next node
+							CheckForChanges(catalog, enumerator.Current);
 						}
-
-						// sync next node
-						CheckForChanges(catalog, enumerator.Current);
+						catch (Exception ex)
+						{
+							if (failureCallback == null)
+							{
+								throw;
+							}
+							failureCallback(catalog, ex);
+						}
 
 						// queue up next iteration
 						timer.Change(trickleRate, Timeout.Infinite);
@@ -116,12 +128,23 @@ namespace Shadow.Agent
 			{
 				foreach (FileSystemInfo file in files)
 				{
-					// sync each node
-					CheckForChanges(catalog, file);
+					try
+					{
+						// sync each node
+						CheckForChanges(catalog, file);
+					}
+					catch (Exception ex)
+					{
+						if (failureCallback == null)
+						{
+							throw;
+						}
+						failureCallback(catalog, ex);
+					}
 				}
 
 				// remove any extra files after, so more clones can happen
-				FileUtility.RemoveExtras(catalog, trickleRate, completedCallback);
+				FileUtility.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
 			}
 
 			// TODO: try-catch around work and create a retry queue
@@ -142,7 +165,8 @@ namespace Shadow.Agent
 		private static void RemoveExtras(
 			Catalog catalog,
 			int trickleRate,
-			Action<Catalog> completedCallback)
+			Action<Catalog> completedCallback,
+			Action<Catalog, Exception> failureCallback)
 		{
 			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
@@ -156,32 +180,43 @@ namespace Shadow.Agent
 				timer = new Timer(
 					delegate(object state)
 					{
-						// check if any files left
-						if (!enumerator.MoveNext())
+						try
 						{
-							// free closure references
-							timer.Change(Timeout.Infinite, Timeout.Infinite);
-							timer = null;
-
-							// flag catalog as indexed
-							if (!catalog.IsIndexed)
+							// check if any files left
+							if (!enumerator.MoveNext())
 							{
-								catalog.IsIndexed = true;
-								unitOfWork.Catalogs.Update(catalog);
-								unitOfWork.Save();
+								// free closure references
+								timer.Change(Timeout.Infinite, Timeout.Infinite);
+								timer = null;
+
+								// flag catalog as indexed
+								if (!catalog.IsIndexed)
+								{
+									catalog.IsIndexed = true;
+									unitOfWork.Catalogs.Update(catalog);
+									unitOfWork.Save();
+								}
+
+								// signal sync is complete
+								if (completedCallback != null)
+								{
+									completedCallback(catalog);
+								}
+								return;
 							}
 
-							// signal sync is complete
-							if (completedCallback != null)
-							{
-								completedCallback(catalog);
-							}
-							return;
+							// extras are any local entries not contained on disk
+							string path = enumerator.Current;
+							FileUtility.CheckIfMissing(catalog, path);
 						}
-
-						// extras are any local entries not contained on disk
-						string path = enumerator.Current;
-						FileUtility.CheckIfMissing(catalog, path);
+						catch (Exception ex)
+						{
+							if (failureCallback == null)
+							{
+								throw;
+							}
+							failureCallback(catalog, ex);
+						}
 
 						// queue up next iteration
 						timer.Change(trickleRate, Timeout.Infinite);
@@ -194,8 +229,19 @@ namespace Shadow.Agent
 			{
 				foreach (string path in repos.GetExistingPaths())
 				{
-					// extras are any local entries not contained on disk
-					FileUtility.CheckIfMissing(catalog, path);
+					try
+					{
+						// extras are any local entries not contained on disk
+						FileUtility.CheckIfMissing(catalog, path);
+					}
+					catch (Exception ex)
+					{
+						if (failureCallback == null)
+						{
+							throw;
+						}
+						failureCallback(catalog, ex);
+					}
 				}
 
 				// flag catalog as indexed
