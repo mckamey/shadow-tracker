@@ -130,9 +130,15 @@ namespace Shadow.Service
 							this.Out.WriteLine();
 							this.Out.WriteLine("End sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
 							this.Out.WriteLine("__________________________");
+						},
+						delegate(Catalog syncCatalog, Exception ex)
+						{
+							this.Error.WriteLine("Error in sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")");
+							this.Error.WriteLine(ex);
 						});
 
 					this.Trackers[i] = new FileTracker();
+					this.Trackers[i].OnTrackerError += this.OnError;
 					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folders[i].Name, folders[i].Path), filterCallback);
 				}
 
@@ -169,6 +175,20 @@ namespace Shadow.Service
 
 			this.Out.WriteLine();
 			this.Out.WriteLine("Tracking stopped.");
+		}
+
+		private void OnError(object sender, ErrorEventArgs e)
+		{
+			FileTracker tracker = sender as FileTracker;
+			if (tracker == null || tracker.Catalog == null)
+			{
+				this.Error.WriteLine("Error in FileTracker:");
+			}
+			else
+			{
+				this.Error.WriteLine("Error in FileTracker: "+tracker.Catalog.Name+" ("+tracker.Catalog.Path+")");
+			}
+			this.Error.WriteLine(e.GetException());
 		}
 
 		public void InstallDatabase()

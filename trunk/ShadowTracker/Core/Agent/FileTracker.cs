@@ -52,7 +52,18 @@ namespace Shadow.Agent
 
 		#endregion Init
 
+		#region Properties
+
+		public Catalog Catalog
+		{
+			get { return this.catalog; }
+		}
+
+		#endregion Properties
+
 		#region Events
+
+		public event ErrorEventHandler OnTrackerError;
 
 		private void UpdateTimerCallback(object state)
 		{
@@ -185,8 +196,10 @@ namespace Shadow.Agent
 
 		private void OnError(object sender, ErrorEventArgs e)
 		{
-			// TODO: log error
-			throw e.GetException();
+			if (this.OnTrackerError != null)
+			{
+				this.OnTrackerError(this, e);
+			}
 		}
 
 		private bool IsFiltered(string fullPath)
