@@ -338,6 +338,17 @@ namespace Shadow.Model
 			CatalogEntry original = this.FindEntry(entry.FullPath);
 			if (original == null)
 			{
+				// ensure hash has been calculated
+				if (!entry.HasSignature)
+				{
+					if (file == null)
+					{
+						throw new ArgumentNullException("file", "FileInfo was missing for CatalogEntry without signature.");
+					}
+
+					entry.Signature = FileHash.ComputeHash(file);
+				}
+
 				// entry does not exist
 				// if bits exist need to add or update entry (no transfer required)
 				// else requires expensive bit transfer
