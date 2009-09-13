@@ -65,16 +65,23 @@ namespace Shadow.Model.L2S
 		{
 			T match;
 
-			// first look for most recent deleted version of item
-			match =
+			if (item.Signature != null)
+			{
+				// first look for most recent deleted version of item
+				match =
 				(from n in this.Items
 				 where
 					n.DeletedDate.HasValue &&
 					n.Signature.ToLower() == item.Signature.ToLower()
 				 orderby n.DeletedDate descending
 				 select n).FirstOrDefault();
+			}
+			else
+			{
+				match = default(T);
+			}
 
-			if (match != null)
+			if (match != default(T))
 			{
 				// if found just undelete and update
 				match.CopyValuesFrom(item);
