@@ -196,6 +196,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets the primary key
 		/// </summary>
+		[DefaultValue(0L)]
 		public long ID
 		{
 			get { return this.id; }
@@ -218,6 +219,7 @@ namespace Shadow.Model
 		/// <remarks>
 		/// Name and resulting path are case-insensitive.
 		/// </remarks>
+		[DefaultValue("")]
 		public string Name
 		{
 			get { return this.name; }
@@ -240,6 +242,7 @@ namespace Shadow.Model
 		/// <remarks>
 		/// Parent and the resulting path are case-insensitive.
 		/// </remarks>
+		[DefaultValue("")]
 		public string Parent
 		{
 			get { return this.parent; }
@@ -265,6 +268,7 @@ namespace Shadow.Model
 			}
 		}
 
+		[DefaultValue("")]
 		public string FullPath
 		{
 			get { return this.Parent+this.Name; }
@@ -273,6 +277,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets file size in bytes
 		/// </summary>
+		[DefaultValue(0L)]
 		public long Length
 		{
 			get
@@ -299,6 +304,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets file attributes
 		/// </summary>
+		[DefaultValue(0)]
 		public FileAttributes Attributes
 		{
 			get { return this.attributes; }
@@ -358,6 +364,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets the hash signature of the file
 		/// </summary>
+		[DefaultValue("")]
 		public string Signature
 		{
 			get
@@ -384,6 +391,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets if the Signature field has been loaded.
 		/// </summary>
+		[DefaultValue(false)]
 		public bool HasSignature
 		{
 			get { return this.Signature != null; }
@@ -392,6 +400,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets the ID of the owning catalog
 		/// </summary>
+		[DefaultValue(0L)]
 		public long CatalogID
 		{
 			get { return this.catalogID; }
@@ -415,6 +424,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets and sets the owning catalog
 		/// </summary>
+		[DefaultValue(null)]
 		internal Catalog Catalog
 		{
 			get { return this.catalog.Entity; }
@@ -434,6 +444,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Gets if this node represents a directory
 		/// </summary>
+		[DefaultValue(false)]
 		public bool IsDirectory
 		{
 			get { return ((this.Attributes&FileAttributes.Directory) != 0); }
@@ -443,6 +454,7 @@ namespace Shadow.Model
 
 		#region IL2SSoftDeleteEntity Members
 
+		[DefaultValue(null)]
 		public DateTime? DeletedDate
 		{
 			get { return this.deletedDate; }
