@@ -1,0 +1,97 @@
+<%@ Control Name="Shadow.SummaryView" Language="JavaScript" %>
+
+<script type="text/javascript">
+
+	// private fields -----------------------------
+	var lastSummary = null,
+		hasHandler = false;
+
+	// private methods ----------------------------
+
+	/*int*/ function getKeyCode(/*Event*/ evt) {
+		evt = evt || window.event;
+		if (!evt) {
+			return -1;
+		}
+		return Number(evt.keyCode || evt.charCode || -1);
+	}
+
+	/*void*/ function onEscKey(/*Event*/ evt) {
+		evt = evt || window.event;
+
+		switch (getKeyCode(evt)) {
+			case 0x0A: // RETURN
+			case 0x0D: // ENTER
+			case 0x1B: // ESC
+				Shadow.SummaryView.hide();
+				break;
+//			default:
+//				alert(getKeyCode(evt));
+//				break;
+		}
+	};
+
+	// public methods -----------------------------
+
+	/*void*/ this.hide = function(/*DOM*/ elem) {
+		if (elem && elem.parentNode) {
+			elem.parentNode.removeChild(elem);
+		}
+
+		if (lastSummary && lastSummary.parentNode) {
+			lastSummary.parentNode.removeChild(lastSummary);
+			lastSummary = null;
+		}
+	};
+
+	this.show = function(/*CatalogEntry*/ entry) {
+		if (!entry) {
+			Shadow.SummaryView.hide();
+			return;
+		}
+
+		var preview = Shadow.SummaryView.bind(entry);
+
+		if (preview) {
+			Shadow.SummaryView.store(preview);
+			document.body.insertBefore(preview, document.body.firstChild);
+		}
+	};
+
+	this.store = function(/*DOM*/ elem) {
+		Shadow.SummaryView.hide();
+		lastSummary = elem;
+
+		if (!hasHandler) {
+			JsonFx.UI.addHandler(document, "keydown", onEscKey)
+			hasHandler = true;
+		}
+	};
+
+	this.close = function(/*Event*/ evt) {
+		Shadow.SummaryView.hide(this);
+	};
+
+</script>
+
+<div class="SummaryView"
+	onclick="<%= this.close %>">
+	
+	<h3><%= this.data.Parent %><%= this.data.Name %></h3>
+	<dl>
+		<dt>Name</dt><dd><%= this.data.Name %></dd>
+		<dt>Parent</dt><dd><%= this.data.Parent %></dd>
+
+		<dt>Entry ID</dt><dd><%= this.data.ID %></dd>
+		<dt>Catalog ID</dt><dd><%= this.data.CatalogID %></dd>
+
+		<dt>Length</dt><dd><%= this.data.Length %> bytes</dd>
+		<dt>SHA1 Hash</dt><dd><%= this.data.Signature %></dd>
+		<dt>Attributes</dt><dd><%= this.data.Attributes %></dd>
+
+		<dt>Created Date</dt><dd><%= String(this.data.CreatedDate) %></dd>
+		<dt>Modified Date</dt><dd><%= String(this.data.ModifiedDate) %></dd>
+		<dt jbst:visible="<%= !!this.data.DeletedDate %>">Deleted Date</dt><dd jbst:visible="<%= !!this.data.DeletedDate %>"><%= String(this.data.DeletedDate) %></dd>
+	</dl>
+
+</div>

@@ -1,0 +1,17 @@
+JsonFx.Scripts.json2.js, JsonFx.Json
+JsonFx.Scripts.JsonML2.js, JsonFx.UI
+JsonFx.Scripts.JsonML_BST.js, JsonFx.UI
+JsonFx.Scripts.JsonFx_IO.js, JsonFx.IO
+JsonFx.Scripts.JsonFx_Bindings.js, JsonFx.UI
+JsonFx.Scripts.JsonFx_UA.js, JsonFx.UI
+JsonFx.Scripts.JsonFx_UI.js, JsonFx.UI
+JsonFx.Scripts.JsonFx_Lang.js, JsonFx.UI
+
+~/Services/BrowseService.jrpc
+
+JsonFx.UIToolkit.Dialogs.Scripts.merge, JsonFx.UIToolkit
+JsonFx.UIToolkit.TreeView.Scripts.merge, JsonFx.UIToolkit
+
+~/Controls/Perf.jbst
+~/Controls/SummaryView.jbst
+~/Scripts/Browse.js
