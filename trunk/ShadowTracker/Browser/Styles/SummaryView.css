@@ -1,0 +1,71 @@
+﻿/*
+	Summary View for CatalogEntry
+*/
+
+ul.tree-view .tree-node .special-folder
+{
+	color: #666666;
+}
+ul.tree-view .tree-node .tree-node-label:focus, .ua-ie ul.tree-view .tree-node .tree-node-label:active
+{
+	background-color: #FFFFCC;
+}
+
+.SummaryView
+{
+	background-color: #F1F1F1;
+	border: 1px solid #999999;
+	color: #00468C;
+	cursor: pointer;
+	display: block;
+	height: 27em;
+	left: 15%;
+	min-width: 45em;
+	overflow: auto;
+	padding: 0.5em;
+	position: fixed;
+	top: 20%;
+	width: 70%;
+	z-index: 1000;
+
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+
+	-webkit-box-shadow: 0 0 10px #CCCCCC;
+	-moz-box-shadow: 0 0 10px #CCCCCC;
+	box-shadow: 0 0 10px #CCCCCC;
+}
+.ua-ie-5 .SummaryView,
+.ua-ie-6 .SummaryView
+{
+	position: absolute;
+}
+
+.SummaryView h3
+{
+	border-bottom: 1px solid #DDDDDD;
+	font-size: 1.5em;
+	margin-bottom: 0.5em;
+	padding-bottom: 0.5em;
+	text-align: center;
+}
+
+.SummaryView dl
+{
+	float: left;
+}
+
+.SummaryView dt,
+.SummaryView dd
+{
+	float: left;
+	margin: 0.5em;
+}
+.SummaryView dt
+{
+	clear: left;
+	font-weight: bold;
+	text-align: right;
+	width: 10em;
+}

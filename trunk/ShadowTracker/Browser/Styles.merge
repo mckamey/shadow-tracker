@@ -1,0 +1,8 @@
+~/Styles/Reset.css
+~/Styles/Basic.css
+~/Styles/Perf.css
+
+JsonFx.UIToolkit.Dialogs.Styles.merge, JsonFx.UIToolkit
+JsonFx.UIToolkit.TreeView.Styles.merge, JsonFx.UIToolkit
+
+~/Styles/SummaryView.css

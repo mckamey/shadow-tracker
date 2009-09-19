@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Database Name="ShadowDB"
+		  xmlns="http://schemas.microsoft.com/linqtosql/mapping/2007">
+
+	<Table Name="dbo.VersionHistory" Member="Versions">
+		<Type Name="Shadow.Model.VersionHistory">
+			<Column Name="VersionID"
+					Member="ID"
+					Storage="id"
+					DbType="BigInt NOT NULL IDENTITY"
+					IsPrimaryKey="true"
+					IsDbGenerated="true"
+					AutoSync="OnInsert"
+					UpdateCheck="Never" />
+
+			<Column Name="Label"
+					Member="Label"
+					Storage="label"
+					DbType="VarChar(50) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
+			<Column Name="Updated"
+					Member="UpdatedDate"
+					Storage="updatedDate"
+					DbType="DateTime NOT NULL"
+					UpdateCheck="Never" />
+		</Type>
+	</Table>
+
+	<Table Name="dbo.Catalog" Member="Catalogs">
+		<Type Name="Shadow.Model.Catalog">
+
+			<Column Name="CatalogID"
+					Member="ID"
+					Storage="id"
+					DbType="BigInt NOT NULL IDENTITY"
+					IsPrimaryKey="true"
+					IsDbGenerated="true"
+					AutoSync="OnInsert"
+					UpdateCheck="Never" />
+
+			<Column Name="Name"
+					Member="Name"
+					Storage="name"
+					DbType="VarChar(450) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
+			<Column Name="Path"
+					Member="Path"
+					Storage="path"
+					DbType="VarChar(450) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
+			<Column Name="IsIndexed"
+					Member="IsIndexed"
+					Storage="isIndexed"
+					DbType="Bit NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+		</Type>
+	</Table>
+
+	<Table Name="dbo.CatalogEntry" Member="Entries">
+		<Type Name="Shadow.Model.CatalogEntry">
+
+			<Column Name="CatalogEntryID"
+					Member="ID"
+					Storage="id"
+					DbType="BigInt NOT NULL IDENTITY"
+					IsPrimaryKey="true"
+					IsDbGenerated="true"
+					AutoSync="OnInsert"
+					UpdateCheck="Never" />
+
+			<Column Name="CatalogID"
+					Member="CatalogID"
+					Storage="catalogID"
+					DbType="BigInt NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Name"
+					Member="Name"
+					Storage="name"
+					DbType="VarChar(450) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
+			<Column Name="Parent"
+					Member="Parent"
+					Storage="parent"
+					DbType="VarChar(450) NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
+			<Column Name="Size"
+					Member="Length"
+					Storage="length"
+					DbType="BigInt NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Hash"
+					Member="Signature"
+					Storage="signature"
+					DbType="Char(40)"
+					UpdateCheck="Never" />
+
+			<Column Name="Created"
+					Member="CreatedDate"
+					Storage="createdDate"
+					DbType="DateTime NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Modified"
+					Member="ModifiedDate"
+					Storage="modifiedDate"
+					DbType="DateTime NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Attribs"
+					Member="Attributes"
+					Storage="attributes"
+					DbType="Int NOT NULL"
+					UpdateCheck="Never" />
+
+			<Column Name="Deleted"
+					Member="DeletedDate"
+					Storage="deletedDate"
+					DbType="DateTime"
+					UpdateCheck="Never" />
+
+			<Association Name="FK_CatalogEntry_Catalog"
+						 Member="Catalog"
+						 Storage="catalog"
+						 ThisKey="CatalogID"
+						 OtherKey="ID"
+						 IsForeignKey="true" />
+		</Type>
+	</Table>
+</Database>
