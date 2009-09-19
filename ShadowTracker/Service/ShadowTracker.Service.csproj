@@ -69,6 +69,7 @@
     <Compile Include="ProjectInstaller.Designer.cs">
       <DependentUpon>ProjectInstaller.cs</DependentUpon>
     </Compile>
+    <Compile Include="Properties\AssemblyVersion.cs" />
     <Compile Include="ShadowTrackerService.cs">
       <SubType>Component</SubType>
     </Compile>
