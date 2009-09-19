@@ -41,6 +41,8 @@ namespace Shadow.Service
 			this.Out = this.Error = TextWriter.Null;
 
 			this.InitializeComponent();
+
+			this.ServiceName = TrackerSettingsSection.GetSettings().ServiceName;
 		}
 
 		#endregion Init
