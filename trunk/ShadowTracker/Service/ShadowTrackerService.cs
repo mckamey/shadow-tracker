@@ -19,7 +19,7 @@ namespace Shadow.Service
 	{
 		#region Constants
 
-		internal static readonly string ServiceDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+		internal static readonly string ServiceDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
 
 		#endregion Constants
 
