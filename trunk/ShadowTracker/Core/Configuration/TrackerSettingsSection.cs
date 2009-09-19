@@ -45,7 +45,7 @@ namespace Shadow.Configuration
 			set { this[Key_SqlMapping] = value; }
 		}
 
-		[ConfigurationProperty(Key_FileFilter, DefaultValue="", IsRequired=true)]
+		[ConfigurationProperty(Key_FileFilter, DefaultValue="", IsRequired=false)]
 		public string FileFilter
 		{
 			get
