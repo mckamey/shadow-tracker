@@ -39,10 +39,6 @@
 			// 
 			// ShadowTrackerServiceInstaller
 			// 
-			this.ShadowTrackerServiceInstaller.Description = "A generalized file system change tracking service intended to keep a database up-" +
-    "to-date with the latest files on disk.";
-			this.ShadowTrackerServiceInstaller.DisplayName = "ShadowTracker Service";
-			this.ShadowTrackerServiceInstaller.ServiceName = "ShadowTrackerService";
 			this.ShadowTrackerServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
 			// 
 			// ProjectInstaller
