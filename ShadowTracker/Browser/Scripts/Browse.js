@@ -86,9 +86,11 @@ UIT.TreeView.getPath = function(/*object*/ data) {
 						UIT.TreeView.addSubTree(elem, data);
 					}
 				},
-				onFailure : function() {
+				onFailure : function(/*XMLHttpRequest*/ xhr, /*object*/ cx, /*Error*/ ex) {
 					// re-enable lazyloading on error
 					elem.onclick = lazyLoad;
+
+					JsonFx.IO.onFailure(xhr, cx, ex);
 				},
 				onComplete : function(/*XHR*/ r, /*object*/ cx) {
 					Perf.add(Perf.now() - start);
