@@ -120,6 +120,7 @@
     <Content Include="Global.asax" />
     <Content Include="Layouts\Layout.Master" />
     <Content Include="Styles\Perf.css" />
+    <Content Include="Images\web.config" />
     <None Include="Services\BrowseService.jrpc" />
   </ItemGroup>
   <ItemGroup>
