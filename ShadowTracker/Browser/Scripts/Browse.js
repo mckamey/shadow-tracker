@@ -59,6 +59,10 @@ UIT.TreeView.getPath = function(/*object*/ data) {
 	// lazy load action (for folders)
 	/*void*/ function lazyLoad(/*Event*/ evt) {
 		var elem = this;
+
+		// disable additional lazy-loading
+		elem.onclick = UIT.TreeView.toggle;
+
 		var path = elem.href||"";
 		if (path.indexOf(host) === 0) {
 			// DOM hrefs get fully qualified
@@ -79,11 +83,12 @@ UIT.TreeView.getPath = function(/*object*/ data) {
 					}
 
 					if (data.category === "Folder") {
-						// lazy loaded data is a sub tree
-						elem.onclick = UIT.TreeView.toggle;
-
 						UIT.TreeView.addSubTree(elem, data);
 					}
+				},
+				onFailure : function() {
+					// re-enable lazyloading on error
+					elem.onclick = lazyLoad;
 				},
 				onComplete : function(/*XHR*/ r, /*object*/ cx) {
 					Perf.add(Perf.now() - start);
