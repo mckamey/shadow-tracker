@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Security;
-using System.Web.SessionState;
-using Shadow.Configuration;
 using System.Configuration;
-using Shadow.Model;
 using System.Data.Linq.Mapping;
 using System.IO;
+using System.Web;
+
+using Shadow.Configuration;
+using Shadow.Model;
 using Shadow.Model.L2S;
 
-namespace MyApp
+namespace Shadow.Browser
 {
 	public class Global : System.Web.HttpApplication
 	{
