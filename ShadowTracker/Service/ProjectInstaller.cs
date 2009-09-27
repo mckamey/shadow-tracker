@@ -17,13 +17,13 @@ namespace Shadow.Service
 
 			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
 
-			this.ShadowTrackerServiceInstaller.ServiceName = settings.ServiceName;
-			this.ShadowTrackerServiceInstaller.DisplayName = settings.DisplayName;
-			this.ShadowTrackerServiceInstaller.Description = settings.ServiceDescription;
+			this.ServiceInstaller.ServiceName = settings.ServiceName;
+			this.ServiceInstaller.DisplayName = settings.DisplayName;
+			this.ServiceInstaller.Description = settings.ServiceDescription;
 
-			//this.ShadowTrackerServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
-			//this.ShadowTrackerServiceProcessInstaller.Password = null;
-			//this.ShadowTrackerServiceProcessInstaller.Username = null;
+			//this.ServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
+			//this.ServiceProcessInstaller.Password = null;
+			//this.ServiceProcessInstaller.Username = null;
 		}
 	}
 }
