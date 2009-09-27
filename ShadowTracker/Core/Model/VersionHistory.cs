@@ -13,6 +13,7 @@ namespace Shadow.Model
 		#region Constants
 
 		public static readonly Version AssemblyVersion;
+		internal static readonly DateTime SqlDateTimeMinValue = new DateTime(1753, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 		#endregion Constants
 
@@ -91,7 +92,7 @@ namespace Shadow.Model
 			get { return this.updatedDate; }
 			set
 			{
-				value = CatalogEntry.ScrubDate(value);
+				value = VersionHistory.ScrubDate(value);
 				if (this.updatedDate.Ticks == value.Ticks)
 				{
 					return;
@@ -133,6 +134,34 @@ namespace Shadow.Model
 
 		#endregion INotifyPropertyChanged Members
 
+		#region Utility Methods
+
+		/// <summary>
+		/// Cleanses dates for round-trip storage equality.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		/// <remarks>
+		/// Converts to UTC and only stores accurately to the second.
+		/// Disregards dates before 1753-01-01T00:00:00z which is DateTime.MinValue for SQL DateTime
+		/// </remarks>
+		internal static DateTime ScrubDate(DateTime value)
+		{
+			if (value.Kind == DateTimeKind.Local)
+			{
+				value = value.ToUniversalTime();
+			}
+
+			if (value < VersionHistory.SqlDateTimeMinValue)
+			{
+				return VersionHistory.SqlDateTimeMinValue;
+			}
+
+			return new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, DateTimeKind.Utc);
+		}
+
+		#endregion Utility Methods
+
 		#region Object Overrides
 
 		[DebuggerHidden]
@@ -144,7 +173,7 @@ namespace Shadow.Model
 			builder.Append(this.ID);
 			builder.Append(", Label = ");
 			builder.Append(this.Label);
-			if (this.UpdatedDate >= CatalogEntry.SqlDateTimeMinValue)
+			if (this.UpdatedDate >= VersionHistory.SqlDateTimeMinValue)
 			{
 				builder.Append(", UpdatedDate = ");
 				builder.Append(this.UpdatedDate);
