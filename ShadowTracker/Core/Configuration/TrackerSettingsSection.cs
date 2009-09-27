@@ -13,6 +13,7 @@ namespace Shadow.Configuration
 
 		private const string DefaultSectionPath = "trackerSettings";
 		private const string DefaultServiceName = "ShadowTrackerService";
+		private const int DefaultTrickleRate = 200;//milliseconds
 
 		private const string Key_ServiceName = "serviceName";
 		private const string Key_DisplayName = "displayName";
@@ -154,7 +155,7 @@ namespace Shadow.Configuration
 			set { this[Key_FileFilter] = value; }
 		}
 
-		[ConfigurationProperty(Key_TrickleRate, DefaultValue=FileUtility.DefaultTrickleRate, IsRequired=false)]
+		[ConfigurationProperty(Key_TrickleRate, DefaultValue=DefaultTrickleRate, IsRequired=false)]
 		public int TrickleRate
 		{
 			get
@@ -165,7 +166,7 @@ namespace Shadow.Configuration
 				}
 				catch
 				{
-					return FileUtility.DefaultTrickleRate;
+					return DefaultTrickleRate;
 				}
 			}
 			set { this[Key_TrickleRate] = value; }
