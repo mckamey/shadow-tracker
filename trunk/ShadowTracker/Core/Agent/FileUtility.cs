@@ -24,11 +24,6 @@ namespace Shadow.Agent
 		/// </summary>
 		private const FileAttributes DefaultFilteredAttribs = FileAttributes.Hidden|FileAttributes.System|FileAttributes.Temporary;
 
-		/// <summary>
-		/// Trickle update rate
-		/// </summary>
-		public const int DefaultTrickleRate = 200;//milliseconds
-
 		#endregion Constants
 
 		#region Methods
