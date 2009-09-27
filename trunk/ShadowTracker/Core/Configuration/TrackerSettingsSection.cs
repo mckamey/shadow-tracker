@@ -17,6 +17,7 @@ namespace Shadow.Configuration
 		private const string Key_ServiceName = "serviceName";
 		private const string Key_DisplayName = "displayName";
 		private const string Key_ServiceDescription = "serviceDescription";
+		private const string Key_SqlConnection = "sqlConnection";
 		private const string Key_SqlMapping = "sqlMapping";
 		private const string Key_FileFilter = "fileFilter";
 		private const string Key_TrickleRate = "trickleRate";
@@ -91,6 +92,32 @@ namespace Shadow.Configuration
 				}
 			}
 			set { this[Key_ServiceDescription] = value; }
+		}
+
+		public string SqlConnectionString
+		{
+			get
+			{
+				ConnectionStringSettings connection = ConfigurationManager.ConnectionStrings[this.SqlConnection];
+				return connection.ConnectionString;
+			}
+		}
+
+		[ConfigurationProperty(Key_SqlConnection, DefaultValue="", IsRequired=true)]
+		public string SqlConnection
+		{
+			get
+			{
+				try
+				{
+					return (string)this[Key_SqlConnection];
+				}
+				catch
+				{
+					return "";
+				}
+			}
+			set { this[Key_SqlConnection] = value; }
 		}
 
 		[ConfigurationProperty(Key_SqlMapping, DefaultValue="", IsRequired=true)]

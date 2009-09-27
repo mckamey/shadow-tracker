@@ -91,8 +91,7 @@ namespace Shadow.Service
 			try
 			{
 				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-				string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
-				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, settings.SqlMapping));
+				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping));
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
 				var version = UnitOfWorkFactory.Create().Versions.OrderByDescending(v => v.ID).FirstOrDefault();
@@ -196,7 +195,7 @@ namespace Shadow.Service
 		public void InstallDatabase()
 		{
 			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-			string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
+			string connection = settings.SqlConnectionString;
 			this.EnsureDatabase(ref connection, settings.SqlMapping);
 		}
 

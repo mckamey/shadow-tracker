@@ -15,8 +15,8 @@ namespace Shadow.Browser
 		protected void Application_Start(object sender, EventArgs e)
 		{
 			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-			string connection = ConfigurationManager.ConnectionStrings["ShadowDB"].ConnectionString;
-			UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(connection, settings.SqlMapping));
+			UnitOfWorkFactory.SetFactoryMethod(
+				this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping));
 		}
 
 		private Func<IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
