@@ -28,30 +28,30 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.ShadowTrackerServiceProcessInstaller = new System.ServiceProcess.ServiceProcessInstaller();
-			this.ShadowTrackerServiceInstaller = new System.ServiceProcess.ServiceInstaller();
+			this.ServiceProcessInstaller = new System.ServiceProcess.ServiceProcessInstaller();
+			this.ServiceInstaller = new System.ServiceProcess.ServiceInstaller();
 			// 
-			// ShadowTrackerServiceProcessInstaller
+			// ServiceProcessInstaller
 			// 
-			this.ShadowTrackerServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
-			this.ShadowTrackerServiceProcessInstaller.Password = null;
-			this.ShadowTrackerServiceProcessInstaller.Username = null;
+			this.ServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
+			this.ServiceProcessInstaller.Password = null;
+			this.ServiceProcessInstaller.Username = null;
 			// 
-			// ShadowTrackerServiceInstaller
+			// ServiceInstaller
 			// 
-			this.ShadowTrackerServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
+			this.ServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
 			// 
 			// ProjectInstaller
 			// 
 			this.Installers.AddRange(new System.Configuration.Install.Installer[] {
-            this.ShadowTrackerServiceProcessInstaller,
-            this.ShadowTrackerServiceInstaller});
+            this.ServiceProcessInstaller,
+            this.ServiceInstaller});
 
 		}
 
 		#endregion
 
-		private System.ServiceProcess.ServiceProcessInstaller ShadowTrackerServiceProcessInstaller;
-		private System.ServiceProcess.ServiceInstaller ShadowTrackerServiceInstaller;
+		private System.ServiceProcess.ServiceProcessInstaller ServiceProcessInstaller;
+		private System.ServiceProcess.ServiceInstaller ServiceInstaller;
 	}
 }
