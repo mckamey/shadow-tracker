@@ -28,6 +28,7 @@ namespace Shadow.Service
 		private FileTracker[] Trackers;
 		private TextWriter outWriter;
 		private TextWriter errorWriter;
+		private IServiceLocator IoC;
 
 		#endregion Fields
 
@@ -91,11 +92,12 @@ namespace Shadow.Service
 			try
 			{
 				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-				ServiceLocator.SetLocatorProvider(new SimpleServiceLocator(
-					this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping)).ServiceLocatorProvider);
+				this.IoC = new SimpleServiceLocator(this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping));
+
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
-				var version = ServiceLocator.Current.GetInstance<IUnitOfWork>().Versions.OrderByDescending(v => v.ID).FirstOrDefault();
+				IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
+				var version = unitOfWork.Versions.OrderByDescending(v => v.ID).FirstOrDefault();
 
 				this.Out.WriteLine("ShadowTracker");
 				if (version != null)
@@ -123,6 +125,7 @@ namespace Shadow.Service
 					this.Out.WriteLine("Begin sync: "+folders[i].Name+" ("+folders[i].Path+")");
 
 					FileUtility.SyncCatalog(
+						this.IoC.GetInstance<IUnitOfWork>(),
 						folders[i].Name,
 						folders[i].Path,
 						filterCallback,
@@ -139,9 +142,9 @@ namespace Shadow.Service
 							this.Error.WriteLine(ex);
 						});
 
-					this.Trackers[i] = new FileTracker();
+					this.Trackers[i] = new FileTracker(this.IoC);
 					this.Trackers[i].TrackerError += this.OnError;
-					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(ServiceLocator.Current.GetInstance<IUnitOfWork>(), folders[i].Name, folders[i].Path), filterCallback);
+					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(this.IoC.GetInstance<IUnitOfWork>(), folders[i].Name, folders[i].Path), filterCallback);
 				}
 
 				this.Out.WriteLine();

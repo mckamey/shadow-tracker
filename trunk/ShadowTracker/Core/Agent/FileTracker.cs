@@ -29,6 +29,7 @@ namespace Shadow.Agent
 
 		private readonly FileSystemWatcher Watcher = new FileSystemWatcher();
 		private readonly Dictionary<string, Timer> Timers = new Dictionary<string, Timer>(StringComparer.OrdinalIgnoreCase);
+		private readonly IServiceLocator IoC;
 		private Func<FileSystemInfo, bool> fileFilter;
 		private Catalog catalog;
 
@@ -39,8 +40,11 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		public FileTracker()
+		/// <param name="ioc"></param>
+		public FileTracker(IServiceLocator ioc)
 		{
+			this.IoC = ioc;
+
 			this.Watcher.IncludeSubdirectories = true;
 			this.Watcher.NotifyFilter = FileTracker.AllNotifyFilters;
 
@@ -240,7 +244,7 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
-			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
+			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, this.catalog);
 
 			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
