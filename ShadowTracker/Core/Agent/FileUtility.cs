@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 
+using Microsoft.Practices.ServiceLocation;
 using Shadow.Model;
 
 namespace Shadow.Agent
@@ -71,7 +71,7 @@ namespace Shadow.Agent
 			}
 
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
-			Catalog catalog = CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), name, rootPath);
+			Catalog catalog = CatalogRepository.EnsureCatalog(ServiceLocator.Current.GetInstance<IUnitOfWork>(), name, rootPath);
 
 			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
@@ -149,7 +149,7 @@ namespace Shadow.Agent
 
 		private static void CheckForChanges(Catalog catalog, FileSystemInfo file)
 		{
-			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
 			CatalogEntry entry = FileUtility.CreateEntry(catalog, file, !catalog.IsIndexed);
@@ -165,7 +165,7 @@ namespace Shadow.Agent
 			Action<Catalog> completedCallback,
 			Action<Catalog, Exception> failureCallback)
 		{
-			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 			if (trickleRate > 0)
 			{
@@ -266,7 +266,7 @@ namespace Shadow.Agent
 			string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
 			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 			{
-				IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+				IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 				CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
 				repos.DeleteEntryByPath(path);

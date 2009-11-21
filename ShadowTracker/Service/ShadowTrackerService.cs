@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Data.Linq.Mapping;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 
+using Microsoft.Practices.ServiceLocation;
 using Shadow.Agent;
 using Shadow.Configuration;
 using Shadow.IO;
@@ -91,10 +91,11 @@ namespace Shadow.Service
 			try
 			{
 				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-				UnitOfWorkFactory.SetFactoryMethod(this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping));
+				ServiceLocator.SetLocatorProvider(new SimpleServiceLocator(
+					this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping)).ServiceLocatorProvider);
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
-				var version = UnitOfWorkFactory.Create().Versions.OrderByDescending(v => v.ID).FirstOrDefault();
+				var version = ServiceLocator.Current.GetInstance<IUnitOfWork>().Versions.OrderByDescending(v => v.ID).FirstOrDefault();
 
 				this.Out.WriteLine("ShadowTracker");
 				if (version != null)
@@ -140,7 +141,7 @@ namespace Shadow.Service
 
 					this.Trackers[i] = new FileTracker();
 					this.Trackers[i].TrackerError += this.OnError;
-					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(UnitOfWorkFactory.Create(), folders[i].Name, folders[i].Path), filterCallback);
+					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(ServiceLocator.Current.GetInstance<IUnitOfWork>(), folders[i].Name, folders[i].Path), filterCallback);
 				}
 
 				this.Out.WriteLine();
@@ -203,11 +204,11 @@ namespace Shadow.Service
 
 		#region Utility Methods
 
-		private Func<IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
+		private Func<string, IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
 		{
 			MappingSource map = this.EnsureDatabase(ref connection, mappings);
 
-			return delegate()
+			return delegate(string key)
 			{
 				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(connection, map);
 				if (this.Out != TextWriter.Null)

@@ -312,6 +312,13 @@
             from PseudoCode.EnumHelper
             </remarks>
         </member>
+        <member name="M:JsonFx.Json.JsonWriter.InvalidIeee754(System.Decimal)">
+            <summary>
+            Determines if a numberic value cannot be represented as IEEE-754.
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
         <member name="P:JsonFx.Json.JsonWriter.TypeHintName">
             <summary>
             Gets and sets the property name used for type hinting.
@@ -343,14 +350,6 @@
             </summary>
             <remarks>
             Respects XmlIgnoreAttribute, ...
-            </remarks>
-        </member>
-        <member name="P:JsonFx.Json.JsonWriter.StrictConformance">
-            <summary>
-            Gets and sets if should conform strictly to JSON spec.
-            </summary>
-            <remarks>
-            Setting to true causes NaN, Infinity, -Infinity to serialize as null.
             </remarks>
         </member>
         <member name="P:JsonFx.Json.JsonWriter.DateTimeSerializer">
@@ -457,9 +456,21 @@
         </member>
         <member name="M:JsonFx.Json.EcmaScriptWriter.Write(System.DateTime)">
             <summary>
-            Writes dates as
+            Writes dates as ECMAScript Date constructors
             </summary>
             <param name="value"></param>
+        </member>
+        <member name="M:JsonFx.Json.EcmaScriptWriter.Write(System.Single)">
+            <summary>
+            Writes out all Single values including NaN, Infinity, -Infinity
+            </summary>
+            <param name="value">Single</param>
+        </member>
+        <member name="M:JsonFx.Json.EcmaScriptWriter.Write(System.Double)">
+            <summary>
+            Writes out all Double values including NaN, Infinity, -Infinity
+            </summary>
+            <param name="value">Double</param>
         </member>
         <member name="M:JsonFx.Json.EcmaScriptWriter.WriteEcmaScriptRegExp(JsonFx.Json.JsonWriter,System.Text.RegularExpressions.Regex)">
             <summary>

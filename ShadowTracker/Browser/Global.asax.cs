@@ -4,6 +4,7 @@ using System.Data.Linq.Mapping;
 using System.IO;
 using System.Web;
 
+using Microsoft.Practices.ServiceLocation;
 using Shadow.Configuration;
 using Shadow.Model;
 using Shadow.Model.L2S;
@@ -15,15 +16,15 @@ namespace Shadow.Browser
 		protected void Application_Start(object sender, EventArgs e)
 		{
 			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-			UnitOfWorkFactory.SetFactoryMethod(
-				this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping));
+			ServiceLocator.SetLocatorProvider(new SimpleServiceLocator(
+				this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping)).ServiceLocatorProvider);
 		}
 
-		private Func<IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
+		private Func<string, IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
 		{
 			MappingSource map = this.EnsureDatabase(ref connection, mappings);
 
-			return delegate()
+			return delegate(string key)
 			{
 				return new L2SUnitOfWork(connection, map);
 			};

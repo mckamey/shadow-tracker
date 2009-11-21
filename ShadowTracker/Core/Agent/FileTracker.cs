@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
+using Microsoft.Practices.ServiceLocation;
 using Shadow.Model;
 
 namespace Shadow.Agent
@@ -239,7 +240,7 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
-			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, this.catalog);
 
 			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
