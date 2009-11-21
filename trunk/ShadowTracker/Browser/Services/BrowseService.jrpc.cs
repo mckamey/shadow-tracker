@@ -5,8 +5,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 
-using MimeUtils;
 using JsonFx.JsonRpc;
+using Microsoft.Practices.ServiceLocation;
+using MimeUtils;
 using Shadow.Model;
 
 namespace Shadow.Browser.Services
@@ -51,7 +52,7 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, false).ToLowerInvariant();
 
-			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 
 			var entry =
 				(from n in unitOfWork.Entries
@@ -66,7 +67,7 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, true);
 
-			IUnitOfWork unitOfWork = UnitOfWorkFactory.Create();
+			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 
 			var children =
 				from n in unitOfWork.Entries

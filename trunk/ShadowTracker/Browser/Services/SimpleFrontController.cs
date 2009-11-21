@@ -3,6 +3,8 @@ using System.Web;
 using System.Web.Compilation;
 using System.Web.UI;
 
+using JsonFx.Json;
+
 namespace Shadow.Browser.Services
 {
 	/// <summary>
@@ -33,11 +35,11 @@ namespace Shadow.Browser.Services
 
 			if (String.IsNullOrEmpty(context.Request.QueryString[null]))
 			{
-				context.Items["TreeView"] = "UIT.ExpandoTree";
+				context.Items["TreeView"] = new EcmaScriptIdentifier("UIT.ExpandoTree");
 			}
 			else
 			{
-				context.Items["TreeView"] = "UIT.FileFolderTree";
+				context.Items["TreeView"] = new EcmaScriptIdentifier("UIT.FileFolderTree");
 			}
 
 			return BuildManager.CreateInstanceFromVirtualPath(ViewPath, typeof(Page)) as Page;

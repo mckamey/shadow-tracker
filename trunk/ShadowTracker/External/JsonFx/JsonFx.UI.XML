@@ -248,7 +248,7 @@
             Gets and sets if literal output should have whitespace normalized
             </summary>
         </member>
-        <member name="M:JsonFx.Mvc.Jbst.Bind(System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+        <member name="M:JsonFx.Mvc.Jbst.Bind(JsonFx.Json.EcmaScriptIdentifier,JsonFx.Json.EcmaScriptIdentifier,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
             Bind the JBST to the provided data.
             </summary>
@@ -258,7 +258,7 @@
             <param name="dataItems">collection of data to emit</param>
             <returns></returns>
         </member>
-        <member name="M:JsonFx.Mvc.Jbst.Bind(System.String,System.Object)">
+        <member name="M:JsonFx.Mvc.Jbst.Bind(JsonFx.Json.EcmaScriptIdentifier,System.Object)">
             <summary>
             Bind the JBST to the provided data.
             </summary>
@@ -267,7 +267,7 @@
             <param name="data"></param>
             <returns></returns>
         </member>
-        <member name="M:JsonFx.Mvc.Jbst.Bind(System.String,System.Object,System.Int32,System.Int32)">
+        <member name="M:JsonFx.Mvc.Jbst.Bind(JsonFx.Json.EcmaScriptIdentifier,System.Object,System.Int32,System.Int32)">
             <summary>
             Bind the JBST to the provided data.
             </summary>
