@@ -25,6 +25,8 @@ namespace Shadow.Browser.Services
 
 		private const long MaxFileSize = 1024L*1024L;// cap at 1MB
 
+		private readonly IServiceLocator IoC = ServiceLocator.Current;
+
 		#endregion Constants
 
 		#region Init
@@ -52,7 +54,7 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, false).ToLowerInvariant();
 
-			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
+			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
 
 			var entry =
 				(from n in unitOfWork.Entries
@@ -67,7 +69,7 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, true);
 
-			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
+			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
 
 			var children =
 				from n in unitOfWork.Entries

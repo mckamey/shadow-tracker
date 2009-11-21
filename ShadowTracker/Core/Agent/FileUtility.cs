@@ -32,9 +32,9 @@ namespace Shadow.Agent
 		/// Syncs an existing catalog with the file system.
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public static void SyncCatalog(string name, string rootPath)
+		public static void SyncCatalog(IUnitOfWork unitOfWork, string name, string rootPath)
 		{
-			FileUtility.SyncCatalog(name, rootPath, FileUtility.CreateFileFilter());
+			FileUtility.SyncCatalog(unitOfWork, name, rootPath, FileUtility.CreateFileFilter());
 		}
 
 		/// <summary>
@@ -42,9 +42,9 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
-		public static void SyncCatalog(string name, string rootPath, Func<FileSystemInfo, bool> fileFilter)
+		public static void SyncCatalog(IUnitOfWork unitOfWork, string name, string rootPath, Func<FileSystemInfo, bool> fileFilter)
 		{
-			FileUtility.SyncCatalog(name, rootPath, fileFilter, -1, null, null);
+			FileUtility.SyncCatalog(unitOfWork, name, rootPath, fileFilter, -1, null, null);
 		}
 
 		/// <summary>
@@ -54,6 +54,7 @@ namespace Shadow.Agent
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
 		public static void SyncCatalog(
+			IUnitOfWork unitOfWork,
 			string name,
 			string rootPath,
 			Func<FileSystemInfo, bool> fileFilter,
@@ -71,7 +72,7 @@ namespace Shadow.Agent
 			}
 
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
-			Catalog catalog = CatalogRepository.EnsureCatalog(ServiceLocator.Current.GetInstance<IUnitOfWork>(), name, rootPath);
+			Catalog catalog = CatalogRepository.EnsureCatalog(unitOfWork, name, rootPath);
 
 			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
@@ -96,12 +97,12 @@ namespace Shadow.Agent
 								files = null;
 
 								// remove any extra files after, so more clones can happen
-								FileUtility.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
+								FileUtility.RemoveExtras(unitOfWork, catalog, trickleRate, completedCallback, failureCallback);
 								return;
 							}
 
 							// sync next node
-							CheckForChanges(catalog, enumerator.Current);
+							FileUtility.CheckForChanges(unitOfWork, catalog, enumerator.Current);
 						}
 						catch (Exception ex)
 						{
@@ -128,7 +129,7 @@ namespace Shadow.Agent
 					try
 					{
 						// sync each node
-						CheckForChanges(catalog, file);
+						FileUtility.CheckForChanges(unitOfWork, catalog, file);
 					}
 					catch (Exception ex)
 					{
@@ -143,13 +144,12 @@ namespace Shadow.Agent
 				}
 
 				// remove any extra files after, so more clones can happen
-				FileUtility.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
+				FileUtility.RemoveExtras(unitOfWork, catalog, trickleRate, completedCallback, failureCallback);
 			}
 		}
 
-		private static void CheckForChanges(Catalog catalog, FileSystemInfo file)
+		private static void CheckForChanges(IUnitOfWork unitOfWork, Catalog catalog, FileSystemInfo file)
 		{
-			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
 			CatalogEntry entry = FileUtility.CreateEntry(catalog, file, !catalog.IsIndexed);
@@ -160,12 +160,12 @@ namespace Shadow.Agent
 		}
 
 		private static void RemoveExtras(
+			IUnitOfWork unitOfWork,
 			Catalog catalog,
 			int trickleRate,
 			Action<Catalog> completedCallback,
 			Action<Catalog, Exception> failureCallback)
 		{
-			IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 			if (trickleRate > 0)
 			{
@@ -204,7 +204,7 @@ namespace Shadow.Agent
 
 							// extras are any local entries not contained on disk
 							string path = enumerator.Current;
-							FileUtility.CheckIfMissing(catalog, path);
+							FileUtility.CheckIfMissing(unitOfWork, catalog, path);
 						}
 						catch (Exception ex)
 						{
@@ -231,7 +231,7 @@ namespace Shadow.Agent
 					try
 					{
 						// extras are any local entries not contained on disk
-						FileUtility.CheckIfMissing(catalog, path);
+						FileUtility.CheckIfMissing(unitOfWork, catalog, path);
 					}
 					catch (Exception ex)
 					{
@@ -261,12 +261,11 @@ namespace Shadow.Agent
 			}
 		}
 
-		private static void CheckIfMissing(Catalog catalog, string path)
+		private static void CheckIfMissing(IUnitOfWork unitOfWork, Catalog catalog, string path)
 		{
 			string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
 			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 			{
-				IUnitOfWork unitOfWork = ServiceLocator.Current.GetInstance<IUnitOfWork>();
 				CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
 				repos.DeleteEntryByPath(path);
