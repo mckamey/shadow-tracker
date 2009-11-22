@@ -171,6 +171,13 @@ namespace Shadow.Model
 			Both = Name|Path
 		}
 
+		/// <summary>
+		/// Finds or creates a matching catalog
+		/// </summary>
+		/// <param name="unitOfWork"></param>
+		/// <param name="name"></param>
+		/// <param name="path"></param>
+		/// <returns></returns>
 		public static Catalog EnsureCatalog(IUnitOfWork unitOfWork, string name, string path)
 		{
 			if (String.IsNullOrEmpty(name))
@@ -197,18 +204,7 @@ namespace Shadow.Model
 				select c;
 
 			Catalog catalog = query.FirstOrDefault();
-			if (catalog != null)
-			{
-				if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Path, path) ||
-					!StringComparer.OrdinalIgnoreCase.Equals(catalog.Name, name))
-				{
-					// update to match
-					catalog.Name = name;
-					catalog.Path = path;
-					unitOfWork.Save();
-				}
-			}
-			else
+			if (catalog == null)
 			{
 				catalog = new Catalog();
 				catalog.Name = name;
@@ -216,6 +212,19 @@ namespace Shadow.Model
 				unitOfWork.Catalogs.Add(catalog);
 				unitOfWork.Save();
 			}
+			else if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Path, path))
+			{
+				// update to match
+				catalog.Path = path;
+				unitOfWork.Save();
+			}
+			else if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Name, name))
+			{
+				// update to match
+				catalog.Name = name;
+				unitOfWork.Save();
+			}
+
 			return catalog;
 		}
 
