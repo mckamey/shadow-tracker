@@ -245,14 +245,14 @@ namespace Shadow.Agent
 		private void ApplyChange(FileSystemEventArgs e)
 		{
 			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-			CatalogRepository repos = new CatalogRepository(unitOfWork, this.catalog);
+			CatalogRepository repos = new CatalogRepository(unitOfWork);
 
 			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
 			switch (e.ChangeType)
 			{
 				case WatcherChangeTypes.Deleted:
 				{
-					repos.DeleteEntryByPath(this.NormalizePath(e.FullPath));
+					repos.DeleteEntryByPath(this.catalog.ID, this.NormalizePath(e.FullPath));
 					break;
 				}
 				case WatcherChangeTypes.Renamed:
@@ -266,7 +266,7 @@ namespace Shadow.Agent
 
 					try
 					{
-						repos.RenameEntry(this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
+						repos.RenameEntry(this.catalog.ID, this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
 
 						foreach (FileSystemInfo info in FileIterator.GetFiles(e2.FullPath))
 						{
@@ -285,7 +285,7 @@ namespace Shadow.Agent
 									continue;
 								}
 
-								repos.RenameEntry(this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
+								repos.RenameEntry(this.catalog.ID, this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
 							}
 							catch (Exception ex)
 							{

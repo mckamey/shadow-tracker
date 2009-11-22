@@ -145,7 +145,7 @@ namespace Shadow.Service
 					this.Trackers[i] = new FileTracker(this.IoC);
 					this.Trackers[i].TrackerError += this.OnError;
 
-					Catalog catalog = new CatalogRepository(unitOfWork, folders[i].Name, folders[i].Path).Catalog;
+					Catalog catalog = new CatalogRepository(unitOfWork).FindOrCreateCatalog(folders[i].Name, folders[i].Path);
 					this.Trackers[i].Start(catalog, filterCallback);
 				}
 
