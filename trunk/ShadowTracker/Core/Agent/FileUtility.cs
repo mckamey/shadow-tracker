@@ -194,7 +194,7 @@ namespace Shadow.Agent
 								if (!catalog.IsIndexed)
 								{
 									catalog.IsIndexed = true;
-									unitOfWork.Catalogs.Update(catalog);
+									repos.Catalogs.Update(catalog);
 									unitOfWork.Save();
 								}
 
@@ -253,7 +253,7 @@ namespace Shadow.Agent
 				if (!catalog.IsIndexed)
 				{
 					catalog.IsIndexed = true;
-					unitOfWork.Catalogs.Update(catalog);
+					repos.Catalogs.Update(catalog);
 					unitOfWork.Save();
 				}
 

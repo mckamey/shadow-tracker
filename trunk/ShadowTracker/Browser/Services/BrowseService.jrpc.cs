@@ -54,10 +54,10 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, false).ToLowerInvariant();
 
-			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
+			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
 
 			var entry =
-				(from n in unitOfWork.Entries
+				(from n in repos.Entries
 				 where n.Parent.ToLower()+n.Name.ToLower() == path
 				 select n).FirstOrDefault();
 
@@ -69,10 +69,10 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, true);
 
-			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
+			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
 
 			var children =
-				from n in unitOfWork.Entries
+				from n in repos.Entries
 				where n.Parent.ToLower() == path
 				orderby n.Name
 				select n;

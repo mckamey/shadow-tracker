@@ -98,7 +98,8 @@ namespace Shadow.Service
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
 				IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-				var version = unitOfWork.Versions.OrderByDescending(v => v.ID).FirstOrDefault();
+				CatalogRepository repository = new CatalogRepository(unitOfWork);
+				var version = repository.GetLatestVersion();
 
 				this.Out.WriteLine("ShadowTracker");
 				if (version != null)
@@ -145,7 +146,7 @@ namespace Shadow.Service
 					this.Trackers[i] = new FileTracker(this.IoC);
 					this.Trackers[i].TrackerError += this.OnError;
 
-					Catalog catalog = new CatalogRepository(unitOfWork).FindOrCreateCatalog(folders[i].Name, folders[i].Path);
+					Catalog catalog = repository.FindOrCreateCatalog(folders[i].Name, folders[i].Path);
 					this.Trackers[i].Start(catalog, filterCallback);
 				}
 
@@ -283,8 +284,8 @@ namespace Shadow.Service
 			MappingSource map = XmlMappingSource.FromUrl(mappings);
 
 			// create one to test out
-			L2SUnitOfWork db = new L2SUnitOfWork(new DataContext(connection, map));
-			if (!db.CanConnect())
+			L2SUnitOfWork unitOfWork = new L2SUnitOfWork(new DataContext(connection, map));
+			if (!unitOfWork.CanConnect())
 			{
 				string answer = "n";
 
@@ -301,9 +302,9 @@ namespace Shadow.Service
 
 				try
 				{
-					db.InitializeDatabase();
-					db.Versions.Add(VersionHistory.Create());
-					db.Save();
+					unitOfWork.InitializeDatabase();
+					new CatalogRepository(unitOfWork).StoreVersion();
+					unitOfWork.Save();
 				}
 				catch (Exception ex)
 				{

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Data.Linq.Mapping;
-using System.IO;
 
 namespace Shadow.Model.L2S
 {
@@ -13,9 +11,6 @@ namespace Shadow.Model.L2S
 		#region Fields
 
 		private readonly DataContext DB;
-		private ITable<Catalog> catalogs;
-		private ITable<CatalogEntry> entries;
-		private ITable<VersionHistory> versions;
 
 		#endregion Fields
 
@@ -85,42 +80,6 @@ namespace Shadow.Model.L2S
 			}
 
 			return new L2STable<TEntity>(this.DB);
-		}
-
-		public ITable<Catalog> Catalogs
-		{
-			get
-			{
-				if (this.catalogs == null)
-				{
-					this.catalogs = this.GetTable<Catalog>();
-				}
-				return this.catalogs;
-			}
-		}
-
-		public ITable<CatalogEntry> Entries
-		{
-			get
-			{
-				if (this.entries == null)
-				{
-					this.entries = this.GetTable<CatalogEntry>();
-				}
-				return this.entries;
-			}
-		}
-
-		public ITable<VersionHistory> Versions
-		{
-			get
-			{
-				if (this.versions == null)
-				{
-					this.versions = this.GetTable<VersionHistory>();
-				}
-				return this.versions;
-			}
 		}
 
 		#endregion IUnitOfWork Members

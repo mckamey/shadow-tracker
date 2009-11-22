@@ -7,7 +7,6 @@ using System.IO;
 using System.Text;
 
 using Shadow.Model.L2S;
-using System.Linq.Expressions;
 
 namespace Shadow.Model
 {
