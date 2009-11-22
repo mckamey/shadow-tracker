@@ -8,127 +8,66 @@ namespace Shadow.Model.Memory
 	{
 		#region Fields
 
-		private IEnumerable<Catalog> CatalogsStorage;
-		private MemoryTable<Catalog> CatalogsIdentityMap;
-
-		private IEnumerable<CatalogEntry> EntriesStorage;
-		private MemoryTable<CatalogEntry> EntriesIdentityMap;
-
-		private IEnumerable<VersionHistory> VersionsStorage;
-		private MemoryTable<VersionHistory> VersionsIdentityMap;
+		private readonly IDictionary<Type, object> Storage = new Dictionary<Type, object>(3);
+		private readonly IDictionary<Type, object> Maps = new Dictionary<Type, object>(3);
 
 		#endregion Fields
-
-		#region Init
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		public MemoryUnitOfWork()
-			: this(null, null)
-		{
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="catalogs">initial catalogs</param>
-		public MemoryUnitOfWork(IEnumerable<Catalog> catalogs)
-			: this(null, null)
-		{
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="catalogs">initial catalogs</param>
-		/// <param name="entities">initial entries</param>
-		public MemoryUnitOfWork(IEnumerable<Catalog> catalogs, IEnumerable<CatalogEntry> entities)
-		{
-			this.CatalogsStorage = catalogs != null ? catalogs : Enumerable.Empty<Catalog>();
-			this.EntriesStorage = entities != null ? entities : Enumerable.Empty<CatalogEntry>();
-			this.VersionsStorage = Enumerable.Empty<VersionHistory>();
-		}
-
-		#endregion Init
 
 		#region IUnitOfWork Members
 
 		public void Save()
 		{
-			// "save" catalogs
-			if (this.CatalogsIdentityMap != null)
+			foreach (Type type in this.Maps.Keys)
 			{
-				// save contents to "storage"
-				this.CatalogsStorage = this.CatalogsIdentityMap.AsEnumerable();
-			}
-
-			// reset change tracking
-			this.CatalogsIdentityMap = null;
-
-			// "save" entries
-			if (this.EntriesIdentityMap != null)
-			{
-				// save contents to "storage"
-				this.EntriesStorage = this.EntriesIdentityMap.AsEnumerable();
-			}
-
-			// reset change tracking
-			this.EntriesIdentityMap = null;
-
-			// "save" entries
-			if (this.VersionsIdentityMap != null)
-			{
-				// save contents to "storage"
-				this.VersionsStorage = this.VersionsIdentityMap.AsEnumerable();
-			}
-
-			// reset change tracking
-			this.VersionsIdentityMap = null;
-		}
-
-		public ITable<Catalog> Catalogs
-		{
-			get
-			{
-				if (this.CatalogsIdentityMap == null)
+				// "save" catalogs
+				if (this.Maps.ContainsKey(type))
 				{
-					this.CatalogsIdentityMap = new MemoryTable<Catalog>(Catalog.PathComparer, this.CatalogsStorage);
+					// save contents to "storage"
+					this.Storage[type] = this.Maps[type];
 				}
-				return this.CatalogsIdentityMap;
-			}
-		}
 
-		public ITable<CatalogEntry> Entries
-		{
-			get
-			{
-				if (this.EntriesIdentityMap == null)
-				{
-					this.EntriesIdentityMap = new MemoryTable<CatalogEntry>(CatalogEntry.PathComparer, this.EntriesStorage);
-				}
-				return this.EntriesIdentityMap;
-			}
-		}
-
-		public ITable<VersionHistory> Versions
-		{
-			get
-			{
-				if (this.VersionsIdentityMap == null)
-				{
-					this.VersionsIdentityMap = new MemoryTable<VersionHistory>(EqualityComparer<VersionHistory>.Default, this.VersionsStorage);
-				}
-				return this.VersionsIdentityMap;
+				// reset change tracking
+				this.Maps[type] = null;
 			}
 		}
 
 		public ITable<TEntity> GetTable<TEntity>() where TEntity : class
 		{
-			// TODO...
-			return new MemoryTable<TEntity>(EqualityComparer<TEntity>.Default, Enumerable.Empty<TEntity>());
+			ITable<TEntity> map =
+				this.Maps.ContainsKey(typeof(TEntity)) ?
+				this.Maps[typeof(TEntity)] as ITable<TEntity> :
+				null;
+
+			if (map == null)
+			{
+				IEnumerable<TEntity> storage =
+					this.Storage.ContainsKey(typeof(TEntity)) ?
+					this.Storage[typeof(TEntity)] as IEnumerable<TEntity> :
+					null;
+
+				if (storage == null)
+				{
+					this.Storage[typeof(TEntity)] = storage = Enumerable.Empty<TEntity>();
+				}
+
+				// TODO: figure out how to switch comparers?
+				// Catalog.PathComparer
+				// CatalogEntry.PathComparer
+
+				this.Maps[typeof(TEntity)] = map = new MemoryTable<TEntity>(EqualityComparer<TEntity>.Default, storage);
+			}
+			return map;
 		}
 
 		#endregion IUnitOfWork Members
+
+		#region Test Methods
+
+		public void PopulateTable<T>(IEnumerable<T> items)
+		{
+			this.Storage[typeof(T)] = items;
+		}
+
+		#endregion Test Methods
 	}
 }

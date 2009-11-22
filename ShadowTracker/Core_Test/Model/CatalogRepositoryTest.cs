@@ -72,7 +72,11 @@ namespace Shadow.Model.Test
 				}
 			};
 
-			this.repos = new CatalogRepository(new MemoryUnitOfWork(catalogs, entries));
+			MemoryUnitOfWork unitOfWork = new MemoryUnitOfWork();
+			unitOfWork.PopulateTable<Catalog>(catalogs);
+			unitOfWork.PopulateTable<CatalogEntry>(entries);
+
+			this.repos = new CatalogRepository(unitOfWork);
 		}
 
 		[TestMethod()]

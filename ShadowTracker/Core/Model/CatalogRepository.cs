@@ -17,6 +17,8 @@ namespace Shadow.Model
 		#region Fields
 
 		private readonly IUnitOfWork UnitOfWork;
+		private ITable<Catalog> catalogs;
+		private ITable<CatalogEntry> entries;
 
 		#endregion Fields
 
@@ -37,6 +39,34 @@ namespace Shadow.Model
 		}
 
 		#endregion Init
+
+		#region Properties
+
+		public ITable<Catalog> Catalogs
+		{
+			get
+			{
+				if (this.catalogs == null)
+				{
+					this.catalogs = this.UnitOfWork.GetTable<Catalog>();
+				}
+				return this.catalogs;
+			}
+		}
+
+		public ITable<CatalogEntry> Entries
+		{
+			get
+			{
+				if (this.entries == null)
+				{
+					this.entries = this.UnitOfWork.GetTable<CatalogEntry>();
+				}
+				return this.entries;
+			}
+		}
+
+		#endregion Properties
 
 		#region Action Methods
 
@@ -59,8 +89,7 @@ namespace Shadow.Model
 		/// <param name="path"></param>
 		public virtual void DeleteEntryByPath(long catalogID, string parent, string name)
 		{
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-			entries.RemoveWhere(n =>
+			this.Entries.RemoveWhere(n =>
 				(n.CatalogID == catalogID) &&
 				(n.Parent.ToLower() == parent.ToLower()) &&
 				(n.Name.ToLower() == name.ToLower()));
@@ -68,7 +97,7 @@ namespace Shadow.Model
 			// if is directory with children then remove them as well
 			string asDir = (parent+name+'/').ToLowerInvariant();
 
-			entries.RemoveWhere(n => n.Parent.ToLower().StartsWith(asDir));
+			this.Entries.RemoveWhere(n => n.Parent.ToLower().StartsWith(asDir));
 		}
 
 		/// <summary>
@@ -81,9 +110,7 @@ namespace Shadow.Model
 			string oldParent, oldName;
 			FileUtility.SplitPath(oldPath, out oldParent, out oldName);
 
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-
-			CatalogEntry entry = entries.FirstOrDefault(n =>
+			CatalogEntry entry = this.Entries.FirstOrDefault(n =>
 				(n.CatalogID == catalogID) &&
 				(n.Name == oldName) &&
 				(n.Parent == oldParent));
@@ -107,10 +134,9 @@ namespace Shadow.Model
 		/// <param name="data">the original entry</param>
 		public virtual void Update(CatalogEntry entry, CatalogEntry original)
 		{
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			if (original == null || original.ID < 1)
 			{
-				entries.Update(entry);
+				this.Entries.Update(entry);
 			}
 			else
 			{
@@ -155,7 +181,7 @@ namespace Shadow.Model
 			string pathLower = path.ToLowerInvariant();
 
 			var query =
-				from c in this.UnitOfWork.Catalogs
+				from c in this.Catalogs
 				let rank =
 					(int)((c.Name.ToLower() == name) ? MatchRank.Name : MatchRank.None) |
 					(int)(c.Path.ToLower() == path ? MatchRank.Path : MatchRank.None)
@@ -169,7 +195,7 @@ namespace Shadow.Model
 				catalog = new Catalog();
 				catalog.Name = name;
 				catalog.Path = path;
-				this.UnitOfWork.Catalogs.Add(catalog);
+				this.Catalogs.Add(catalog);
 				this.UnitOfWork.Save();
 			}
 			else if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Path, path))
@@ -195,9 +221,8 @@ namespace Shadow.Model
 		/// <returns></returns>
 		public CatalogEntry FindEntry(long catalogID, Expression<Func<CatalogEntry, bool>> predicate)
 		{
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			return
-				(from n in entries
+				(from n in this.Entries
 				 where n.CatalogID == catalogID
 				 select n).FirstOrDefault(predicate);
 		}
@@ -226,9 +251,8 @@ namespace Shadow.Model
 		/// <returns></returns>
 		public bool EntryExists(long catalogID, Expression<Func<CatalogEntry, bool>> predicate)
 		{
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			return
-				(from n in entries
+				(from n in this.Entries
 				 where n.CatalogID == catalogID
 				 select n).Any(predicate);
 		}
@@ -263,9 +287,8 @@ namespace Shadow.Model
 				parent += "/";
 			}
 
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			return
-				from n in entries
+				from n in this.Entries
 				where
 					catalogID == n.CatalogID &&
 					n.Parent.ToLower().StartsWith(parent)
@@ -274,9 +297,8 @@ namespace Shadow.Model
 
 		public IQueryable<string> GetExistingPaths(long catalogID)
 		{
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 			return
-				from n in entries
+				from n in this.Entries
 				where catalogID == n.CatalogID
 				select n.Parent + n.Name;
 		}
@@ -325,7 +347,7 @@ namespace Shadow.Model
 				// entry does not exist
 				// if bits exist need to add or update entry (no transfer required)
 				// else requires expensive bit transfer
-				this.UnitOfWork.Entries.Add(entry);
+				this.Entries.Add(entry);
 				return true;
 			}
 
@@ -366,10 +388,10 @@ namespace Shadow.Model
 		public void Sync(CatalogRepository that)
 		{
 			// TODO: reconcile this with trickle-updates?
-			foreach (Catalog catalog in that.UnitOfWork.Catalogs)
+			foreach (Catalog catalog in that.Catalogs)
 			{
 				// apply any deltas since last sync
-				foreach (CatalogEntry entry in that.UnitOfWork.Entries.Where(n => n.CatalogID == catalog.ID))
+				foreach (CatalogEntry entry in that.Entries.Where(n => n.CatalogID == catalog.ID))
 				{
 					this.ApplyChanges(entry);
 				}
@@ -391,5 +413,22 @@ namespace Shadow.Model
 		}
 
 		#endregion Catalog Sync Methods
+
+		#region Version Methods
+
+		public VersionHistory GetLatestVersion()
+		{
+			return
+				(from v in this.UnitOfWork.GetTable<VersionHistory>()
+				 orderby v.ID descending
+				 select v).FirstOrDefault();
+		}
+
+		public void StoreVersion()
+		{
+			this.UnitOfWork.GetTable<VersionHistory>().Add(VersionHistory.Create());
+		}
+
+		#endregion Version Methods
 	}
 }
