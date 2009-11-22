@@ -25,7 +25,7 @@ namespace Shadow.Model.Memory
 		/// Ctor
 		/// </summary>
 		public MemoryUnitOfWork()
-			: this(null)
+			: this(null, null)
 		{
 		}
 
@@ -47,6 +47,7 @@ namespace Shadow.Model.Memory
 		{
 			this.CatalogsStorage = catalogs != null ? catalogs : Enumerable.Empty<Catalog>();
 			this.EntriesStorage = entities != null ? entities : Enumerable.Empty<CatalogEntry>();
+			this.VersionsStorage = Enumerable.Empty<VersionHistory>();
 		}
 
 		#endregion Init
