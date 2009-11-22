@@ -16,31 +16,28 @@ namespace Shadow.Browser
 	{
 		protected void Application_Start(object sender, EventArgs e)
 		{
-			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-			ServiceLocator.SetLocatorProvider(new SimpleServiceLocator(
-				this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping)).ServiceLocatorProvider);
+			SimpleServiceLocator locator = new SimpleServiceLocator(this.GetFactoryMethod());
+
+			ServiceLocator.SetLocatorProvider(locator.ServiceLocatorProvider);
 		}
 
-		private Func<string, IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
+		private Func<string, IUnitOfWork> GetFactoryMethod()
 		{
-			MappingSource map = this.EnsureDatabase(ref connection, mappings);
+			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
+
+			string connection = settings.SqlConnectionString;
+			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
+			{
+				connection = connection.Replace("|DataDirectory|", HttpRuntime.AppDomainAppPath+"App_data\\");
+			}
+
+			string mappings = Path.Combine(HttpRuntime.AppDomainAppPath, settings.SqlMapping);
+			MappingSource map = XmlMappingSource.FromUrl(mappings);
 
 			return delegate(string key)
 			{
 				return new L2SUnitOfWork(new DataContext(connection, map));
 			};
-		}
-
-		private MappingSource EnsureDatabase(ref string connection, string mappings)
-		{
-			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
-			{
-				connection = connection.Replace("|DataDirectory|", HttpRuntime.AppDomainAppPath+"App_data\\");
-			}
-			mappings = Path.Combine(HttpRuntime.AppDomainAppPath, mappings);
-			MappingSource map = XmlMappingSource.FromUrl(mappings);
-
-			return map;
 		}
 	}
 }

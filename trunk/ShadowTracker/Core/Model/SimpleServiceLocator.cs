@@ -18,7 +18,7 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <param name="factories"></param>
+		/// <param name="factories">must be of type Func&lt;string, T&gt;</param>
 		public SimpleServiceLocator(params Delegate[] factories)
 		{
 			if (factories == null)

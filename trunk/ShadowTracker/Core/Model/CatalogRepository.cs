@@ -416,7 +416,7 @@ namespace Shadow.Model
 
 		#region Version Methods
 
-		public VersionHistory GetLatestVersion()
+		public VersionHistory GetVersionInfo()
 		{
 			return
 				(from v in this.UnitOfWork.GetTable<VersionHistory>()
@@ -424,11 +424,20 @@ namespace Shadow.Model
 				 select v).FirstOrDefault();
 		}
 
-		public void StoreVersion()
+		public void StoreVersionInfo()
 		{
 			this.UnitOfWork.GetTable<VersionHistory>().Add(VersionHistory.Create());
 		}
 
 		#endregion Version Methods
+
+		#region UnitOfWork.Save
+
+		public void Save()
+		{
+			this.UnitOfWork.Save();
+		}
+
+		#endregion UnitOfWork.Save
 	}
 }
