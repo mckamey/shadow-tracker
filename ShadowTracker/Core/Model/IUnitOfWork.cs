@@ -10,6 +10,9 @@ namespace Shadow.Model
 
 		ITable<VersionHistory> Versions { get; }
 
+		ITable<TEntity> GetTable<TEntity>()
+			where TEntity : class;
+
 		void Save();
 	}
 }

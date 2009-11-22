@@ -15,7 +15,7 @@ namespace Shadow.Model.Memory
 	/// the changes will take effect immediately within the Table. This is different
 	/// from remote persistent storage system such as a RDBMS.
 	/// </remarks>
-	public class MemoryTable<T> :
+	internal class MemoryTable<T> :
 		ITable<T>
 		where T : class
 	{

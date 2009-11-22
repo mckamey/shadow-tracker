@@ -50,27 +50,6 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Syncs an existing catalog with the file system.
 		/// </summary>
-		/// <param name="rootPath"></param>
-		[System.Diagnostics.DebuggerStepThrough]
-		public void SyncCatalog(string name, string rootPath)
-		{
-			this.SyncCatalog(name, rootPath, FileUtility.CreateFileFilter());
-		}
-
-		/// <summary>
-		/// Syncs an existing catalog with the file system.
-		/// </summary>
-		/// <param name="rootPath"></param>
-		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
-		[System.Diagnostics.DebuggerStepThrough]
-		public void SyncCatalog(string name, string rootPath, Func<FileSystemInfo, bool> fileFilter)
-		{
-			this.SyncCatalog(name, rootPath, fileFilter, -1, null, null);
-		}
-
-		/// <summary>
-		/// Syncs an existing catalog with the file system.
-		/// </summary>
 		/// <param name="name"></param>
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
@@ -96,7 +75,7 @@ namespace Shadow.Agent
 
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
 
-			Catalog catalog = CatalogRepository.EnsureCatalog(this.IoC.GetInstance<IUnitOfWork>(), name, rootPath);
+			Catalog catalog = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>(), name, rootPath).Catalog;
 
 			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 

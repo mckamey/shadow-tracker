@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 
 using Shadow.Model.L2S;
+using System.Linq.Expressions;
 
 namespace Shadow.Model
 {
@@ -16,7 +17,7 @@ namespace Shadow.Model
 	public class CatalogEntry :
 		INotifyPropertyChanging,
 		INotifyPropertyChanged,
-		IL2SSoftDeleteEntity
+		ISoftDeleteEntity
 	{
 		#region EqualityComparer
 
@@ -469,18 +470,12 @@ namespace Shadow.Model
 		/// Updates the values of one entry with those of another
 		/// </summary>
 		/// <param name="entry"></param>
-		public void CopyValuesFrom(IL2SSoftDeleteEntity entity)
+		public void CopyValuesFrom(object entity)
 		{
-			if (entity == null)
-			{
-				return;
-			}
-
 			CatalogEntry that = entity as CatalogEntry;
 			if (that == null)
 			{
-				this.Signature = entity.Signature;
-				return;
+				throw new ArgumentException("Can only copy from CatalogEntry");
 			}
 
 			//this.ID = that.ID;

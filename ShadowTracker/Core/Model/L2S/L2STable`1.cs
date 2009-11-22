@@ -11,7 +11,7 @@ namespace Shadow.Model.L2S
 	/// A queryable table adapter for LINQ-to-SQL tables.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public class L2STable<T> :
+	internal class L2STable<T> :
 		ITable<T> where T:class
 	{
 		#region Fields
