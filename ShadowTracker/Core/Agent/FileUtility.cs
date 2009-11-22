@@ -153,13 +153,12 @@ namespace Shadow.Agent
 
 		private void CheckForChanges(Catalog catalog, FileSystemInfo file)
 		{
-			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-			CatalogRepository repos = new CatalogRepository(unitOfWork);
+			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
 
 			CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
 			if (repos.ApplyChanges(entry, file as FileInfo))
 			{
-				unitOfWork.Save();
+				repos.Save();
 			}
 		}
 
@@ -169,8 +168,7 @@ namespace Shadow.Agent
 			Action<Catalog> completedCallback,
 			Action<Catalog, Exception> failureCallback)
 		{
-			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-			CatalogRepository repos = new CatalogRepository(unitOfWork);
+			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
 			if (trickleRate > 0)
 			{
 				var enumerator = repos.GetExistingPaths(catalog.ID).GetEnumerator();
@@ -195,7 +193,7 @@ namespace Shadow.Agent
 								{
 									catalog.IsIndexed = true;
 									repos.Catalogs.Update(catalog);
-									unitOfWork.Save();
+									repos.Save();
 								}
 
 								// signal sync is complete
@@ -254,7 +252,7 @@ namespace Shadow.Agent
 				{
 					catalog.IsIndexed = true;
 					repos.Catalogs.Update(catalog);
-					unitOfWork.Save();
+					repos.Save();
 				}
 
 				// signal sync is complete
@@ -270,11 +268,10 @@ namespace Shadow.Agent
 			string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
 			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 			{
-				IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-				CatalogRepository repos = new CatalogRepository(unitOfWork);
+				CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
 
 				repos.DeleteEntryByPath(catalog.ID, path);
-				unitOfWork.Save();
+				repos.Save();
 			}
 		}
 
@@ -288,7 +285,7 @@ namespace Shadow.Agent
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
 		[System.Diagnostics.DebuggerStepThrough]
-		public static CatalogEntry CreateEntry(long catalogID, string catalogPath, FileSystemInfo file)
+		internal static CatalogEntry CreateEntry(long catalogID, string catalogPath, FileSystemInfo file)
 		{
 			return FileUtility.CreateEntry(catalogID, catalogPath, file, true);
 		}
@@ -368,7 +365,7 @@ namespace Shadow.Agent
 
 		#region Utility Methods
 
-		public static FileSystemInfo CreateFileSystemInfo(string path)
+		internal static FileSystemInfo CreateFileSystemInfo(string path)
 		{
 			if (Directory.Exists(path))
 			{
@@ -387,7 +384,7 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="fullPath"></param>
 		/// <returns>root-relative paths</returns>
-		public static string NormalizePath(string rootPath, string fullPath)
+		internal static string NormalizePath(string rootPath, string fullPath)
 		{
 			rootPath = FileUtility.TrimTrailingSlash(rootPath);
 
@@ -412,7 +409,7 @@ namespace Shadow.Agent
 			return Path.Combine(rootPath, path);
 		}
 
-		public static void SplitPath(string path, out string parent, out string name)
+		internal static void SplitPath(string path, out string parent, out string name)
 		{
 			int index = path.LastIndexOf('/');
 
@@ -427,7 +424,7 @@ namespace Shadow.Agent
 		/// <param name="fullPath"></param>
 		/// <param name="newRoot"></param>
 		/// <returns></returns>
-		public static string ReplaceRoot(string rootPath, string fullPath, string newRoot)
+		internal static string ReplaceRoot(string rootPath, string fullPath, string newRoot)
 		{
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
 			newRoot = FileUtility.EnsureTrailingSlash(newRoot);
@@ -439,12 +436,12 @@ namespace Shadow.Agent
 			return Path.Combine(newRoot, fullPath.Substring(rootPath.Length));
 		}
 
-		public static string EnsureTrailingSlash(string path)
+		internal static string EnsureTrailingSlash(string path)
 		{
 			return path.TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
 		}
 
-		public static string TrimTrailingSlash(string path)
+		internal static string TrimTrailingSlash(string path)
 		{
 			return path.TrimEnd(Path.DirectorySeparatorChar);
 		}

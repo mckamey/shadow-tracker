@@ -244,8 +244,7 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
-			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-			CatalogRepository repos = new CatalogRepository(unitOfWork);
+			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
 
 			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
 			switch (e.ChangeType)
@@ -324,7 +323,7 @@ namespace Shadow.Agent
 				}
 			}
 
-			unitOfWork.Save();
+			repos.Save();
 		}
 
 		#endregion Events

@@ -97,9 +97,8 @@ namespace Shadow.Service
 
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
-				IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-				CatalogRepository repository = new CatalogRepository(unitOfWork);
-				var version = repository.GetLatestVersion();
+				CatalogRepository repository = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+				var version = repository.GetVersionInfo();
 
 				this.Out.WriteLine("ShadowTracker");
 				if (version != null)
@@ -303,7 +302,7 @@ namespace Shadow.Service
 				try
 				{
 					unitOfWork.InitializeDatabase();
-					new CatalogRepository(unitOfWork).StoreVersion();
+					new CatalogRepository(unitOfWork).StoreVersionInfo();
 					unitOfWork.Save();
 				}
 				catch (Exception ex)
