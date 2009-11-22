@@ -308,7 +308,7 @@ namespace Shadow.Agent
 				{
 					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
 
-					CatalogEntry entry = FileUtility.CreateEntry(this.catalog, info);
+					CatalogEntry entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, info);
 					repos.ApplyChanges(entry);
 
 					if (info is DirectoryInfo)
@@ -316,7 +316,7 @@ namespace Shadow.Agent
 						// add any children
 						foreach (FileSystemInfo child in FileIterator.GetFiles(e.FullPath).Where(this.fileFilter))
 						{
-							entry = FileUtility.CreateEntry(this.catalog, child);
+							entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, child);
 							repos.ApplyChanges(entry);
 						}
 					}
@@ -335,6 +335,7 @@ namespace Shadow.Agent
 		/// Sends updates to a catalog
 		/// </summary>
 		/// <param name="watchFolder"></param>
+		[System.Diagnostics.DebuggerStepThrough]
 		public void Start(Catalog catalog)
 		{
 			this.Start(catalog, n => true);

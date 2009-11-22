@@ -124,8 +124,7 @@ namespace Shadow.Service
 					this.Out.WriteLine();
 					this.Out.WriteLine("Begin sync: "+folders[i].Name+" ("+folders[i].Path+")");
 
-					FileUtility.SyncCatalog(
-						unitOfWork,
+					new FileUtility(this.IoC).SyncCatalog(
 						folders[i].Name,
 						folders[i].Path,
 						filterCallback,

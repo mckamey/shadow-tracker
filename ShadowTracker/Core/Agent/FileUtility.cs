@@ -11,7 +11,7 @@ namespace Shadow.Agent
 	/// <summary>
 	/// Utility for synchronizing a catalog with the file system.
 	/// </summary>
-	public static class FileUtility
+	public class FileUtility
 	{
 		#region Constants
 
@@ -26,15 +26,35 @@ namespace Shadow.Agent
 
 		#endregion Constants
 
+		#region Fields
+
+		private readonly IServiceLocator IoC;
+
+		#endregion Fields
+
+		#region Init
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="ioc"></param>
+		public FileUtility(IServiceLocator ioc)
+		{
+			this.IoC = ioc;
+		}
+
+		#endregion Init
+
 		#region Methods
 
 		/// <summary>
 		/// Syncs an existing catalog with the file system.
 		/// </summary>
 		/// <param name="rootPath"></param>
-		public static void SyncCatalog(IUnitOfWork unitOfWork, string name, string rootPath)
+		[System.Diagnostics.DebuggerStepThrough]
+		public void SyncCatalog(string name, string rootPath)
 		{
-			FileUtility.SyncCatalog(unitOfWork, name, rootPath, FileUtility.CreateFileFilter());
+			this.SyncCatalog(name, rootPath, FileUtility.CreateFileFilter());
 		}
 
 		/// <summary>
@@ -42,19 +62,22 @@ namespace Shadow.Agent
 		/// </summary>
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
-		public static void SyncCatalog(IUnitOfWork unitOfWork, string name, string rootPath, Func<FileSystemInfo, bool> fileFilter)
+		[System.Diagnostics.DebuggerStepThrough]
+		public void SyncCatalog(string name, string rootPath, Func<FileSystemInfo, bool> fileFilter)
 		{
-			FileUtility.SyncCatalog(unitOfWork, name, rootPath, fileFilter, -1, null, null);
+			this.SyncCatalog(name, rootPath, fileFilter, -1, null, null);
 		}
 
 		/// <summary>
 		/// Syncs an existing catalog with the file system.
 		/// </summary>
+		/// <param name="name"></param>
 		/// <param name="rootPath"></param>
 		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
 		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
-		public static void SyncCatalog(
-			IUnitOfWork unitOfWork,
+		/// <param name="completedCallback"></param>
+		/// <param name="failureCallback"></param>
+		public void SyncCatalog(
 			string name,
 			string rootPath,
 			Func<FileSystemInfo, bool> fileFilter,
@@ -72,7 +95,8 @@ namespace Shadow.Agent
 			}
 
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
-			Catalog catalog = CatalogRepository.EnsureCatalog(unitOfWork, name, rootPath);
+
+			Catalog catalog = CatalogRepository.EnsureCatalog(this.IoC.GetInstance<IUnitOfWork>(), name, rootPath);
 
 			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
@@ -97,12 +121,12 @@ namespace Shadow.Agent
 								files = null;
 
 								// remove any extra files after, so more clones can happen
-								FileUtility.RemoveExtras(unitOfWork, catalog, trickleRate, completedCallback, failureCallback);
+								this.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
 								return;
 							}
 
 							// sync next node
-							FileUtility.CheckForChanges(unitOfWork, catalog, enumerator.Current);
+							this.CheckForChanges(catalog, enumerator.Current);
 						}
 						catch (Exception ex)
 						{
@@ -129,7 +153,7 @@ namespace Shadow.Agent
 					try
 					{
 						// sync each node
-						FileUtility.CheckForChanges(unitOfWork, catalog, file);
+						this.CheckForChanges(catalog, file);
 					}
 					catch (Exception ex)
 					{
@@ -144,28 +168,29 @@ namespace Shadow.Agent
 				}
 
 				// remove any extra files after, so more clones can happen
-				FileUtility.RemoveExtras(unitOfWork, catalog, trickleRate, completedCallback, failureCallback);
+				this.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
 			}
 		}
 
-		private static void CheckForChanges(IUnitOfWork unitOfWork, Catalog catalog, FileSystemInfo file)
+		private void CheckForChanges(Catalog catalog, FileSystemInfo file)
 		{
+			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
-			CatalogEntry entry = FileUtility.CreateEntry(catalog, file, !catalog.IsIndexed);
+			CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
 			if (repos.ApplyChanges(entry, file as FileInfo))
 			{
 				unitOfWork.Save();
 			}
 		}
 
-		private static void RemoveExtras(
-			IUnitOfWork unitOfWork,
+		private void RemoveExtras(
 			Catalog catalog,
 			int trickleRate,
 			Action<Catalog> completedCallback,
 			Action<Catalog, Exception> failureCallback)
 		{
+			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
 			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 			if (trickleRate > 0)
 			{
@@ -204,7 +229,7 @@ namespace Shadow.Agent
 
 							// extras are any local entries not contained on disk
 							string path = enumerator.Current;
-							FileUtility.CheckIfMissing(unitOfWork, catalog, path);
+							this.CheckIfMissing(catalog, path);
 						}
 						catch (Exception ex)
 						{
@@ -231,7 +256,7 @@ namespace Shadow.Agent
 					try
 					{
 						// extras are any local entries not contained on disk
-						FileUtility.CheckIfMissing(unitOfWork, catalog, path);
+						this.CheckIfMissing(catalog, path);
 					}
 					catch (Exception ex)
 					{
@@ -261,11 +286,12 @@ namespace Shadow.Agent
 			}
 		}
 
-		private static void CheckIfMissing(IUnitOfWork unitOfWork, Catalog catalog, string path)
+		private void CheckIfMissing(Catalog catalog, string path)
 		{
 			string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
 			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 			{
+				IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
 				CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
 
 				repos.DeleteEntryByPath(path);
@@ -276,26 +302,29 @@ namespace Shadow.Agent
 		/// <summary>
 		/// Builds a CatalogEntry from a file system descriptor. (Requires read access)
 		/// </summary>
-		/// <param name="catalog"></param>
+		/// <param name="catalogID"></param>
+		/// <param name="catalogPath"></param>
 		/// <param name="file"></param>
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
-		public static CatalogEntry CreateEntry(Catalog catalog, FileSystemInfo file)
+		[System.Diagnostics.DebuggerStepThrough]
+		public static CatalogEntry CreateEntry(long catalogID, string catalogPath, FileSystemInfo file)
 		{
-			return FileUtility.CreateEntry(catalog, file, true);
+			return FileUtility.CreateEntry(catalogID, catalogPath, file, true);
 		}
 
 		/// <summary>
 		/// Builds a CatalogEntry from a file system descriptor. (Requires read access)
 		/// </summary>
-		/// <param name="catalog"></param>
+		/// <param name="catalogID"></param>
+		/// <param name="catalogPath"></param>
 		/// <param name="file"></param>
 		/// <param name="calcHash"></param>
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
-		private static CatalogEntry CreateEntry(Catalog catalog, FileSystemInfo file, bool calcHash)
+		private static CatalogEntry CreateEntry(long catalogID, string catalogPath, FileSystemInfo file, bool calcHash)
 		{
 			FileInfo fileInfo = file as FileInfo;
 
@@ -307,7 +336,7 @@ namespace Shadow.Agent
 			CatalogEntry entry = new CatalogEntry
 			{
 				Attributes = (file.Attributes&FileUtility.AttribMask),
-				CatalogID = catalog.ID,
+				CatalogID = catalogID,
 				CreatedDate = file.CreationTimeUtc,
 				Length =
 					(fileInfo != null) ?
@@ -315,7 +344,7 @@ namespace Shadow.Agent
 					0L,
 				ModifiedDate = file.LastWriteTimeUtc,
 				Name = file.Name,
-				Parent = FileUtility.NormalizePath(catalog.Path, parent.FullName)
+				Parent = FileUtility.NormalizePath(catalogPath, parent.FullName)
 			};
 
 			if (calcHash && fileInfo != null)
@@ -326,6 +355,7 @@ namespace Shadow.Agent
 			return entry;
 		}
 
+		[System.Diagnostics.DebuggerStepThrough]
 		public static Func<FileSystemInfo, bool> CreateFileFilter(params string[] trackedExtensions)
 		{
 			return CreateFileFilter(FileUtility.DefaultFilteredAttribs, trackedExtensions);
