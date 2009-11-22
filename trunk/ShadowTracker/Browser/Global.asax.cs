@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.IO;
 using System.Web;
@@ -26,7 +27,7 @@ namespace Shadow.Browser
 
 			return delegate(string key)
 			{
-				return new L2SUnitOfWork(connection, map);
+				return new L2SUnitOfWork(new DataContext(connection, map));
 			};
 		}
 

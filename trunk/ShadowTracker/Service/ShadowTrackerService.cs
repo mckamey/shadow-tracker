@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Diagnostics;
 using System.IO;
@@ -214,13 +215,62 @@ namespace Shadow.Service
 
 			return delegate(string key)
 			{
-				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(connection, map);
-				if (this.Out != TextWriter.Null)
-				{
-					unitOfWork.Log = this.Out;
-				}
+				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(new DataContext(connection, map));
+				unitOfWork.OnCommit += new CommitCallback(this.OnCommit);
 				return unitOfWork;
 			};
+		}
+
+		private void OnCommit(L2SUnitOfWork unitOfWork, ChangeSet changes)
+		{
+			foreach (var inserted in changes.Inserts)
+			{
+				CatalogEntry entry = inserted as CatalogEntry;
+				if (entry != null)
+				{
+					this.Out.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.FullPath);
+				}
+				else if (inserted is Catalog)
+				{
+					this.Out.WriteLine("ADD Catalog at \"{0}\"", ((Catalog)inserted).Path);
+				}
+				else
+				{
+					this.Out.WriteLine("ADD "+inserted);
+				}
+			}
+			foreach (var updated in changes.Updates)
+			{
+				CatalogEntry entry = updated as CatalogEntry;
+				if (entry != null)
+				{
+					this.Out.WriteLine("UPDATE \"{0}\"", entry.FullPath);
+				}
+				else if (updated is Catalog)
+				{
+					this.Out.WriteLine("UPDATE Catalog \"{0}\"", ((Catalog)updated).Path);
+				}
+				else
+				{
+					this.Out.WriteLine("UPDATE "+updated);
+				}
+			}
+			foreach (var deleted in changes.Deletes)
+			{
+				CatalogEntry entry = deleted as CatalogEntry;
+				if (entry != null)
+				{
+					this.Out.WriteLine("REMOVE \"{0}\"", entry.FullPath);
+				}
+				else if (deleted is Catalog)
+				{
+					this.Out.WriteLine("REMOVE Catalog \"{0}\"", ((Catalog)deleted).Path);
+				}
+				else
+				{
+					this.Out.WriteLine("REMOVE "+deleted);
+				}
+			}
 		}
 
 		private MappingSource EnsureDatabase(ref string connection, string mappings)
@@ -233,7 +283,7 @@ namespace Shadow.Service
 			MappingSource map = XmlMappingSource.FromUrl(mappings);
 
 			// create one to test out
-			L2SUnitOfWork db = new L2SUnitOfWork(connection, map);
+			L2SUnitOfWork db = new L2SUnitOfWork(new DataContext(connection, map));
 			if (!db.CanConnect())
 			{
 				string answer = "n";

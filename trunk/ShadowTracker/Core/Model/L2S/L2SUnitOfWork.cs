@@ -5,6 +5,8 @@ using System.IO;
 
 namespace Shadow.Model.L2S
 {
+	public delegate void CommitCallback(L2SUnitOfWork unitOfWork, ChangeSet changes);
+
 	/// <summary>
 	/// A unit-of-work adapter for LINQ-to-SQL DataContexts.
 	/// </summary>
@@ -24,22 +26,13 @@ namespace Shadow.Model.L2S
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		public L2SUnitOfWork(string connection, MappingSource mappings)
+		/// <param name="db"></param>
+		public L2SUnitOfWork(DataContext db)
 		{
-			this.DB = new DataContext(connection, mappings);
+			this.DB = db;
 		}
 
 		#endregion Init
-
-		#region Properties
-
-		public TextWriter Log
-		{
-			get;
-			set;
-		}
-
-		#endregion Properties
 
 		#region Methods
 
@@ -55,71 +48,25 @@ namespace Shadow.Model.L2S
 
 		#endregion Methods
 
+		#region Events
+
+		public event CommitCallback OnCommit;
+
+		#endregion Events
+
 		#region IUnitOfWork Members
 
 		public void Save()
 		{
-			if (this.Log != null)
+			if (this.OnCommit != null)
 			{
-				bool hasChanges = false;
 				ChangeSet changes = this.DB.GetChangeSet();
-				foreach (var inserted in changes.Inserts)
-				{
-					hasChanges = true;
 
-					CatalogEntry entry = inserted as CatalogEntry;
-					if (entry != null)
-					{
-						Console.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.FullPath);
-					}
-					else if (inserted is Catalog)
-					{
-						Console.WriteLine("ADD Catalog at \"{0}\"", ((Catalog)inserted).Path);
-					}
-					else
-					{
-						Console.WriteLine("ADD "+inserted);
-					}
-				}
-				foreach (var updated in changes.Updates)
+				if ((changes.Inserts.Count > 0) ||
+					(changes.Updates.Count > 0) ||
+					(changes.Deletes.Count > 0))
 				{
-					hasChanges = true;
-
-					CatalogEntry entry = updated as CatalogEntry;
-					if (entry != null)
-					{
-						Console.WriteLine("UPDATE \"{0}\"", entry.FullPath);
-					}
-					else if (updated is Catalog)
-					{
-						Console.WriteLine("UPDATE Catalog \"{0}\"", ((Catalog)updated).Path);
-					}
-					else
-					{
-						Console.WriteLine("UPDATE "+updated);
-					}
-				}
-				foreach (var deleted in changes.Deletes)
-				{
-					hasChanges = true;
-
-					CatalogEntry entry = deleted as CatalogEntry;
-					if (entry != null)
-					{
-						Console.WriteLine("REMOVE \"{0}\"", entry.FullPath);
-					}
-					else if (deleted is Catalog)
-					{
-						Console.WriteLine("REMOVE Catalog \"{0}\"", ((Catalog)deleted).Path);
-					}
-					else
-					{
-						Console.WriteLine("REMOVE "+deleted);
-					}
-				}
-				if (!hasChanges)
-				{
-					//Console.WriteLine("NO CHANGES");
+					this.OnCommit(this, changes);
 				}
 			}
 
