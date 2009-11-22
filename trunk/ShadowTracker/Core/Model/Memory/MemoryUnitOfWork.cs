@@ -9,7 +9,8 @@ namespace Shadow.Model.Memory
 		#region Fields
 
 		private readonly IDictionary<Type, object> Storage = new Dictionary<Type, object>(3);
-		private readonly IDictionary<Type, object> Maps = new Dictionary<Type, object>(3);
+		private readonly IDictionary<Type, object> Tables = new Dictionary<Type, object>(3);
+		private readonly IDictionary<Type, object> Comparers = new Dictionary<Type, object>(3);
 
 		#endregion Fields
 
@@ -17,46 +18,53 @@ namespace Shadow.Model.Memory
 
 		public void Save()
 		{
-			foreach (Type type in this.Maps.Keys)
+			// "save" each table
+			foreach (Type type in this.Tables.Keys)
 			{
-				// "save" catalogs
-				if (this.Maps.ContainsKey(type))
+				if (this.Tables.ContainsKey(type))
 				{
 					// save contents to "storage"
-					this.Storage[type] = this.Maps[type];
+					this.Storage[type] = this.Tables[type];
 				}
 
 				// reset change tracking
-				this.Maps[type] = null;
+				this.Tables[type] = null;
 			}
 		}
 
-		public ITable<TEntity> GetTable<TEntity>() where TEntity : class
+		public ITable<T> GetTable<T>() where T : class
 		{
-			ITable<TEntity> map =
-				this.Maps.ContainsKey(typeof(TEntity)) ?
-				this.Maps[typeof(TEntity)] as ITable<TEntity> :
+			ITable<T> table =
+				this.Tables.ContainsKey(typeof(T)) ?
+				this.Tables[typeof(T)] as ITable<T> :
 				null;
 
-			if (map == null)
+			if (table == null)
 			{
-				IEnumerable<TEntity> storage =
-					this.Storage.ContainsKey(typeof(TEntity)) ?
-					this.Storage[typeof(TEntity)] as IEnumerable<TEntity> :
+				IEnumerable<T> storage =
+					this.Storage.ContainsKey(typeof(T)) ?
+					this.Storage[typeof(T)] as IEnumerable<T> :
 					null;
 
 				if (storage == null)
 				{
-					this.Storage[typeof(TEntity)] = storage = Enumerable.Empty<TEntity>();
+					this.Storage[typeof(T)] = storage = Enumerable.Empty<T>();
 				}
 
-				// TODO: figure out how to switch comparers?
-				// Catalog.PathComparer
-				// CatalogEntry.PathComparer
+				IEqualityComparer<T> comparer =
+					this.Comparers.ContainsKey(typeof(T)) ?
+					this.Comparers[typeof(T)] as IEqualityComparer<T> :
+					null;
 
-				this.Maps[typeof(TEntity)] = map = new MemoryTable<TEntity>(EqualityComparer<TEntity>.Default, storage);
+				if (comparer == null)
+				{
+					this.Comparers[typeof(T)] = comparer = EqualityComparer<T>.Default;
+				}
+
+				this.Tables[typeof(T)] = table = new MemoryTable<T>(comparer, storage);
 			}
-			return map;
+
+			return table;
 		}
 
 		#endregion IUnitOfWork Members
@@ -65,6 +73,12 @@ namespace Shadow.Model.Memory
 
 		public void PopulateTable<T>(IEnumerable<T> items)
 		{
+			this.PopulateTable(EqualityComparer<T>.Default, items);
+		}
+
+		public void PopulateTable<T>(IEqualityComparer<T> comparer, IEnumerable<T> items)
+		{
+			this.Comparers[typeof(T)] = comparer;
 			this.Storage[typeof(T)] = items;
 		}
 

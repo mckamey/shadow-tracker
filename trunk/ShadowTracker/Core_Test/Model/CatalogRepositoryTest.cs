@@ -73,8 +73,8 @@ namespace Shadow.Model.Test
 			};
 
 			MemoryUnitOfWork unitOfWork = new MemoryUnitOfWork();
-			unitOfWork.PopulateTable<Catalog>(catalogs);
-			unitOfWork.PopulateTable<CatalogEntry>(entries);
+			unitOfWork.PopulateTable<Catalog>(Catalog.PathComparer, catalogs);
+			unitOfWork.PopulateTable<CatalogEntry>(CatalogEntry.PathComparer, entries);
 
 			this.repos = new CatalogRepository(unitOfWork);
 		}

@@ -19,27 +19,27 @@ namespace Shadow.Model
 		/// Ctor
 		/// </summary>
 		/// <param name="factories">must be of type Func&lt;string, T&gt;</param>
-		public SimpleServiceLocator(params Delegate[] factories)
+		public SimpleServiceLocator(params Delegate[] factoryMethods)
 		{
-			if (factories == null)
+			if (factoryMethods == null)
 			{
 				throw new ArgumentNullException("factories");
 			}
 
-			foreach (Delegate factory in factories)
+			foreach (Delegate method in factoryMethods)
 			{
-				if (factories == null)
+				if (factoryMethods == null)
 				{
 					throw new ArgumentNullException("factories");
 				}
 
-				ParameterInfo[] parameters = factory.Method.GetParameters();
+				ParameterInfo[] parameters = method.Method.GetParameters();
 				if (parameters.Length != 1 || parameters[0].ParameterType != typeof(string))
 				{
-					throw new ArgumentException("factories", "Factory methods must be Func<string, T>");
+					throw new ArgumentException("factoryMethods", "Factory methods must be Func<string, T>");
 				}
 
-				this.FactoryMethods[factory.Method.ReturnType] = factory;
+				this.FactoryMethods[method.Method.ReturnType] = method;
 			}
 		}
 
@@ -69,7 +69,7 @@ namespace Shadow.Model
 		{
 			if (!this.FactoryMethods.ContainsKey(serviceType))
 			{
-				throw new ActivationException("Must use SetFactoryMethod to configure persistence.");
+				throw new ActivationException("Must set Func<string, T> factory methods in SimpleServiceLocator constructor.");
 			}
 
 			return this.FactoryMethods[serviceType].DynamicInvoke(key);

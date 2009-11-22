@@ -68,18 +68,18 @@ namespace Shadow.Model.L2S
 
 		/// <summary>
 		/// Returns a collection of objects of a particular type,
-		/// where the type is defined by the TEntity parameter.
+		/// where the type is defined by the T parameter.
 		/// </summary>
 		/// <typeparam name="T">The type of the objects to be returned.</typeparam>
 		/// <returns>A collection of objects.</returns>
-		public ITable<TEntity> GetTable<TEntity>() where TEntity : class
+		public ITable<T> GetTable<T>() where T : class
 		{
-			if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+			if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(T)))
 			{
-				return new L2SSoftDeleteTable<TEntity>(this.DB);
+				return new L2SSoftDeleteTable<T>(this.DB);
 			}
 
-			return new L2STable<TEntity>(this.DB);
+			return new L2STable<T>(this.DB);
 		}
 
 		#endregion IUnitOfWork Members
