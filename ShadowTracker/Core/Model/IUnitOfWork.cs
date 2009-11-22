@@ -4,8 +4,8 @@ namespace Shadow.Model
 {
 	public interface IUnitOfWork
 	{
-		ITable<TEntity> GetTable<TEntity>()
-			where TEntity : class;
+		ITable<T> GetTable<T>()
+			where T : class;
 
 		void Save();
 	}

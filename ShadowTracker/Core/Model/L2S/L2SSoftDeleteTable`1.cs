@@ -96,6 +96,6 @@ namespace Shadow.Model.L2S
 			}
 		}
 
-		#endregion L2STable<TEntity, TKey> Methods
+		#endregion L2STable<T, TKey> Methods
 	}
 }
