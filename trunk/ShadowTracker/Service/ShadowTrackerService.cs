@@ -145,7 +145,7 @@ namespace Shadow.Service
 					this.Trackers[i] = new FileTracker(this.IoC);
 					this.Trackers[i].TrackerError += this.OnError;
 
-					Catalog catalog = CatalogRepository.EnsureCatalog(unitOfWork, folders[i].Name, folders[i].Path);
+					Catalog catalog = new CatalogRepository(unitOfWork, folders[i].Name, folders[i].Path).Catalog;
 					this.Trackers[i].Start(catalog, filterCallback);
 				}
 
@@ -216,7 +216,7 @@ namespace Shadow.Service
 			return delegate(string key)
 			{
 				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(new DataContext(connection, map));
-				unitOfWork.OnCommit += new CommitCallback(this.OnCommit);
+				unitOfWork.OnCommit += this.OnCommit;
 				return unitOfWork;
 			};
 		}

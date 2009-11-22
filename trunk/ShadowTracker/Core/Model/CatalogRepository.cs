@@ -17,7 +17,7 @@ namespace Shadow.Model
 		#region Fields
 
 		private readonly IUnitOfWork UnitOfWork;
-		private readonly Catalog Catalog;
+		private readonly Catalog catalog;
 
 		#endregion Fields
 
@@ -45,7 +45,7 @@ namespace Shadow.Model
 			this.UnitOfWork = unitOfWork;
 
 			rootPath = rootPath.ToLower();
-			this.Catalog = CatalogRepository.EnsureCatalog(unitOfWork, name, rootPath);
+			this.catalog = this.FindOrCreateCatalog(name, rootPath);
 		}
 
 		/// <summary>
@@ -64,10 +64,19 @@ namespace Shadow.Model
 			}
 
 			this.UnitOfWork = unitOfWork;
-			this.Catalog = catalog;
+			this.catalog = catalog;
 		}
 
 		#endregion Init
+
+		#region Properties
+
+		public Catalog Catalog
+		{
+			get { return this.catalog; }
+		}
+
+		#endregion Properties
 
 		#region Action Methods
 
@@ -119,10 +128,10 @@ namespace Shadow.Model
 		/// <param name="newPath"></param>
 		public virtual void RenameEntry(string oldPath, string newPath)
 		{
-			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
-
-			string oldParent, oldName, newParent, newName;
+			string oldParent, oldName;
 			FileUtility.SplitPath(oldPath, out oldParent, out oldName);
+
+			ITable<CatalogEntry> entries = this.UnitOfWork.Entries;
 
 			CatalogEntry entry = entries.FirstOrDefault(n =>
 				(n.CatalogID == this.Catalog.ID) &&
@@ -135,6 +144,7 @@ namespace Shadow.Model
 				throw new ArgumentException("Entry was not found: "+oldPath, "oldPath");
 			}
 
+			string newParent, newName;
 			FileUtility.SplitPath(newPath, out newParent, out newName);
 			entry.Parent = newParent;
 			entry.Name = newName;
@@ -178,7 +188,7 @@ namespace Shadow.Model
 		/// <param name="name"></param>
 		/// <param name="path"></param>
 		/// <returns></returns>
-		public static Catalog EnsureCatalog(IUnitOfWork unitOfWork, string name, string path)
+		public Catalog FindOrCreateCatalog(string name, string path)
 		{
 			if (String.IsNullOrEmpty(name))
 			{
@@ -195,7 +205,7 @@ namespace Shadow.Model
 			string pathLower = path.ToLowerInvariant();
 
 			var query =
-				from c in unitOfWork.Catalogs
+				from c in this.UnitOfWork.Catalogs
 				let rank =
 					(int)((c.Name.ToLower() == name) ? MatchRank.Name : MatchRank.None) |
 					(int)(c.Path.ToLower() == path ? MatchRank.Path : MatchRank.None)
@@ -209,20 +219,20 @@ namespace Shadow.Model
 				catalog = new Catalog();
 				catalog.Name = name;
 				catalog.Path = path;
-				unitOfWork.Catalogs.Add(catalog);
-				unitOfWork.Save();
+				this.UnitOfWork.Catalogs.Add(catalog);
+				this.UnitOfWork.Save();
 			}
 			else if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Path, path))
 			{
 				// update to match
 				catalog.Path = path;
-				unitOfWork.Save();
+				this.UnitOfWork.Save();
 			}
 			else if (!StringComparer.OrdinalIgnoreCase.Equals(catalog.Name, name))
 			{
 				// update to match
 				catalog.Name = name;
-				unitOfWork.Save();
+				this.UnitOfWork.Save();
 			}
 
 			return catalog;

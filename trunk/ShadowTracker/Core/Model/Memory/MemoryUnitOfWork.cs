@@ -123,6 +123,12 @@ namespace Shadow.Model.Memory
 			}
 		}
 
+		public ITable<TEntity> GetTable<TEntity>() where TEntity : class
+		{
+			// TODO...
+			return new MemoryTable<TEntity>(EqualityComparer<TEntity>.Default, Enumerable.Empty<TEntity>());
+		}
+
 		#endregion IUnitOfWork Members
 	}
 }

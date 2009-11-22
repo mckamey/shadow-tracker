@@ -5,26 +5,23 @@ using System.Linq.Expressions;
 
 namespace Shadow.Model.L2S
 {
-	public interface IL2SSoftDeleteEntity
+	public interface ISoftDeleteEntity
 	{
 		DateTime? DeletedDate { get; set; }
+
 		string Signature { get; }
-		void CopyValuesFrom(IL2SSoftDeleteEntity item);
+
+		void CopyValuesFrom(object item);
 	}
 
 	/// <summary>
 	/// A table which doesn't actually delete but instead flags as deleted
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public class L2SSoftDeleteTable<T> :
-		L2STable<T> where T : class, IL2SSoftDeleteEntity
+	/// <typeparam name="T">must implement ISoftDeleteEntity</typeparam>
+	internal class L2SSoftDeleteTable<T> :
+		L2STable<T>
+		where T : class//, ISoftDeleteEntity
 	{
-		#region Fields
-
-		private readonly bool OnlySoftDelete;
-
-		#endregion Fields
-
 		#region Init
 
 		/// <summary>
@@ -32,19 +29,12 @@ namespace Shadow.Model.L2S
 		/// </summary>
 		/// <param name="db">DataContext</param>
 		public L2SSoftDeleteTable(DataContext db)
-			: this(db, true)
-		{
-		}
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="db">DataContext</param>
-		/// <param name="onlySoftDelete">determines if should soft-delete even entries without a signature</param>
-		public L2SSoftDeleteTable(DataContext db, bool onlySoftDelete)
 			: base(db)
 		{
-			this.OnlySoftDelete = onlySoftDelete;
+			if (!typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(T)))
+			{
+				throw new InvalidOperationException("L2SSoftDeleteTable only supports ISoftDeleteEntity");
+			}
 		}
 
 		#endregion Init
@@ -53,8 +43,11 @@ namespace Shadow.Model.L2S
 
 		protected override IQueryable<T> GetQueryable(Table<T> items)
 		{
-			// add a permanent where clause that filters soft-deleted here
-			return base.GetQueryable(items).Where(n => !n.DeletedDate.HasValue);
+			// add a permanent where clause that filters soft-deleted items
+			return
+				from ISoftDeleteEntity n in base.GetQueryable(items)
+				where !n.DeletedDate.HasValue
+				select (T)n;
 		}
 
 		/// <summary>
@@ -63,23 +56,17 @@ namespace Shadow.Model.L2S
 		/// <param name="item"></param>
 		public override void Add(T item)
 		{
-			T match;
+			string signature = ((ISoftDeleteEntity)item).Signature;
 
-			if (item.Signature != null)
-			{
-				// first look for most recent deleted version of item
-				match =
-				(from n in this.Items
+			// first look for most recent deleted item with signature
+			ISoftDeleteEntity match =
+				(from ISoftDeleteEntity n in this
 				 where
-					n.DeletedDate.HasValue &&
-					n.Signature.ToLower() == item.Signature.ToLower()
+					 n.DeletedDate.HasValue &&
+					 n.Signature == signature
+
 				 orderby n.DeletedDate descending
 				 select n).FirstOrDefault();
-			}
-			else
-			{
-				match = default(T);
-			}
 
 			if (match != default(T))
 			{
@@ -95,33 +82,20 @@ namespace Shadow.Model.L2S
 
 		public override void Remove(T item)
 		{
-			if (!this.OnlySoftDelete && String.IsNullOrEmpty(item.Signature))
-			{
-				// cannot reliably undelete without a signature
-				base.Remove(item);
-				return;
-			}
-
 			// update as soft-deleted
-			item.DeletedDate = DateTime.UtcNow;
+			((ISoftDeleteEntity)item).DeletedDate = DateTime.UtcNow;
 		}
 
 		public override void RemoveWhere(Expression<Func<T, bool>> match)
 		{
-			foreach (var item in this.Where(match))
-			{
-				if (!this.OnlySoftDelete && String.IsNullOrEmpty(item.Signature))
-				{
-					// cannot reliably undelete without a signature
-					base.Remove(item);
-					continue;
-				}
+			DateTime now = DateTime.UtcNow;
 
-				// update as soft-deleted
-				item.DeletedDate = DateTime.UtcNow;
+			foreach (ISoftDeleteEntity item in this.Where(match))
+			{
+				item.DeletedDate = now;
 			}
 		}
 
-		#endregion L2STable<T> Methods
+		#endregion L2STable<TEntity, TKey> Methods
 	}
 }

@@ -5,8 +5,6 @@ using System.IO;
 
 namespace Shadow.Model.L2S
 {
-	public delegate void CommitCallback(L2SUnitOfWork unitOfWork, ChangeSet changes);
-
 	/// <summary>
 	/// A unit-of-work adapter for LINQ-to-SQL DataContexts.
 	/// </summary>
@@ -50,7 +48,7 @@ namespace Shadow.Model.L2S
 
 		#region Events
 
-		public event CommitCallback OnCommit;
+		public event Action<L2SUnitOfWork, ChangeSet> OnCommit;
 
 		#endregion Events
 
@@ -73,13 +71,29 @@ namespace Shadow.Model.L2S
 			this.DB.SubmitChanges(ConflictMode.ContinueOnConflict);
 		}
 
+		/// <summary>
+		/// Returns a collection of objects of a particular type,
+		/// where the type is defined by the TEntity parameter.
+		/// </summary>
+		/// <typeparam name="T">The type of the objects to be returned.</typeparam>
+		/// <returns>A collection of objects.</returns>
+		public ITable<TEntity> GetTable<TEntity>() where TEntity : class
+		{
+			if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+			{
+				return new L2SSoftDeleteTable<TEntity>(this.DB);
+			}
+
+			return new L2STable<TEntity>(this.DB);
+		}
+
 		public ITable<Catalog> Catalogs
 		{
 			get
 			{
 				if (this.catalogs == null)
 				{
-					this.catalogs = new L2STable<Catalog>(this.DB);
+					this.catalogs = this.GetTable<Catalog>();
 				}
 				return this.catalogs;
 			}
@@ -91,7 +105,7 @@ namespace Shadow.Model.L2S
 			{
 				if (this.entries == null)
 				{
-					this.entries = new L2SSoftDeleteTable<CatalogEntry>(this.DB);
+					this.entries = this.GetTable<CatalogEntry>();
 				}
 				return this.entries;
 			}
@@ -103,7 +117,7 @@ namespace Shadow.Model.L2S
 			{
 				if (this.versions == null)
 				{
-					this.versions = new L2STable<VersionHistory>(this.DB);
+					this.versions = this.GetTable<VersionHistory>();
 				}
 				return this.versions;
 			}
