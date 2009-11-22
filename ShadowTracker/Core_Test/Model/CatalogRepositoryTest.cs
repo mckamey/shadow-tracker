@@ -72,7 +72,7 @@ namespace Shadow.Model.Test
 				}
 			};
 
-			this.repos = new CatalogRepository(new MemoryUnitOfWork(catalogs, entries), catalogs[0]);
+			this.repos = new CatalogRepository(new MemoryUnitOfWork(catalogs, entries));
 		}
 
 		[TestMethod()]
@@ -111,11 +111,11 @@ namespace Shadow.Model.Test
 		{
 			const string path = "/Foo.txt";
 
-			Assert.IsTrue(this.repos.EntryExists(path));
+			Assert.IsTrue(this.repos.EntryExists(1L, path));
 
-			this.repos.DeleteEntryByPath(path);
+			this.repos.DeleteEntryByPath(1L, path);
 
-			Assert.IsFalse(this.repos.EntryExists(path));
+			Assert.IsFalse(this.repos.EntryExists(1L, path));
 		}
 
 		[TestMethod()]
@@ -127,7 +127,7 @@ namespace Shadow.Model.Test
 			Expression<Func<CatalogEntry, bool>> predicate = null; // TODO: Initialize to an appropriate value
 			bool expected = false; // TODO: Initialize to an appropriate value
 			bool actual;
-			actual = target.EntryExists(predicate);
+			actual = target.EntryExists(1L, predicate);
 			Assert.AreEqual(expected, actual);
 		}
 
@@ -138,20 +138,20 @@ namespace Shadow.Model.Test
 
 			CatalogRepository target = this.repos;
 			IQueryable<string> expected = null; // TODO: Initialize to an appropriate value
-			IEnumerable<string> actual = target.GetExistingPaths();
+			IEnumerable<string> actual = target.GetExistingPaths(1L);
 			Assert.AreEqual(expected, actual);
 		}
 
 		[TestMethod]
 		public void RenameEntryTest()
 		{
-			Assert.IsTrue(this.repos.EntryExists("/Foo.txt"));
-			Assert.IsFalse(this.repos.EntryExists("/Bar.txt"));
+			Assert.IsTrue(this.repos.EntryExists(1L, "/Foo.txt"));
+			Assert.IsFalse(this.repos.EntryExists(1L, "/Bar.txt"));
 
-			this.repos.RenameEntry("/Foo.txt", "/Bar.txt");
+			this.repos.RenameEntry(1L, "/Foo.txt", "/Bar.txt");
 
-			Assert.IsFalse(this.repos.EntryExists("/Foo.txt"));
-			Assert.IsTrue(this.repos.EntryExists("/Bar.txt"));
+			Assert.IsFalse(this.repos.EntryExists(1L, "/Foo.txt"));
+			Assert.IsTrue(this.repos.EntryExists(1L, "/Bar.txt"));
 		}
 
 		[TestMethod()]
@@ -183,16 +183,6 @@ namespace Shadow.Model.Test
 			CatalogRepository target = this.repos;
 			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
 			target.ApplyChanges(entry);
-		}
-
-		[TestMethod()]
-		public void AddEntryTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
-
-			CatalogRepository target = this.repos;
-			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			target.AddEntry(entry);
 		}
 	}
 }

@@ -75,7 +75,7 @@ namespace Shadow.Agent
 
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
 
-			Catalog catalog = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>(), name, rootPath).Catalog;
+			Catalog catalog = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>()).FindOrCreateCatalog(name, rootPath);
 
 			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
@@ -154,7 +154,7 @@ namespace Shadow.Agent
 		private void CheckForChanges(Catalog catalog, FileSystemInfo file)
 		{
 			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
+			CatalogRepository repos = new CatalogRepository(unitOfWork);
 
 			CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
 			if (repos.ApplyChanges(entry, file as FileInfo))
@@ -170,10 +170,10 @@ namespace Shadow.Agent
 			Action<Catalog, Exception> failureCallback)
 		{
 			IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-			CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
+			CatalogRepository repos = new CatalogRepository(unitOfWork);
 			if (trickleRate > 0)
 			{
-				var enumerator = repos.GetExistingPaths().GetEnumerator();
+				var enumerator = repos.GetExistingPaths(catalog.ID).GetEnumerator();
 
 				// perform loop with a timer to allow trickle updates
 				// use a closure as the callback to allow access to local vars
@@ -230,7 +230,7 @@ namespace Shadow.Agent
 			}
 			else
 			{
-				foreach (string path in repos.GetExistingPaths())
+				foreach (string path in repos.GetExistingPaths(catalog.ID))
 				{
 					try
 					{
@@ -271,9 +271,9 @@ namespace Shadow.Agent
 			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 			{
 				IUnitOfWork unitOfWork = this.IoC.GetInstance<IUnitOfWork>();
-				CatalogRepository repos = new CatalogRepository(unitOfWork, catalog);
+				CatalogRepository repos = new CatalogRepository(unitOfWork);
 
-				repos.DeleteEntryByPath(path);
+				repos.DeleteEntryByPath(catalog.ID, path);
 				unitOfWork.Save();
 			}
 		}
