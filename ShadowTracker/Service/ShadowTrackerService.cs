@@ -125,7 +125,7 @@ namespace Shadow.Service
 					this.Out.WriteLine("Begin sync: "+folders[i].Name+" ("+folders[i].Path+")");
 
 					FileUtility.SyncCatalog(
-						this.IoC.GetInstance<IUnitOfWork>(),
+						unitOfWork,
 						folders[i].Name,
 						folders[i].Path,
 						filterCallback,
@@ -144,7 +144,9 @@ namespace Shadow.Service
 
 					this.Trackers[i] = new FileTracker(this.IoC);
 					this.Trackers[i].TrackerError += this.OnError;
-					this.Trackers[i].Start(CatalogRepository.EnsureCatalog(this.IoC.GetInstance<IUnitOfWork>(), folders[i].Name, folders[i].Path), filterCallback);
+
+					Catalog catalog = CatalogRepository.EnsureCatalog(unitOfWork, folders[i].Name, folders[i].Path);
+					this.Trackers[i].Start(catalog, filterCallback);
 				}
 
 				this.Out.WriteLine();
