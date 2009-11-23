@@ -93,7 +93,7 @@ namespace Shadow.Service
 			try
 			{
 				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-				this.IoC = new SimpleServiceLocator(this.GetUnitOfWorkFactory(settings.SqlConnectionString, settings.SqlMapping));
+				this.IoC = new SimpleServiceLocator(this.GetFactoryMethod(settings.SqlConnectionString, settings.SqlMapping));
 
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
@@ -209,7 +209,7 @@ namespace Shadow.Service
 
 		#region Utility Methods
 
-		private Func<string, IUnitOfWork> GetUnitOfWorkFactory(string connection, string mappings)
+		private Func<string, IUnitOfWork> GetFactoryMethod(string connection, string mappings)
 		{
 			MappingSource map = this.EnsureDatabase(ref connection, mappings);
 
