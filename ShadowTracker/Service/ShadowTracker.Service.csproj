@@ -49,17 +49,21 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommonServiceLocator.NinjectAdapter">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\Ninject\CommonServiceLocator.NinjectAdapter.dll</HintPath>
+    </Reference>
     <Reference Include="IgnorantPersistence">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.dll</HintPath>
     </Reference>
-    <Reference Include="IgnorantPersistence.SimpleServiceLocator">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.SimpleServiceLocator.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Practices.ServiceLocation">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\CommonServiceLocator\Microsoft.Practices.ServiceLocation.dll</HintPath>
+    </Reference>
+    <Reference Include="Ninject">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\Ninject\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -75,6 +79,8 @@
     <Reference Include="System.ServiceProcess" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IoC\IocModule.cs" />
+    <Compile Include="IoC\UnitOfWorkProvider.cs" />
     <Compile Include="ProjectInstaller.cs">
       <SubType>Component</SubType>
     </Compile>

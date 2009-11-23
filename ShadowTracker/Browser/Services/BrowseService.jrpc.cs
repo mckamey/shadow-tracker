@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 
-using IgnorantPersistence;
 using JsonFx.JsonRpc;
 using Microsoft.Practices.ServiceLocation;
 using MimeUtils;
@@ -55,7 +54,7 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, false).ToLowerInvariant();
 
-			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 
 			var entry =
 				(from n in repos.Entries
@@ -70,7 +69,7 @@ namespace Shadow.Browser.Services
 		{
 			path = BrowseService.RepairPath(path, true);
 
-			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 
 			var children =
 				from n in repos.Entries

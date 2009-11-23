@@ -43,6 +43,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommonServiceLocator.NinjectAdapter">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\Ninject\CommonServiceLocator.NinjectAdapter.dll</HintPath>
+    </Reference>
     <Reference Include="EcmaScript.NET.modified">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\EcmaScript.NET.modified.dll</HintPath>
@@ -54,10 +58,6 @@
     <Reference Include="IgnorantPersistence">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.dll</HintPath>
-    </Reference>
-    <Reference Include="IgnorantPersistence.SimpleServiceLocator">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.SimpleServiceLocator.dll</HintPath>
     </Reference>
     <Reference Include="JsonFx.BuildTools">
       <SpecificVersion>False</SpecificVersion>
@@ -90,6 +90,10 @@
     <Reference Include="MimeUtils">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\MimeUtils\MimeUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="Ninject">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\Ninject\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -139,6 +143,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="IoC\IocModule.cs" />
+    <Compile Include="IoC\UnitOfWorkProvider.cs" />
     <Compile Include="Services\BrowseService.jrpc.cs" />
     <Compile Include="Services\SimpleFrontController.cs" />
   </ItemGroup>
