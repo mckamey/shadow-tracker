@@ -147,40 +147,26 @@
             <param name="comparer">initial items</param>
             <param name="items">determines if two objects represent the same item</param>
         </member>
-        <member name="T:IgnorantPersistence.SimpleServiceLocator">
+        <member name="T:IgnorantPersistence.ISoftDeleteEntity">
             <summary>
-            A simple ServiceLocator implementation
+            An interface entities can implement to support
             </summary>
         </member>
-        <member name="M:IgnorantPersistence.SimpleServiceLocator.#ctor(System.Delegate[])">
+        <member name="M:IgnorantPersistence.ISoftDeleteEntity.CopyValuesFrom(System.Object)">
             <summary>
-            Ctor
+            Updates an existing entity from the values of another
             </summary>
-            <param name="factoryMethods">must be of type Func&lt;string, T&gt;</param>
+            <param name="item"></param>
         </member>
-        <member name="M:IgnorantPersistence.SimpleServiceLocator.ServiceLocatorProvider">
+        <member name="P:IgnorantPersistence.ISoftDeleteEntity.DeletedDate">
             <summary>
-            Satisfies the ServiceLocatorProvider delegate.
+            Gets and sets the DateTime which the entity was deleted. null means not deleted
             </summary>
-            <returns></returns>
         </member>
-        <member name="M:IgnorantPersistence.SimpleServiceLocator.DoGetAllInstances(System.Type)">
+        <member name="P:IgnorantPersistence.ISoftDeleteEntity.Signature">
             <summary>
-            Gets all instances of a given type
+            Gets a value which is used to identify the entity after it is deleted
             </summary>
-            <param name="serviceType"></param>
-            <returns></returns>
-            <remarks>
-            Note this simplified ServiceLocator only supports one factory method per type
-            </remarks>
-        </member>
-        <member name="M:IgnorantPersistence.SimpleServiceLocator.DoGetInstance(System.Type,System.String)">
-            <summary>
-            Gets an instance of the specified type
-            </summary>
-            <param name="serviceType"></param>
-            <param name="key"></param>
-            <returns></returns>
         </member>
         <member name="T:IgnorantPersistence.L2S.L2STable`1">
             <summary>
@@ -211,27 +197,6 @@
             Adds by first checking if a deleted version exists
             </summary>
             <param name="item"></param>
-        </member>
-        <member name="T:IgnorantPersistence.ISoftDeleteEntity">
-            <summary>
-            An interface entities can implement to support
-            </summary>
-        </member>
-        <member name="M:IgnorantPersistence.ISoftDeleteEntity.CopyValuesFrom(System.Object)">
-            <summary>
-            Updates an existing entity from the values of another
-            </summary>
-            <param name="item"></param>
-        </member>
-        <member name="P:IgnorantPersistence.ISoftDeleteEntity.DeletedDate">
-            <summary>
-            Gets and sets the DateTime which the entity was deleted. null means not deleted
-            </summary>
-        </member>
-        <member name="P:IgnorantPersistence.ISoftDeleteEntity.Signature">
-            <summary>
-            Gets a value which is used to identify the entity after it is deleted
-            </summary>
         </member>
     </members>
 </doc>

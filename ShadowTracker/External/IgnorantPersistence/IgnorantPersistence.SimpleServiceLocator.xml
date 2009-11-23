@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>IgnorantPersistence.SimpleServiceLocator</name>
+    </assembly>
+    <members>
+        <member name="T:IgnorantPersistence.SimpleServiceLocator">
+            <summary>
+            A simple ServiceLocator implementation
+            </summary>
+        </member>
+        <member name="M:IgnorantPersistence.SimpleServiceLocator.#ctor(System.Delegate[])">
+            <summary>
+            Ctor
+            </summary>
+            <param name="factoryMethods">must be of type Func&lt;string, T&gt;</param>
+        </member>
+        <member name="M:IgnorantPersistence.SimpleServiceLocator.ServiceLocatorProvider">
+            <summary>
+            Satisfies the ServiceLocatorProvider delegate.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IgnorantPersistence.SimpleServiceLocator.DoGetAllInstances(System.Type)">
+            <summary>
+            Gets all instances of a given type
+            </summary>
+            <param name="serviceType"></param>
+            <returns></returns>
+            <remarks>
+            Note this simplified ServiceLocator only supports one factory method per type
+            </remarks>
+        </member>
+        <member name="M:IgnorantPersistence.SimpleServiceLocator.DoGetInstance(System.Type,System.String)">
+            <summary>
+            Gets an instance of the specified type
+            </summary>
+            <param name="serviceType"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
