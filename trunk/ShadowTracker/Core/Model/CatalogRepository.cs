@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 
+using IgnorantPersistence;
 using Shadow.Agent;
 
 namespace Shadow.Model

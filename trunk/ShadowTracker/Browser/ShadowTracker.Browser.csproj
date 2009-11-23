@@ -43,43 +43,47 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EcmaScript.NET.modified, Version=0.1.1.0, Culture=neutral, PublicKeyToken=7d53ba4f537753a5, processorArchitecture=MSIL">
+    <Reference Include="EcmaScript.NET.modified">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\EcmaScript.NET.modified.dll</HintPath>
     </Reference>
-    <Reference Include="Iesi.Collections, Version=1.0.0.3, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
+    <Reference Include="Iesi.Collections">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\Iesi.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="JsonFx.BuildTools, Version=1.1.908.1708, Culture=neutral, PublicKeyToken=315052dd637f8a52, processorArchitecture=MSIL">
+    <Reference Include="IgnorantPersistence">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonFx.BuildTools">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.BuildTools.dll</HintPath>
     </Reference>
-    <Reference Include="JsonFx.Client, Version=1.1.908.1708, Culture=neutral, PublicKeyToken=315052dd637f8a52, processorArchitecture=MSIL">
+    <Reference Include="JsonFx.Client">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.Client.dll</HintPath>
     </Reference>
-    <Reference Include="JsonFx.IO, Version=1.1.908.1708, Culture=neutral, PublicKeyToken=315052dd637f8a52, processorArchitecture=MSIL">
+    <Reference Include="JsonFx.IO, Version">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.IO.dll</HintPath>
     </Reference>
-    <Reference Include="JsonFx.Json, Version=1.1.908.1708, Culture=neutral, PublicKeyToken=315052dd637f8a52, processorArchitecture=MSIL">
+    <Reference Include="JsonFx.Json">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.Json.dll</HintPath>
     </Reference>
-    <Reference Include="JsonFx.UI, Version=1.1.908.1708, Culture=neutral, PublicKeyToken=315052dd637f8a52, processorArchitecture=MSIL">
+    <Reference Include="JsonFx.UI">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.UI.dll</HintPath>
     </Reference>
-    <Reference Include="JsonFx.UIToolkit, Version=1.1.909.1408, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="JsonFx.UIToolkit">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx.UIToolkit\JsonFx.UIToolkit.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Practices.ServiceLocation">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\CommonServiceLocator\Microsoft.Practices.ServiceLocation.dll</HintPath>
     </Reference>
-    <Reference Include="MimeUtils, Version=1.0.903.1007, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="MimeUtils">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\MimeUtils\MimeUtils.dll</HintPath>
     </Reference>

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
+using IgnorantPersistence;
 using Microsoft.Practices.ServiceLocation;
 using Shadow.Model;
 

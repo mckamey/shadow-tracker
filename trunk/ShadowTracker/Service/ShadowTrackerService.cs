@@ -3,16 +3,16 @@ using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 
+using IgnorantPersistence;
+using IgnorantPersistence.L2S;
 using Microsoft.Practices.ServiceLocation;
 using Shadow.Agent;
 using Shadow.Configuration;
 using Shadow.IO;
 using Shadow.Model;
-using Shadow.Model.L2S;
 
 namespace Shadow.Service
 {
