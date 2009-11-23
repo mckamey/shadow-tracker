@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-using Shadow.Model.L2S;
+using IgnorantPersistence;
 
 namespace Shadow.Model
 {

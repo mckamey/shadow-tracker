@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IgnorantPersistence">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Practices.ServiceLocation">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\CommonServiceLocator\Microsoft.Practices.ServiceLocation.dll</HintPath>
@@ -58,14 +62,6 @@
     <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\CatalogRepository.cs" />
     <Compile Include="Model\Catalog.cs" />
-    <Compile Include="Model\IUnitOfWork.cs" />
-    <Compile Include="Model\L2S\L2SSoftDeleteTable`1.cs" />
-    <Compile Include="Model\L2S\L2STable`1.cs" />
-    <Compile Include="Model\L2S\L2SUnitOfWork.cs" />
-    <Compile Include="Model\Memory\MemoryTable`1.cs" />
-    <Compile Include="Model\Memory\MemoryUnitOfWork.cs" />
-    <Compile Include="Model\ITable`1.cs" />
-    <Compile Include="Model\SimpleServiceLocator.cs" />
     <Compile Include="Model\VersionHistory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyVersion.cs" />

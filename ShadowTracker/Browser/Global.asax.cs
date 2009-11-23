@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Configuration;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.IO;
 using System.Web;
 
+using IgnorantPersistence;
+using IgnorantPersistence.L2S;
 using Microsoft.Practices.ServiceLocation;
 using Shadow.Configuration;
-using Shadow.Model;
-using Shadow.Model.L2S;
 
 namespace Shadow.Browser
 {

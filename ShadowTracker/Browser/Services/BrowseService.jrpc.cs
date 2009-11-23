@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 
+using IgnorantPersistence;
 using JsonFx.JsonRpc;
 using Microsoft.Practices.ServiceLocation;
 using MimeUtils;
