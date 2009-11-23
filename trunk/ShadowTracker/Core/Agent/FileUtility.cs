@@ -76,7 +76,7 @@ namespace Shadow.Agent
 
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
 
-			Catalog catalog = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>()).FindOrCreateCatalog(name, rootPath);
+			Catalog catalog = this.IoC.GetInstance<CatalogRepository>().FindOrCreateCatalog(name, rootPath);
 
 			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
@@ -154,7 +154,7 @@ namespace Shadow.Agent
 
 		private void CheckForChanges(Catalog catalog, FileSystemInfo file)
 		{
-			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 
 			CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
 			if (repos.ApplyChanges(entry, file as FileInfo))
@@ -169,7 +169,7 @@ namespace Shadow.Agent
 			Action<Catalog> completedCallback,
 			Action<Catalog, Exception> failureCallback)
 		{
-			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 			if (trickleRate > 0)
 			{
 				var enumerator = repos.GetExistingPaths(catalog.ID).GetEnumerator();
@@ -269,7 +269,7 @@ namespace Shadow.Agent
 			string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
 			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 			{
-				CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+				CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 
 				repos.DeleteEntryByPath(catalog.ID, path);
 				repos.Save();

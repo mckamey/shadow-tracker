@@ -245,7 +245,7 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
-			CatalogRepository repos = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 
 			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
 			switch (e.ChangeType)

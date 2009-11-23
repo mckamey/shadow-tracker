@@ -6,13 +6,14 @@ using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
 
-using IgnorantPersistence;
 using IgnorantPersistence.L2S;
 using Microsoft.Practices.ServiceLocation;
+using Ninject;
 using Shadow.Agent;
 using Shadow.Configuration;
 using Shadow.IO;
 using Shadow.Model;
+using Shadow.Service.IoC;
 
 namespace Shadow.Service
 {
@@ -40,6 +41,10 @@ namespace Shadow.Service
 		/// </summary>
 		public ShadowTrackerService()
 		{
+			// setup Ninject
+			IKernel kernel = new StandardKernel(new IocModule(this));
+			this.IoC = ServiceLocator.Current;
+
 			this.Out = this.Error = TextWriter.Null;
 
 			this.InitializeComponent();
@@ -93,11 +98,10 @@ namespace Shadow.Service
 			try
 			{
 				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
-				this.IoC = new SimpleServiceLocator(this.GetFactoryMethod(settings.SqlConnectionString, settings.SqlMapping));
 
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
 
-				CatalogRepository repository = new CatalogRepository(this.IoC.GetInstance<IUnitOfWork>());
+				CatalogRepository repository = this.IoC.GetInstance<CatalogRepository>();
 				var version = repository.GetVersionInfo();
 
 				this.Out.WriteLine("ShadowTracker");
@@ -201,27 +205,51 @@ namespace Shadow.Service
 		public void InstallDatabase()
 		{
 			TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
+
 			string connection = settings.SqlConnectionString;
-			this.EnsureDatabase(ref connection, settings.SqlMapping);
+			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
+			{
+				connection = connection.Replace("|DataDirectory|", ShadowTrackerService.ServiceDirectory);
+			}
+			string mappings = Path.Combine(ShadowTrackerService.ServiceDirectory, settings.SqlMapping);
+			MappingSource map = XmlMappingSource.FromUrl(mappings);
+
+			// create one to test out
+			L2SUnitOfWork unitOfWork = new L2SUnitOfWork(new DataContext(connection, map));
+			if (!unitOfWork.CanConnect())
+			{
+				string answer = "n";
+
+				if (this.In != null && this.In != TextReader.Null)
+				{
+					this.Out.Write("Specified database does not exist. Want to create it? (y/n): ");
+					answer = this.In.ReadLine();
+				}
+
+				if (!StringComparer.OrdinalIgnoreCase.Equals(answer, "y"))
+				{
+					throw new Exception("Database specified in connection string does not exist.");
+				}
+
+				try
+				{
+					unitOfWork.InitializeDatabase();
+					new CatalogRepository(unitOfWork).StoreVersionInfo();
+					unitOfWork.Save();
+				}
+				catch (Exception ex)
+				{
+					this.Error.WriteLine(ex);
+					throw;
+				}
+			}
 		}
 
 		#endregion Service Events
 
 		#region Utility Methods
 
-		private Func<string, IUnitOfWork> GetFactoryMethod(string connection, string mappings)
-		{
-			MappingSource map = this.EnsureDatabase(ref connection, mappings);
-
-			return delegate(string key)
-			{
-				L2SUnitOfWork unitOfWork = new L2SUnitOfWork(new DataContext(connection, map));
-				unitOfWork.OnCommit += this.OnCommit;
-				return unitOfWork;
-			};
-		}
-
-		private void OnCommit(L2SUnitOfWork unitOfWork, ChangeSet changes)
+		internal void OnCommit(L2SUnitOfWork unitOfWork, ChangeSet changes)
 		{
 			foreach (var inserted in changes.Inserts)
 			{
@@ -271,47 +299,6 @@ namespace Shadow.Service
 					this.Out.WriteLine("REMOVE "+deleted);
 				}
 			}
-		}
-
-		private MappingSource EnsureDatabase(ref string connection, string mappings)
-		{
-			if (connection != null && connection.IndexOf("|DataDirectory|") >= 0)
-			{
-				connection = connection.Replace("|DataDirectory|", ShadowTrackerService.ServiceDirectory);
-			}
-			mappings = Path.Combine(ShadowTrackerService.ServiceDirectory, mappings);
-			MappingSource map = XmlMappingSource.FromUrl(mappings);
-
-			// create one to test out
-			L2SUnitOfWork unitOfWork = new L2SUnitOfWork(new DataContext(connection, map));
-			if (!unitOfWork.CanConnect())
-			{
-				string answer = "n";
-
-				if (this.In != null && this.In != TextReader.Null)
-				{
-					this.Out.Write("Specified database does not exist. Want to create it? (y/n): ");
-					answer = this.In.ReadLine();
-				}
-
-				if (!StringComparer.OrdinalIgnoreCase.Equals(answer, "y"))
-				{
-					throw new Exception("Database specified in connection string does not exist.");
-				}
-
-				try
-				{
-					unitOfWork.InitializeDatabase();
-					new CatalogRepository(unitOfWork).StoreVersionInfo();
-					unitOfWork.Save();
-				}
-				catch (Exception ex)
-				{
-					this.Error.WriteLine(ex);
-					throw;
-				}
-			}
-			return map;
 		}
 
 		#endregion Utility Methods
