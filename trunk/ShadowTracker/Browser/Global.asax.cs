@@ -13,9 +13,17 @@ namespace Shadow.Browser
 {
 	public class Global : System.Web.HttpApplication
 	{
+		public IServiceLocator IoC
+		{
+			get;
+			private set;
+		}
+
 		protected void Application_Start(object sender, EventArgs e)
 		{
 			SimpleServiceLocator locator = new SimpleServiceLocator(this.GetFactoryMethod());
+
+			this.IoC = locator;
 
 			ServiceLocator.SetLocatorProvider(locator.ServiceLocatorProvider);
 		}

@@ -53,6 +53,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.dll</HintPath>
     </Reference>
+    <Reference Include="IgnorantPersistence.SimpleServiceLocator">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.SimpleServiceLocator.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Practices.ServiceLocation">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\CommonServiceLocator\Microsoft.Practices.ServiceLocation.dll</HintPath>

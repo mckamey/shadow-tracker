@@ -55,6 +55,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.dll</HintPath>
     </Reference>
+    <Reference Include="IgnorantPersistence.SimpleServiceLocator">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.SimpleServiceLocator.dll</HintPath>
+    </Reference>
     <Reference Include="JsonFx.BuildTools">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.BuildTools.dll</HintPath>
@@ -98,7 +102,7 @@
     </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
-    <Reference Include="Yahoo.Yui.Compressor.NET20, Version=1.4.0.0, Culture=neutral, PublicKeyToken=0734edc2d38ad47d, processorArchitecture=MSIL">
+    <Reference Include="Yahoo.Yui.Compressor.NET20">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\Yahoo.Yui.Compressor.NET20.dll</HintPath>
     </Reference>
