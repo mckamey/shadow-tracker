@@ -26,13 +26,23 @@ namespace Shadow.Agent
 
 			while (queue.Count > 0)
 			{
-				DirectoryInfo parent = queue.Dequeue();
-				if (!parent.Exists)
+				FileSystemInfo[] children;
+				try
 				{
+					DirectoryInfo parent = queue.Dequeue();
+					if (!parent.Exists)
+					{
+						// this can happen if a queued folder is removed
+						continue;
+					}
+					children = parent.GetFileSystemInfos();
+				}
+				catch (DirectoryNotFoundException)
+				{
+					// this can happen if a queued folder is removed
 					continue;
 				}
 
-				FileSystemInfo[] children = parent.GetFileSystemInfos();
 				foreach (FileSystemInfo info in children)
 				{
 					if (info is DirectoryInfo)
