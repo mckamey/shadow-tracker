@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define TRICKLE
+
+using System;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Diagnostics;
@@ -129,6 +131,7 @@ namespace Shadow.Service
 					this.Out.WriteLine();
 					this.Out.WriteLine("Begin sync: "+folders[i].Name+" ("+folders[i].Path+")");
 
+#if TRICKLE
 					new FileUtility(this.IoC).SyncCatalog(
 						folders[i].Name,
 						folders[i].Path,
@@ -145,6 +148,11 @@ namespace Shadow.Service
 							this.Error.WriteLine("Error in sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")");
 							this.Error.WriteLine(ex);
 						});
+#else
+					this.Out.WriteLine();
+					this.Out.WriteLine("End sync: "+folders[i].Name+" ("+folders[i].Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
+					this.Out.WriteLine("__________________________");
+#endif
 
 					this.Trackers[i] = new FileTracker(this.IoC);
 					this.Trackers[i].TrackerError += this.OnError;
@@ -246,61 +254,5 @@ namespace Shadow.Service
 		}
 
 		#endregion Service Events
-
-		#region Utility Methods
-
-		internal void OnCommit(L2SUnitOfWork unitOfWork, ChangeSet changes)
-		{
-			foreach (var inserted in changes.Inserts)
-			{
-				CatalogEntry entry = inserted as CatalogEntry;
-				if (entry != null)
-				{
-					this.Out.WriteLine("ADD \"{0}\" at \"{1}\"", entry.Signature, entry.FullPath);
-				}
-				else if (inserted is Catalog)
-				{
-					this.Out.WriteLine("ADD Catalog at \"{0}\"", ((Catalog)inserted).Path);
-				}
-				else
-				{
-					this.Out.WriteLine("ADD "+inserted);
-				}
-			}
-			foreach (var updated in changes.Updates)
-			{
-				CatalogEntry entry = updated as CatalogEntry;
-				if (entry != null)
-				{
-					this.Out.WriteLine("UPDATE \"{0}\"", entry.FullPath);
-				}
-				else if (updated is Catalog)
-				{
-					this.Out.WriteLine("UPDATE Catalog \"{0}\"", ((Catalog)updated).Path);
-				}
-				else
-				{
-					this.Out.WriteLine("UPDATE "+updated);
-				}
-			}
-			foreach (var deleted in changes.Deletes)
-			{
-				CatalogEntry entry = deleted as CatalogEntry;
-				if (entry != null)
-				{
-					this.Out.WriteLine("REMOVE \"{0}\"", entry.FullPath);
-				}
-				else if (deleted is Catalog)
-				{
-					this.Out.WriteLine("REMOVE Catalog \"{0}\"", ((Catalog)deleted).Path);
-				}
-				else
-				{
-					this.Out.WriteLine("REMOVE "+deleted);
-				}
-			}
-		}
-
-		#endregion Utility Methods
 	}
 }
