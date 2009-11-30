@@ -26,7 +26,13 @@ namespace Shadow.Agent
 
 			while (queue.Count > 0)
 			{
-				FileSystemInfo[] children = queue.Dequeue().GetFileSystemInfos();
+				DirectoryInfo parent = queue.Dequeue();
+				if (!parent.Exists)
+				{
+					continue;
+				}
+
+				FileSystemInfo[] children = parent.GetFileSystemInfos();
 				foreach (FileSystemInfo info in children)
 				{
 					if (info is DirectoryInfo)
