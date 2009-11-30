@@ -48,9 +48,9 @@ namespace Shadow.Service.IoC
 
 		protected override IUnitOfWork CreateInstance(IContext context)
 		{
-			L2SUnitOfWork unitOfWork = new L2SUnitOfWork(new DataContext(this.ConnectionString, this.MappingSource));
-			unitOfWork.OnCommit += this.TrackerService.OnCommit;
-			return unitOfWork;
+			DataContext db = new DataContext(this.ConnectionString, this.MappingSource);
+
+			return new L2SUnitOfWork(db);
 		}
 
 		#endregion Provider<IUnitOfWork> Members
