@@ -269,26 +269,20 @@ namespace Shadow.Agent
 						string newPath = this.NormalizePath(e2.FullPath);
 						if (this.IsFiltered(oldPath))
 						{
-							string parent, name;
-							FileUtility.SplitPath(newPath, out parent, out name);
-							this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, parent, name));
+							this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(newPath), Path.GetFileName(newPath)));
 							return;
 						}
 
 						if (this.IsFiltered(newPath))
 						{
-							string parent, name;
-							FileUtility.SplitPath(oldPath, out parent, out name);
-							this.OnFileDeleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, parent, name));
+							this.OnFileDeleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(oldPath), Path.GetFileName(oldPath)));
 							return;
 						}
 
 						bool found = repos.MoveEntry(this.catalog.ID, oldPath, newPath);
 						if (!found)
 						{
-							string parent, name;
-							FileUtility.SplitPath(newPath, out parent, out name);
-							this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, parent, name));
+							this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(newPath), Path.GetFileName(newPath)));
 						}
 						break;
 					}
@@ -303,10 +297,13 @@ namespace Shadow.Agent
 							repos.Save();
 						}
 
-						// add or sync any children (needed for folder moves)
-						if (info is DirectoryInfo)
+						// add any children
+						if (info is DirectoryInfo &&
+							e.ChangeType == WatcherChangeTypes.Created)
 						{
-							Trace.TraceInformation("Sync children \"{0}/*\"", entry.FullPath);
+							// TODO: determine best way to for WatcherChangeTypes.Changed
+
+							Trace.TraceInformation("Add children \"{0}/*\"", entry.FullPath);
 
 							int count = 0;
 							foreach (FileSystemInfo child in FileIterator.GetFiles(info.FullName).Where(this.fileFilter))

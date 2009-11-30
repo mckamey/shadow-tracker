@@ -30,6 +30,9 @@ namespace Shadow.Agent
 				try
 				{
 					DirectoryInfo parent = queue.Dequeue();
+
+					// refresh since may have been queued much earlier
+					parent.Refresh();
 					if (!parent.Exists)
 					{
 						// this can happen if a queued folder is removed
