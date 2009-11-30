@@ -1,14 +1,99 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 
-using IgnorantPersistence;
 using Microsoft.Practices.ServiceLocation;
 using Shadow.Model;
 
 namespace Shadow.Agent
 {
+	internal static class EnumerableExtensions
+	{
+		#region Methods
+
+		public static void TrickleIterate<T>(
+			this IEnumerable<T> items,
+			int trickleRate,
+			Action<T> doWork,
+			Action onCompleted,
+			Action<Exception> onFailure)
+		{
+			if (trickleRate > 0)
+			{
+				var enumerator = items.GetEnumerator();
+
+				// perform loop with a timer to allow trickle iteration
+				// use a closure as the callback to allow access to local vars
+				Timer timer = null;
+				timer = new Timer(
+					delegate(object state)
+					{
+						try
+						{
+							// check if any left
+							if (!enumerator.MoveNext())
+							{
+								if (onCompleted != null)
+								{
+									onCompleted();
+								}
+								return;
+							}
+
+							// perform work
+							doWork(enumerator.Current);
+						}
+						catch (Exception ex)
+						{
+							if (onFailure == null)
+							{
+								throw;
+							}
+							onFailure(ex);
+
+							// TODO: create a retry queue
+						}
+
+						// queue up next iteration
+						timer.Change(trickleRate, Timeout.Infinite);
+					},
+					null,
+					trickleRate,
+					Timeout.Infinite);
+			}
+			else
+			{
+				foreach (T item in items)
+				{
+					try
+					{
+						// sync each node
+						doWork(item);
+					}
+					catch (Exception ex)
+					{
+						if (onFailure == null)
+						{
+							throw;
+						}
+						onFailure(ex);
+
+						// TODO: create a retry queue
+					}
+				}
+
+				if (onCompleted != null)
+				{
+					onCompleted();
+				}
+			}
+		}
+
+		#endregion Methods
+	}
+
 	/// <summary>
 	/// Utility for synchronizing a catalog with the file system.
 	/// </summary>
@@ -62,8 +147,8 @@ namespace Shadow.Agent
 			string rootPath,
 			Func<FileSystemInfo, bool> fileFilter,
 			int trickleRate,
-			Action<Catalog> completedCallback,
-			Action<Catalog, Exception> failureCallback)
+			Action<Catalog> onCompleted,
+			Action<Catalog, Exception> onFailure)
 		{
 			if (String.IsNullOrEmpty(rootPath))
 			{
@@ -73,207 +158,104 @@ namespace Shadow.Agent
 			{
 				throw new ArgumentException("Root path is invalid.", "rootPath");
 			}
-
 			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
 
 			Catalog catalog = this.IoC.GetInstance<CatalogRepository>().FindOrCreateCatalog(name, rootPath);
 
-			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
-
-			if (trickleRate > 0)
-			{
-				var enumerator = files.GetEnumerator();
-
-				// perform loop with a timer to allow trickle updates
-				// use a closure as the callback to allow access to local vars
-				Timer timer = null;
-				timer = new Timer(
-					delegate(object state)
-					{
-						try
-						{
-							// check if any files left
-							if (!enumerator.MoveNext())
-							{
-								// free closure references
-								timer.Change(Timeout.Infinite, Timeout.Infinite);
-								timer = null;
-								files = null;
-
-								// remove any extra files after, so more clones can happen
-								this.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
-								return;
-							}
-
-							// sync next node
-							this.CheckForChanges(catalog, enumerator.Current);
-						}
-						catch (Exception ex)
-						{
-							if (failureCallback == null)
-							{
-								throw;
-							}
-							failureCallback(catalog, ex);
-
-							// TODO: create a retry queue
-						}
-
-						// queue up next iteration
-						timer.Change(trickleRate, Timeout.Infinite);
-					},
-					null,
-					trickleRate,
-					Timeout.Infinite);
-			}
-			else
-			{
-				foreach (FileSystemInfo file in files)
+			// remove any extra files first to ensure references stay intact
+			this.RemoveExtras(
+				catalog,
+				trickleRate,
+				delegate(Catalog c)
 				{
-					try
-					{
-						// sync each node
-						this.CheckForChanges(catalog, file);
-					}
-					catch (Exception ex)
-					{
-						if (failureCallback == null)
-						{
-							throw;
-						}
-						failureCallback(catalog, ex);
-
-						// TODO: create a retry queue
-					}
-				}
-
-				// remove any extra files after, so more clones can happen
-				this.RemoveExtras(catalog, trickleRate, completedCallback, failureCallback);
-			}
+					// find any new or updated files after
+					this.FindChanged(catalog, rootPath, trickleRate, fileFilter, onCompleted, onFailure);
+				},
+				onFailure);
 		}
 
-		private void CheckForChanges(Catalog catalog, FileSystemInfo file)
+		private void FindChanged(
+			Catalog catalog,
+			string rootPath,
+			int trickleRate,
+			Func<FileSystemInfo, bool> fileFilter,
+			Action<Catalog> onCompleted,
+			Action<Catalog, Exception> onFailure)
 		{
 			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
+			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
 
-			CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
-			if (repos.AddOrUpdate(entry, file as FileInfo))
-			{
-				repos.Save();
-			}
+			files.TrickleIterate(
+				trickleRate,
+				delegate(FileSystemInfo file)
+				{
+					CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
+					if (repos.AddOrUpdate(entry, file as FileInfo))
+					{
+						repos.Save();
+					}
+				},
+				delegate()
+				{
+					if (onCompleted != null)
+					{
+						onCompleted(catalog);
+					}
+				},
+				delegate(Exception ex)
+				{
+					if (onFailure == null)
+					{
+						throw ex;
+					}
+					onFailure(catalog, ex);
+				});
 		}
 
 		private void RemoveExtras(
 			Catalog catalog,
 			int trickleRate,
-			Action<Catalog> completedCallback,
-			Action<Catalog, Exception> failureCallback)
+			Action<Catalog> onCompleted,
+			Action<Catalog, Exception> onFailure)
 		{
 			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
-			if (trickleRate > 0)
-			{
-				var enumerator = repos.GetExistingPaths(catalog.ID).GetEnumerator();
+			var paths = repos.GetExistingPaths(catalog.ID);
 
-				// perform loop with a timer to allow trickle updates
-				// use a closure as the callback to allow access to local vars
-				Timer timer = null;
-				timer = new Timer(
-					delegate(object state)
-					{
-						try
-						{
-							// check if any files left
-							if (!enumerator.MoveNext())
-							{
-								// free closure references
-								timer.Change(Timeout.Infinite, Timeout.Infinite);
-								timer = null;
-
-								// flag catalog as indexed
-								if (!catalog.IsIndexed)
-								{
-									catalog.IsIndexed = true;
-									repos.Catalogs.Update(catalog);
-									repos.Save();
-								}
-
-								// signal sync is complete
-								if (completedCallback != null)
-								{
-									completedCallback(catalog);
-								}
-								return;
-							}
-
-							// extras are any local entries not contained on disk
-							string path = enumerator.Current;
-							this.CheckIfMissing(catalog, path);
-						}
-						catch (Exception ex)
-						{
-							if (failureCallback == null)
-							{
-								throw;
-							}
-							failureCallback(catalog, ex);
-
-							// TODO: create a retry queue
-						}
-
-						// queue up next iteration
-						timer.Change(trickleRate, Timeout.Infinite);
-					},
-					null,
-					trickleRate,
-					Timeout.Infinite);
-			}
-			else
-			{
-				foreach (string path in repos.GetExistingPaths(catalog.ID))
+			paths.TrickleIterate(
+				trickleRate,
+				delegate(string path)
 				{
-					try
+					string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
+					if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 					{
-						// extras are any local entries not contained on disk
-						this.CheckIfMissing(catalog, path);
+						repos.DeleteEntryByPath(catalog.ID, path);
+						repos.Save();
 					}
-					catch (Exception ex)
+				},
+				delegate()
+				{
+					// flag catalog as indexed
+					if (!catalog.IsIndexed)
 					{
-						if (failureCallback == null)
-						{
-							throw;
-						}
-						failureCallback(catalog, ex);
-
-						// TODO: create a retry queue
+						catalog.IsIndexed = true;
+						repos.Catalogs.Update(catalog);
+						repos.Save();
 					}
-				}
 
-				// flag catalog as indexed
-				if (!catalog.IsIndexed)
+					// signal extras are removed
+					if (onCompleted != null)
+					{
+						onCompleted(catalog);
+					}
+				},
+				delegate(Exception ex)
 				{
-					catalog.IsIndexed = true;
-					repos.Catalogs.Update(catalog);
-					repos.Save();
-				}
-
-				// signal sync is complete
-				if (completedCallback != null)
-				{
-					completedCallback(catalog);
-				}
-			}
-		}
-
-		private void CheckIfMissing(Catalog catalog, string path)
-		{
-			string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
-			if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
-			{
-				CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
-
-				repos.DeleteEntryByPath(catalog.ID, path);
-				repos.Save();
-			}
+					if (onFailure == null)
+					{
+						throw ex;
+					}
+					onFailure(catalog, ex);
+				});
 		}
 
 		/// <summary>
