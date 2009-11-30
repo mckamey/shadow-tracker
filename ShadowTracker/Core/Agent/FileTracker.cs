@@ -298,7 +298,10 @@ namespace Shadow.Agent
 					{
 						FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
 						CatalogEntry entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, info);
-						repos.AddOrUpdate(entry);
+						if (repos.AddOrUpdate(entry))
+						{
+							repos.Save();
+						}
 
 						// add or sync any children (needed for folder moves)
 						if (info is DirectoryInfo)
@@ -308,15 +311,11 @@ namespace Shadow.Agent
 							int count = 0;
 							foreach (FileSystemInfo child in FileIterator.GetFiles(info.FullName).Where(this.fileFilter))
 							{
-								count++;
-								if (count % 25 == 0)
+								entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, child);
+								if (repos.AddOrUpdate(entry))
 								{
-									// save every 25
 									repos.Save();
 								}
-
-								entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, child);
-								repos.AddOrUpdate(entry);
 							}
 						}
 						break;
