@@ -157,7 +157,7 @@ namespace Shadow.Agent
 			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 
 			CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
-			if (repos.ApplyChanges(entry, file as FileInfo))
+			if (repos.AddOrUpdate(entry, file as FileInfo))
 			{
 				repos.Save();
 			}
@@ -306,19 +306,18 @@ namespace Shadow.Agent
 			FileInfo fileInfo = file as FileInfo;
 
 			DirectoryInfo parent =
-				fileInfo != null ?
+				(fileInfo != null) ?
 				fileInfo.Directory :
 				((DirectoryInfo)file).Parent;
+
+			long length = (fileInfo != null && fileInfo.Exists) ? fileInfo.Length : 0L;
 
 			CatalogEntry entry = new CatalogEntry
 			{
 				Attributes = (file.Attributes&FileUtility.AttribMask),
 				CatalogID = catalogID,
 				CreatedDate = file.CreationTimeUtc,
-				Length =
-					(fileInfo != null) ?
-					fileInfo.Length :
-					0L,
+				Length = length,
 				ModifiedDate = file.LastWriteTimeUtc,
 				Name = file.Name,
 				Parent = FileUtility.NormalizePath(catalogPath, parent.FullName)

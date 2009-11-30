@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 
-using IgnorantPersistence;
 using Microsoft.Practices.ServiceLocation;
 using Shadow.Model;
 
@@ -232,7 +232,7 @@ namespace Shadow.Agent
 			bool filtered = !this.fileFilter(info);
 			if (filtered)
 			{
-				Console.WriteLine("FILTERED "+fullPath);
+				Trace.TraceInformation("Filtered: \"{0}\"", fullPath);
 			}
 			return filtered;
 		}
@@ -245,86 +245,90 @@ namespace Shadow.Agent
 
 		private void ApplyChange(FileSystemEventArgs e)
 		{
-			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
-
-			//Console.WriteLine(e.ChangeType + ": " + e.FullPath);
-			switch (e.ChangeType)
+			try
 			{
-				case WatcherChangeTypes.Deleted:
+				CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
+
+				switch (e.ChangeType)
 				{
-					repos.DeleteEntryByPath(this.catalog.ID, this.NormalizePath(e.FullPath));
-					break;
-				}
-				case WatcherChangeTypes.Renamed:
-				{
-					RenamedEventArgs e2 = e as RenamedEventArgs;
-					if (e2 == null)
+					case WatcherChangeTypes.Deleted:
 					{
-						this.OnTrackerError(new ArgumentNullException("state", "UpdateTimerCallback state was not FileSystemEventArgs"));
-						return;
+						repos.DeleteEntryByPath(this.catalog.ID, this.NormalizePath(e.FullPath));
+						break;
 					}
-
-					try
+					case WatcherChangeTypes.Renamed:
 					{
-						repos.RenameEntry(this.catalog.ID, this.NormalizePath(e2.OldFullPath), this.NormalizePath(e2.FullPath));
-
-						foreach (FileSystemInfo info in FileIterator.GetFiles(e2.FullPath))
+						RenamedEventArgs e2 = e as RenamedEventArgs;
+						if (e2 == null)
 						{
-							try
+							this.OnTrackerError(new ArgumentNullException("state", "UpdateTimerCallback state was not FileSystemEventArgs"));
+							return;
+						}
+
+						string oldPath = this.NormalizePath(e2.OldFullPath);
+						string newPath = this.NormalizePath(e2.FullPath);
+						if (this.IsFiltered(oldPath))
+						{
+							string parent, name;
+							FileUtility.SplitPath(newPath, out parent, out name);
+							this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, parent, name));
+							return;
+						}
+
+						if (this.IsFiltered(newPath))
+						{
+							string parent, name;
+							FileUtility.SplitPath(oldPath, out parent, out name);
+							this.OnFileDeleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, parent, name));
+							return;
+						}
+
+						bool found = repos.MoveEntry(this.catalog.ID, oldPath, newPath);
+						if (!found)
+						{
+							string parent, name;
+							FileUtility.SplitPath(newPath, out parent, out name);
+							this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, parent, name));
+						}
+						break;
+					}
+					case WatcherChangeTypes.Created:
+					case WatcherChangeTypes.Changed:
+					default:
+					{
+						FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
+						CatalogEntry entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, info);
+						repos.AddOrUpdate(entry);
+
+						// add or sync any children (needed for folder moves)
+						if (info is DirectoryInfo)
+						{
+							Trace.TraceInformation("Sync children \"{0}/*\"", entry.FullPath);
+
+							int count = 0;
+							foreach (FileSystemInfo child in FileIterator.GetFiles(info.FullName).Where(this.fileFilter))
 							{
-								string infoOldName = FileUtility.ReplaceRoot(e2.FullPath, info.FullName, e2.OldFullPath);
-								if (this.IsFiltered(infoOldName))
+								count++;
+								if (count % 25 == 0)
 								{
-									this.OnFileCreated(this, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(info.FullName), Path.GetFileName(info.FullName)));
-									continue;
+									// save every 25
+									repos.Save();
 								}
 
-								if (this.IsFiltered(info.FullName))
-								{
-									this.OnFileDeleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(infoOldName), Path.GetFileName(infoOldName)));
-									continue;
-								}
-
-								repos.RenameEntry(this.catalog.ID, this.NormalizePath(infoOldName), this.NormalizePath(info.FullName));
-							}
-							catch (Exception ex)
-							{
-								this.OnTrackerError(ex);
+								entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, child);
+								repos.AddOrUpdate(entry);
 							}
 						}
+						break;
 					}
-					catch (ArgumentException ex)
-					{
-						this.OnTrackerError(ex);
-
-						// recover by simply adding
-						goto case WatcherChangeTypes.Created;
-					}
-					break;
 				}
-				case WatcherChangeTypes.Created:
-				case WatcherChangeTypes.Changed:
-				default:
-				{
-					FileSystemInfo info = FileUtility.CreateFileSystemInfo(e.FullPath);
 
-					CatalogEntry entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, info);
-					repos.ApplyChanges(entry);
-
-					if (info is DirectoryInfo)
-					{
-						// add any children
-						foreach (FileSystemInfo child in FileIterator.GetFiles(e.FullPath).Where(this.fileFilter))
-						{
-							entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, child);
-							repos.ApplyChanges(entry);
-						}
-					}
-					break;
-				}
+				repos.Save();
 			}
-
-			repos.Save();
+			catch (Exception ex)
+			{
+				this.OnTrackerError(ex);
+			}
 		}
 
 		#endregion Events

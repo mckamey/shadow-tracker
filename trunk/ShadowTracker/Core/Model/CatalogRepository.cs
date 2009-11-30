@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,6 +10,26 @@ using Shadow.Agent;
 
 namespace Shadow.Model
 {
+	internal static class CatalogEntryQueryExtensions
+	{
+		public static IQueryable<CatalogEntry> FindByPath(this IQueryable<CatalogEntry> table, long catalogID, string path)
+		{
+			if (String.IsNullOrEmpty(path))
+			{
+				throw new ArgumentNullException("path", "path was empty");
+			}
+
+			path = path.ToLowerInvariant();
+
+			return
+				(from n in table
+				 where
+					n.CatalogID == catalogID &&
+					path == n.Parent.ToLower()+n.Name.ToLower()
+				 select n);
+		}
+	}
+
 	/// <summary>
 	/// Implements a repository pattern for CatalogEntry which
 	/// can be backed by a number of different storage mechanisms.
@@ -90,15 +111,20 @@ namespace Shadow.Model
 		/// <param name="path"></param>
 		public virtual void DeleteEntryByPath(long catalogID, string parent, string name)
 		{
+			Trace.TraceInformation("Delete Entry: \"{0}{1}\"", parent, name);
+			parent = parent.ToLowerInvariant();
+			name = name.ToLowerInvariant();
+
 			this.Entries.RemoveWhere(n =>
 				(n.CatalogID == catalogID) &&
-				(n.Parent.ToLower() == parent.ToLower()) &&
-				(n.Name.ToLower() == name.ToLower()));
+				(n.Parent.ToLower() == parent) &&
+				(n.Name.ToLower() == name));
 
 			// if is directory with children then remove them as well
-			string asDir = (parent+name+'/').ToLowerInvariant();
+			string asDir = parent+name+'/';
 
-			this.Entries.RemoveWhere(n => n.Parent.ToLower().StartsWith(asDir));
+			Trace.TraceInformation("Delete Entries: \"{0}*\"", asDir);
+			this.Entries.RemoveWhere(n => n.CatalogID == catalogID && n.Parent.ToLower().StartsWith(asDir));
 		}
 
 		/// <summary>
@@ -106,7 +132,7 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="oldPath"></param>
 		/// <param name="newPath"></param>
-		public virtual void RenameEntry(long catalogID, string oldPath, string newPath)
+		public virtual bool MoveEntry(long catalogID, string oldPath, string newPath)
 		{
 			string oldParent, oldName;
 			FileUtility.SplitPath(oldPath, out oldParent, out oldName);
@@ -118,14 +144,39 @@ namespace Shadow.Model
 
 			if (entry == null)
 			{
-				// TODO: log error
-				throw new ArgumentException("Entry was not found: "+oldPath, "oldPath");
+				Trace.TraceError("Entry Missing: \"{0}\"", oldPath);
+				//throw new ArgumentException("Entry was not found: "+oldPath, "oldPath");
+				return false;
 			}
+
+			Trace.TraceInformation("Rename Entry: \"{0}\" to \"{1}\"", oldPath, newPath);
 
 			string newParent, newName;
 			FileUtility.SplitPath(newPath, out newParent, out newName);
 			entry.Parent = newParent;
 			entry.Name = newName;
+
+			if (!entry.IsDirectory)
+			{
+				return true;
+			}
+
+			// if is directory with children then move them as well
+			string asDir = oldPath+'/';
+
+			var children =
+				from n in this.Entries
+				where
+					n.CatalogID == catalogID &&
+					n.Parent.ToLower().StartsWith(asDir)
+				select n;
+
+			Trace.TraceInformation("Rename Entries: \"{0}*\"", asDir);
+			foreach (CatalogEntry child in children)
+			{
+				child.Parent = newPath+child.Parent.Substring(oldPath.Length);
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -135,6 +186,8 @@ namespace Shadow.Model
 		/// <param name="data">the original entry</param>
 		public virtual void Update(CatalogEntry entry, CatalogEntry original)
 		{
+			Trace.TraceInformation("Update Entry: \"{0}\"", entry.FullPath);
+
 			if (original == null || original.ID < 1)
 			{
 				this.Entries.Update(entry);
@@ -148,15 +201,6 @@ namespace Shadow.Model
 		#endregion Action Methods
 
 		#region Query Methods
-
-		[Flags]
-		private enum MatchRank : int
-		{
-			None = 0x00,
-			Path = 0x01,
-			Name = 0x02,
-			Both = Name|Path
-		}
 
 		/// <summary>
 		/// Finds or creates a matching catalog
@@ -181,12 +225,16 @@ namespace Shadow.Model
 			string nameLower = name.ToLowerInvariant();
 			string pathLower = path.ToLowerInvariant();
 
+			const int NONE = 0x00;
+			const int PATH = 0x01;
+			const int NAME = 0x02;
+
 			var query =
 				from c in this.Catalogs
 				let rank =
-					(int)((c.Name.ToLower() == name) ? MatchRank.Name : MatchRank.None) |
-					(int)(c.Path.ToLower() == path ? MatchRank.Path : MatchRank.None)
-				where rank > (int)MatchRank.None
+					((c.Name.ToLower() == name) ? NAME : NONE) |
+					(c.Path.ToLower() == path ? PATH : NONE)
+				where rank > NONE
 				orderby rank descending
 				select c;
 
@@ -196,6 +244,8 @@ namespace Shadow.Model
 				catalog = new Catalog();
 				catalog.Name = name;
 				catalog.Path = path;
+
+				Trace.TraceInformation("Add Catalog: \"{0}\"", catalog.Path);
 				this.Catalogs.Add(catalog);
 				this.UnitOfWork.Save();
 			}
@@ -222,10 +272,7 @@ namespace Shadow.Model
 		/// <returns></returns>
 		public CatalogEntry FindEntry(long catalogID, Expression<Func<CatalogEntry, bool>> predicate)
 		{
-			return
-				(from n in this.Entries
-				 where n.CatalogID == catalogID
-				 select n).FirstOrDefault(predicate);
+			return this.Entries.Where(n => n.CatalogID == catalogID).FirstOrDefault(predicate);
 		}
 
 		/// <summary>
@@ -235,14 +282,45 @@ namespace Shadow.Model
 		/// <returns></returns>
 		public CatalogEntry FindEntry(long catalogID, string path)
 		{
-			if (String.IsNullOrEmpty(path))
-			{
-				throw new ArgumentNullException("path", "path was empty");
-			}
+			return this.Entries.FindByPath(catalogID, path).FirstOrDefault();
+		}
 
-			path = path.ToLowerInvariant();
+		/// <summary>
+		/// Finds the closest matching entry
+		/// </summary>
+		/// <param name="entry"></param>
+		/// <returns></returns>
+		protected CatalogEntry FindDeletedEntry(CatalogEntry entry)
+		{
+			long catalogID = entry.CatalogID;
+			string parent = (entry.Parent??String.Empty).ToLowerInvariant();
+			string name = (entry.Name??String.Empty).ToLowerInvariant();
+			string signature = entry.IsDirectory ? null : entry.Signature.ToLowerInvariant();
 
-			return this.FindEntry(catalogID, n => n.Parent.ToLower()+n.Name.ToLower() == path);
+			var softDelete = this.Entries as ISoftDeleteTable<CatalogEntry>;
+			var table = (softDelete == null) ? this.Entries : softDelete.AllItems;
+
+			const int NONE = 0x00; // no match
+			const int PART = 0x01; // paths partially match
+			const int NAME = 0x02; // paths partially match
+			const int HASH = 0x04; // signatures match
+
+			var query =
+				from n in table
+				where
+					n.CatalogID == catalogID &&
+					n.DeletedDate.HasValue
+				let rank =
+				    (signature != null && (n.Signature.ToLower() == signature) ? HASH : NONE) |
+				    ((n.Parent.ToLower() == parent) ? PART : NONE) |
+				    ((n.Name.ToLower() == name) ? NAME : NONE)
+				where rank > NONE
+				orderby
+					rank descending,
+					n.DeletedDate descending
+				select n;
+
+			return query.FirstOrDefault();
 		}
 
 		/// <summary>
@@ -313,9 +391,9 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="entry"></param>
 		/// <returns>true if changes were found</returns>
-		internal bool ApplyChanges(CatalogEntry entry)
+		internal bool AddOrUpdate(CatalogEntry entry)
 		{
-			return this.ApplyChanges(entry, null);
+			return this.AddOrUpdate(entry, null);
 		}
 
 		/// <summary>
@@ -323,7 +401,7 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="entry"></param>
 		/// <returns>true if changes were found</returns>
-		internal bool ApplyChanges(CatalogEntry entry, FileInfo file)
+		internal bool AddOrUpdate(CatalogEntry entry, FileInfo file)
 		{
 			if (entry == null)
 			{
@@ -334,6 +412,14 @@ namespace Shadow.Model
 			CatalogEntry original = this.FindEntry(entry.CatalogID, entry.FullPath);
 			if (original == null)
 			{
+				original = this.FindDeletedEntry(entry);
+				if (original != null)
+				{
+					Trace.TraceInformation("Found Deleted Entry: \"{0}\" at \"{1}\"", entry.FullPath, original.FullPath);
+				}
+			}
+			if (original == null)
+			{
 				// ensure hash has been calculated
 				if (!entry.HasSignature)
 				{
@@ -342,12 +428,14 @@ namespace Shadow.Model
 						throw new ArgumentNullException("file", "FileInfo was missing for CatalogEntry without signature.");
 					}
 
+					Trace.TraceInformation("Compute Hash: \"{0}\"", entry.FullPath);
 					entry.Signature = FileHash.ComputeHash(file);
 				}
 
 				// entry does not exist
 				// if bits exist need to add or update entry (no transfer required)
 				// else requires expensive bit transfer
+				Trace.TraceInformation("Add Entry: \"{0}\"", entry.FullPath);
 				this.Entries.Add(entry);
 				return true;
 			}
@@ -374,6 +462,7 @@ namespace Shadow.Model
 					throw new ArgumentNullException("file", "FileInfo was missing for CatalogEntry without signature.");
 				}
 
+				Trace.TraceInformation("Compute Hash: \"{0}\"", entry.FullPath);
 				entry.Signature = FileHash.ComputeHash(file);
 			}
 
@@ -383,37 +472,6 @@ namespace Shadow.Model
 		}
 
 		#endregion Delta Methods
-
-		#region Catalog Sync Methods
-
-		public void Sync(CatalogRepository that)
-		{
-			// TODO: reconcile this with trickle-updates?
-			foreach (Catalog catalog in that.Catalogs)
-			{
-				// apply any deltas since last sync
-				foreach (CatalogEntry entry in that.Entries.Where(n => n.CatalogID == catalog.ID))
-				{
-					this.ApplyChanges(entry);
-				}
-
-				// NOTE: always perform deletes last, so that
-				// moves or renames can be expressed as a clone/delete
-
-				foreach (string path in this.GetExistingPaths(catalog.ID))
-				{
-					// extras are any local entries not contained in other
-					if (that.EntryExists(catalog.ID, path))
-					{
-						continue;
-					}
-
-					this.DeleteEntryByPath(catalog.ID, path);
-				}
-			}
-		}
-
-		#endregion Catalog Sync Methods
 
 		#region Version Methods
 
@@ -427,7 +485,10 @@ namespace Shadow.Model
 
 		public void StoreVersionInfo()
 		{
-			this.UnitOfWork.GetTable<VersionHistory>().Add(VersionHistory.Create());
+			VersionHistory version = VersionHistory.Create();
+
+			Trace.TraceInformation("Add VersionHistory: \"{0}\"", version.Label);
+			this.UnitOfWork.GetTable<VersionHistory>().Add(version);
 		}
 
 		#endregion Version Methods
