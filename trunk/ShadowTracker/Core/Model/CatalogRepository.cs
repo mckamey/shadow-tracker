@@ -96,7 +96,7 @@ namespace Shadow.Model
 		{
 			if (String.IsNullOrEmpty(path))
 			{
-				throw new ArgumentNullException("path", "Path is empty");
+				throw new ArgumentNullException("path", "path is empty");
 			}
 
 			string parent, name;
@@ -111,20 +111,28 @@ namespace Shadow.Model
 		/// <param name="path"></param>
 		public virtual void DeleteEntryByPath(long catalogID, string parent, string name)
 		{
-			Trace.TraceInformation("Delete Entry: \"{0}{1}\"", parent, name);
+			if (String.IsNullOrEmpty(parent))
+			{
+				throw new ArgumentNullException("parent", "parent is empty");
+			}
+			if (String.IsNullOrEmpty(name))
+			{
+				throw new ArgumentNullException("name", "name is empty");
+			}
+
 			parent = parent.ToLowerInvariant();
 			name = name.ToLowerInvariant();
-
-			this.Entries.RemoveWhere(n =>
-				(n.CatalogID == catalogID) &&
-				(n.Parent.ToLower() == parent) &&
-				(n.Name.ToLower() == name));
-
+			
 			// if is directory with children then remove them as well
 			string asDir = parent+name+'/';
 
-			Trace.TraceInformation("Delete Entries: \"{0}*\"", asDir);
-			this.Entries.RemoveWhere(n => n.CatalogID == catalogID && n.Parent.ToLower().StartsWith(asDir));
+			Trace.TraceInformation("Delete Entries: \"{0}{1}*\"", parent, name);
+
+			// remove exact match and any children
+			this.Entries.RemoveWhere(n =>
+				(n.CatalogID == catalogID) &&
+				(((n.Parent.ToLower() == parent) && (n.Name.ToLower() == name)) ||
+				(n.Parent.ToLower().StartsWith(asDir))));
 		}
 
 		/// <summary>
