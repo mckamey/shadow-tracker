@@ -295,7 +295,7 @@ namespace Shadow.Model
 			long catalogID = entry.CatalogID;
 			string parent = (entry.Parent??String.Empty).ToLowerInvariant();
 			string name = (entry.Name??String.Empty).ToLowerInvariant();
-			string signature = entry.IsDirectory ? null : entry.Signature.ToLowerInvariant();
+			string signature = entry.HasSignature && !entry.IsDirectory ? entry.Signature.ToLowerInvariant() : null;
 
 			var softDelete = this.Entries as ISoftDeleteTable<CatalogEntry>;
 			var table = (softDelete == null) ? this.Entries : softDelete.AllItems;
