@@ -111,9 +111,10 @@ namespace Shadow.Model
 
 				return
 					EqualityComparer<FileAttributes>.Default.Equals(x.Attributes, y.Attributes) &&
-					(x.CreatedDate.Ticks == y.CreatedDate.Ticks) &&
+					EqualityComparer<DateTime>.Default.Equals(x.CreatedDate, y.CreatedDate) &&
+					EqualityComparer<DateTime>.Default.Equals(x.ModifiedDate, y.ModifiedDate) &&
+					EqualityComparer<DateTime?>.Default.Equals(x.DeletedDate, y.DeletedDate) &&
 					EqualityComparer<Int64>.Default.Equals(x.Length, y.Length) &&
-					(x.ModifiedDate.Ticks == y.ModifiedDate.Ticks) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Name, y.Name) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Parent, y.Parent) &&
 					(x.CatalogID == y.CatalogID);
@@ -133,6 +134,7 @@ namespace Shadow.Model
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<Int64>.Default.GetHashCode(obj.Length);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.CreatedDate);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.ModifiedDate);
+				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime?>.Default.GetHashCode(obj.DeletedDate);
 				return hashcode;
 			}
 
@@ -559,6 +561,11 @@ namespace Shadow.Model
 			{
 				builder.Append(", Parent = ");
 				builder.Append(this.Parent);
+			}
+			if (this.DeletedDate >= VersionHistory.SqlDateTimeMinValue)
+			{
+				builder.Append(", DeletedDate = ");
+				builder.Append(this.DeletedDate);
 			}
 			builder.Append(" }");
 
