@@ -80,82 +80,13 @@ namespace Shadow.Model.Test
 		}
 
 		[TestMethod()]
-		[DeploymentItem("ShadowTracker.Core.dll")]
-		public void CalcEntryDeltaTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
-
-			//CatalogRepository_Accessor target = this.repos;
-			//CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry meta = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry metaExpected = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry data = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry dataExpected = null; // TODO: Initialize to an appropriate value
-			//DeltaAction expected = new DeltaAction(); // TODO: Initialize to an appropriate value
-			//DeltaAction actual;
-			//actual = target.CalcEntryDelta(entry, out meta, out data);
-			//Assert.AreEqual(metaExpected, meta);
-			//Assert.AreEqual(dataExpected, data);
-			//Assert.AreEqual(expected, actual);
-		}
-
-		[TestMethod()]
-		public void CloneEntryTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
-
-			//CatalogRepository target = this.repos;
-			//CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			//CatalogEntry data = null; // TODO: Initialize to an appropriate value
-			//target.CloneEntry(entry, data);
-		}
-
-		[TestMethod]
-		public void DeleteEntryByPathTest()
-		{
-			const string path = "/Foo.txt";
-
-			Assert.IsTrue(this.repos.EntryExists(1L, path));
-
-			this.repos.DeleteEntryByPath(1L, path);
-
-			Assert.IsFalse(this.repos.EntryExists(1L, path));
-		}
-
-		[TestMethod()]
-		public void ExistsTest()
+		public void AddOrUpdateTest()
 		{
 			Assert.Inconclusive("Verify the correctness of this test method.");
 
 			CatalogRepository target = this.repos;
-			Expression<Func<CatalogEntry, bool>> predicate = null; // TODO: Initialize to an appropriate value
-			bool expected = false; // TODO: Initialize to an appropriate value
-			bool actual;
-			actual = target.EntryExists(1L, predicate);
-			Assert.AreEqual(expected, actual);
-		}
-
-		[TestMethod()]
-		public void GetExistingPathsTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
-
-			CatalogRepository target = this.repos;
-			IQueryable<string> expected = null; // TODO: Initialize to an appropriate value
-			IEnumerable<string> actual = target.GetExistingPaths(1L);
-			Assert.AreEqual(expected, actual);
-		}
-
-		[TestMethod]
-		public void RenameEntryTest()
-		{
-			Assert.IsTrue(this.repos.EntryExists(1L, "/Foo.txt"));
-			Assert.IsFalse(this.repos.EntryExists(1L, "/Bar.txt"));
-
-			this.repos.RenameEntry(1L, "/Foo.txt", "/Bar.txt");
-
-			Assert.IsFalse(this.repos.EntryExists(1L, "/Foo.txt"));
-			Assert.IsTrue(this.repos.EntryExists(1L, "/Bar.txt"));
+			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
+			target.AddOrUpdate(entry);
 		}
 
 		[TestMethod()]
@@ -169,24 +100,28 @@ namespace Shadow.Model.Test
 			target.Update(entry, original);
 		}
 
-		[TestMethod()]
-		public void SyncTest()
+		[TestMethod]
+		public void MoveEntryTest()
 		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
+			Assert.IsTrue(this.repos.EntryExists(1L, "/Foo.txt"));
+			Assert.IsFalse(this.repos.EntryExists(1L, "/Bar.txt"));
 
-			CatalogRepository target = this.repos;
-			CatalogRepository that = null; // TODO: Initialize to an appropriate value
-			target.Sync(that);
+			this.repos.MoveEntry(1L, "/Foo.txt", "/Bar.txt");
+
+			Assert.IsFalse(this.repos.EntryExists(1L, "/Foo.txt"));
+			Assert.IsTrue(this.repos.EntryExists(1L, "/Bar.txt"));
 		}
 
-		[TestMethod()]
-		public void ApplyChangesTest()
+		[TestMethod]
+		public void DeleteEntryByPathTest()
 		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
+			const string path = "/Foo.txt";
 
-			CatalogRepository target = this.repos;
-			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			target.ApplyChanges(entry);
+			Assert.IsTrue(this.repos.EntryExists(1L, path));
+
+			this.repos.DeleteEntryByPath(1L, path);
+
+			Assert.IsFalse(this.repos.EntryExists(1L, path));
 		}
 	}
 }

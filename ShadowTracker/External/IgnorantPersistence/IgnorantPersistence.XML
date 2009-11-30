@@ -186,6 +186,22 @@
             </summary>
             <typeparam name="T">must implement ISoftDeleteEntity</typeparam>
         </member>
+        <member name="T:IgnorantPersistence.ISoftDeleteTable`1">
+            <summary>
+            A table which doesn't actually delete but instead flags as deleted
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:IgnorantPersistence.ISoftDeleteTable`1.AllItems">
+            <summary>
+            Gets a queryable collection of all items, deleted or not
+            </summary>
+        </member>
+        <member name="P:IgnorantPersistence.ISoftDeleteTable`1.Deleted">
+            <summary>
+            Gets a queryable collection of all the deleted items
+            </summary>
+        </member>
         <member name="M:IgnorantPersistence.L2S.L2SSoftDeleteTable`1.#ctor(System.Data.Linq.DataContext)">
             <summary>
             Ctor
