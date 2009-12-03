@@ -62,6 +62,17 @@ namespace Shadow.Model
 		/// <summary>
 		/// Ctor
 		/// </summary>
+		/// <param name="collection"></param>
+		/// <param name="higherPriorityPredicate">predicate that returns true if the first argument is higher priority than the second; if equal or lesser priority returns false</param>
+		public PriorityQueue(IEnumerable<T> collection, Func<T, T, bool> higherPriorityPredicate)
+			: this(MinCapacity, higherPriorityPredicate)
+		{
+			this.AddRange(collection);
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
 		/// <param name="capacity">initial capacity</param>
 		/// <param name="higherPriorityPredicate">predicate that returns true if the first argument is higher priority than the second; if equal or lesser priority returns false</param>
 		public PriorityQueue(int capacity, Func<T, T, bool> higherPriorityPredicate)
@@ -193,6 +204,68 @@ namespace Shadow.Model
 		}
 
 		#endregion Queue Methods
+
+		#region List Methods
+
+		/// <summary>
+		/// Adds the elements of the specified collection to the queue.
+		/// </summary>
+		/// <param name="values"></param>
+		public void AddRange(IEnumerable<T> collection)
+		{
+			foreach (T value in collection)
+			{
+				this.Enqueue(value);
+			}
+		}
+
+		/// <summary>
+		/// Determines whether an element is in the queue.
+		/// </summary>
+		/// <param name="item"></param>
+		/// <returns>true if item is found in the queue; otherwise, false</returns>
+		public bool Contains(T item)
+		{
+			return this.Contains(item, EqualityComparer<T>.Default);
+		}
+
+		/// <summary>
+		/// Determines whether an element is in the queue.
+		/// </summary>
+		/// <param name="item"></param>
+		/// <returns>true if item is found in the queue; otherwise, false</returns>
+		public bool Contains(T item, EqualityComparer<T> comparer)
+		{
+			if (comparer == null)
+			{
+				throw new ArgumentNullException("comparer");
+			}
+
+			if (item == null)
+			{
+				for (int j=0; j<this.count; j++)
+				{
+					if (this.data[j] == null)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			for (int i=0; i<this.count; i++)
+			{
+				if (comparer.Equals(this.data[i], item))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		#endregion List Methods
 
 		#region Rebuild Heap Methods
 
