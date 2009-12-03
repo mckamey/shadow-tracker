@@ -10,40 +10,33 @@ namespace Shadow.Model.Test
 	[TestClass]
 	public class PriorityQueueTest
 	{
-		#region Fields
+		#region Setup
 
-		private PriorityQueue<int> queue;
-		private Func<int, int, bool> comparer;
-
-		#endregion Fields
-
-		#region Init
-
-		[TestInitialize()]
-		public void InitQueue()
+		public PriorityQueue<int> InitQueue()
 		{
-			this.comparer = (a, b) => a > b;
-			this.queue = new PriorityQueue<int>(this.comparer);
+			return new PriorityQueue<int>((a, b) => a > b);
 		}
 
-		#endregion Init
+		#endregion Setup
 
 		#region Enqueue/Dequeue Tests
 
 		[TestMethod]
 		public void TestRandomPushPop()
 		{
+			PriorityQueue<int> queue = this.InitQueue();
+
 			int[] values = { 0, 5, 4, 3, 8, 7, 2, 1, 0, 9, 8, 1, 5, 6 };
 
 			foreach (int value in values)
 			{
-				this.queue.Enqueue(value);
+				queue.Enqueue(value);
 			}
 
 			// Assert that the values come off in descending order
 			foreach (int expected in values.OrderByDescending(n => n))
 			{
-				int actual = this.queue.Dequeue();
+				int actual = queue.Dequeue();
 				Assert.AreEqual(expected, actual, "Sequences are not same");
 			}
 		}
@@ -51,17 +44,19 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void TestReverseSortedPushPop()
 		{
+			PriorityQueue<int> queue = this.InitQueue();
+
 			int[] values = { 9, 9, 8, 8, 7, 6, 5, 4, 3, 3, 2, 1, 0, 0 };
 
 			foreach (int value in values)
 			{
-				this.queue.Enqueue(value);
+				queue.Enqueue(value);
 			}
 
 			// Assert that the values come off in descending order
 			foreach (int expected in values.OrderByDescending(n => n))
 			{
-				int actual = this.queue.Dequeue();
+				int actual = queue.Dequeue();
 				Assert.AreEqual(expected, actual, "Sequences are not same");
 			}
 		}
@@ -69,17 +64,19 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void TestPreSortedPushPop()
 		{
+			PriorityQueue<int> queue = this.InitQueue();
+
 			int[] values = { 0, 0, 1, 2, 3, 3, 4, 4, 5, 6, 7, 8, 8, 9, 9 };
 
 			foreach (int value in values)
 			{
-				this.queue.Enqueue(value);
+				queue.Enqueue(value);
 			}
 
 			// Assert that the values come off in descending order
 			foreach (int expected in values.OrderByDescending(n => n))
 			{
-				int actual = this.queue.Dequeue();
+				int actual = queue.Dequeue();
 				Assert.AreEqual(expected, actual, "Sequences are not same");
 			}
 		}
@@ -91,18 +88,20 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void TestPeek()
 		{
+			PriorityQueue<int> queue = this.InitQueue();
+
 			int[] values = { 0, 5, 4, 3, 8, 7, 2, 1, 0, 9, 8, 1, 5, 6 };
 
 			foreach (int value in values)
 			{
-				this.queue.Enqueue(value);
+				queue.Enqueue(value);
 			}
 
 			// Assert that the values come off in descending order
-			while (this.queue.Count > 0)
+			while (queue.Count > 0)
 			{
-				int expected = this.queue.Peek();
-				int actual = this.queue.Dequeue();
+				int expected = queue.Peek();
+				int actual = queue.Dequeue();
 				Assert.AreEqual(actual, expected, "Sequences are not same");
 			}
 		}
@@ -114,22 +113,24 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void TestClear()
 		{
+			PriorityQueue<int> queue = this.InitQueue();
+
 			int[] values = { 0, 5, 4, 3, 8, 7, 2, 1, 0, 9, 8, 1, 5, 6 };
 
 			foreach (int value in values)
 			{
-				this.queue.Enqueue(value);
+				queue.Enqueue(value);
 			}
 
-			Assert.AreEqual(this.queue.Count, values.Length);
+			Assert.AreEqual(queue.Count, values.Length);
 
-			this.queue.Clear();
+			queue.Clear();
 
-			Assert.AreEqual(this.queue.Count, 0);
+			Assert.AreEqual(queue.Count, 0);
 
 			try
 			{
-				int val = this.queue.Peek();
+				int val = queue.Peek();
 
 				Assert.Fail("Queue still contained items.");
 			}
@@ -137,7 +138,7 @@ namespace Shadow.Model.Test
 
 			try
 			{
-				int val = this.queue.Dequeue();
+				int val = queue.Dequeue();
 
 				Assert.Fail("Queue still contained items.");
 			}
@@ -151,14 +152,34 @@ namespace Shadow.Model.Test
 		[TestMethod]
 		public void TestEnumerating()
 		{
+			PriorityQueue<int> queue = this.InitQueue();
+
 			int[] values = { 0, 5, 4, 3, 8, 7, 2, 1, 0, 9, 8, 1, 5, 6 };
 
 			foreach (int value in values)
 			{
-				this.queue.Enqueue(value);
+				queue.Enqueue(value);
 			}
 
-			Assert.IsTrue(this.queue.SequenceEqual(values.OrderByDescending(n => n)), "Sequences are not same");
+			Assert.IsTrue(queue.SequenceEqual(values.OrderByDescending(n => n)), "Sequences are not same");
+		}
+
+		[TestMethod]
+		public void TestCopyTo()
+		{
+			PriorityQueue<int> queue = this.InitQueue();
+
+			int[] values = { 0, 5, 4, 3, 8, 7, 2, 1, 0, 9, 8, 1, 5, 6 };
+
+			foreach (int value in values)
+			{
+				queue.Enqueue(value);
+			}
+
+			int[] actual = new int[queue.Count];
+			queue.CopyTo(actual, 0);
+
+			Assert.IsTrue(actual.SequenceEqual(values.OrderByDescending(n => n)), "Sequences are not same");
 		}
 
 		#endregion Enumeration Tests
