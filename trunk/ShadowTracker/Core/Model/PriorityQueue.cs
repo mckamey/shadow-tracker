@@ -70,6 +70,20 @@ namespace Shadow.Model
 			this.SetCapacity(capacity);
 		}
 
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="queue"></param>
+		public PriorityQueue(PriorityQueue<T> queue)
+		{
+			this.HigherPriority = queue.HigherPriority;
+			this.count = queue.count;
+			this.version = queue.version;
+			this.data = new T[queue.data.Length];
+
+			Array.Copy(queue.data, this.data, this.count);
+		}
+
 		#endregion Init
 
 		#region Queue Methods
@@ -303,11 +317,91 @@ namespace Shadow.Model
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			// TODO: ensure that this is returned in priority order
-			for (int i=0; i< this.count; i++)
+			return new Enumerator(this);
+		}
+
+		/// <summary>
+		/// Clones the internal storage and enumerates by Dequeueing
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		public class Enumerator : IEnumerator<T>
+		{
+			#region Fields
+
+			private readonly PriorityQueue<T> Original;
+			private readonly int Version;
+
+			private PriorityQueue<T> Enumerated;
+			private T current;
+
+			#endregion Fields
+
+			#region Init
+
+			/// <summary>
+			/// Ctor
+			/// </summary>
+			/// <param name="queue"></param>
+			internal Enumerator(PriorityQueue<T> queue)
 			{
-				yield return this.data[i];
+				this.Original = queue;
+				this.Version = this.Original.version;
+				this.Enumerated = new PriorityQueue<T>(this.Original);
 			}
+
+			#endregion Init
+
+			#region IEnumerator<T> Members
+
+			public T Current
+			{
+				get { return this.current; }
+			}
+
+			#endregion IEnumerator<T> Members
+
+			#region IDisposable Members
+
+			void IDisposable.Dispose()
+			{
+			}
+
+			#endregion IDisposable Members
+
+			#region IEnumerator Members
+
+			object IEnumerator.Current
+			{
+				get { return this.current; }
+			}
+
+			public bool MoveNext()
+			{
+				if (this.Version != this.Original.version)
+				{
+					throw new InvalidOperationException("Collection was modified after the enumerator was instantiated.");
+				}
+
+				if (this.Enumerated.Count < 1)
+				{
+					return false;
+				}
+
+				this.current = this.Enumerated.Dequeue();
+				return true;
+			}
+
+			public void Reset()
+			{
+				if (this.Version != this.Original.version)
+				{
+					throw new InvalidOperationException("Collection was modified after the enumerator was instantiated.");
+				}
+
+				this.Enumerated = new PriorityQueue<T>(this.Original);
+			}
+
+			#endregion IEnumerator Members
 		}
 
 		#endregion IEnumerable<T> Members
