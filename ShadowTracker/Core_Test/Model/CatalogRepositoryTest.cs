@@ -14,35 +14,9 @@ namespace Shadow.Model.Test
 	{
 		#region Fields
 
-		private TestContext testContextInstance;
 		private CatalogRepository repos;
 
 		#endregion Fields
-
-		#region Init
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		public CatalogRepositoryTest()
-		{
-		}
-
-		#endregion Init
-
-		#region Properties
-
-		/// <summary>
-		/// Gets or sets the test context which provides
-		/// information about and functionality for the current test run.
-		/// </summary>
-		public TestContext TestContext
-		{
-			get{ return this.testContextInstance; }
-			set { this.testContextInstance = value; }
-		}
-
-		#endregion Properties
 
 		[TestInitialize()]
 		public void CatalogInitialize()
@@ -79,26 +53,26 @@ namespace Shadow.Model.Test
 			this.repos = new CatalogRepository(unitOfWork);
 		}
 
-		[TestMethod()]
-		public void AddOrUpdateTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
+		//[TestMethod()]
+		//public void AddOrUpdateTest()
+		//{
+		//    Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.repos;
-			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			target.AddOrUpdate(entry);
-		}
+		//    CatalogRepository target = this.repos;
+		//    CatalogEntry entry = null; // TODO: Initialize to an appropriate value
+		//    target.AddOrUpdate(entry);
+		//}
 
-		[TestMethod()]
-		public void UpdateTest()
-		{
-			Assert.Inconclusive("Verify the correctness of this test method.");
+		//[TestMethod()]
+		//public void UpdateTest()
+		//{
+		//    Assert.Inconclusive("Verify the correctness of this test method.");
 
-			CatalogRepository target = this.repos;
-			CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-			CatalogEntry original = null; // TODO: Initialize to an appropriate value
-			target.Update(entry, original);
-		}
+		//    CatalogRepository target = this.repos;
+		//    CatalogEntry entry = null; // TODO: Initialize to an appropriate value
+		//    CatalogEntry original = null; // TODO: Initialize to an appropriate value
+		//    target.Update(entry, original);
+		//}
 
 		[TestMethod]
 		public void MoveEntryTest()
