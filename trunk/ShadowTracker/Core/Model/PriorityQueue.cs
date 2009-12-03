@@ -250,14 +250,18 @@ namespace Shadow.Model
 		#region ICollection Members
 
 		/// <summary>
-		/// Copies the elements to an existing one-dimensional System.Array, starting at the specified array index.
+		/// Copies the elements to an existing Array, starting at the specified starting index.
 		/// </summary>
-		/// <param name="array"></param>
-		/// <param name="index"></param>
+		/// <param name="array">destination array</param>
+		/// <param name="index">starting index for copying</param>
 		public void CopyTo(Array array, int index)
 		{
-			// TODO: ensure that this is returned in priority order
-			this.data.CopyTo(array, index);
+			int i = index;
+			foreach (T item in this)
+			{
+				array.SetValue(item, i);
+				i++;
+			}
 		}
 
 		/// <summary>
@@ -286,27 +290,26 @@ namespace Shadow.Model
 
 		#endregion ICollection Members
 
+		#region IEnumerable Members
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return ((IEnumerable<T>)this.data).GetEnumerator();
+		}
+
+		#endregion IEnumerable Members
+
 		#region IEnumerable<T> Members
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
 			// TODO: ensure that this is returned in priority order
-			foreach (T item in this.data)
+			for (int i=0; i< this.count; i++)
 			{
-				yield return item;
+				yield return this.data[i];
 			}
 		}
 
 		#endregion IEnumerable<T> Members
-
-		#region IEnumerable Members
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			// TODO: ensure that this is returned in priority order
-			return this.data.GetEnumerator();
-		}
-
-		#endregion IEnumerable Members
 	}
 }
