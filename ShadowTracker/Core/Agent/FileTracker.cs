@@ -305,7 +305,6 @@ namespace Shadow.Agent
 
 							Trace.TraceInformation("Add children \"{0}/*\"", entry.FullPath);
 
-							int count = 0;
 							foreach (FileSystemInfo child in FileIterator.GetFiles(info.FullName).Where(this.fileFilter))
 							{
 								entry = FileUtility.CreateEntry(this.catalog.ID, this.catalog.Path, child);
