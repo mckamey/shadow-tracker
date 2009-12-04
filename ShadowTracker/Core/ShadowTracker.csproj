@@ -64,6 +64,9 @@
     <Compile Include="Model\CatalogRepository.cs" />
     <Compile Include="Model\Catalog.cs" />
     <Compile Include="Model\VersionHistory.cs" />
+    <Compile Include="Agent\Tasks\TaskEngine.cs" />
+    <Compile Include="Agent\Tasks\TaskPriority.cs" />
+    <Compile Include="Agent\Tasks\TaskItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyVersion.cs" />
   </ItemGroup>
