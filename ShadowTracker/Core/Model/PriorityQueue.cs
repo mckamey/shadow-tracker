@@ -169,20 +169,7 @@ namespace Shadow.Model
 		/// <returns></returns>
 		public T Dequeue()
 		{
-			if (this.count <= 0)
-			{
-				throw new InvalidOperationException("queue is empty");
-			}
-
-			T current = this.data[0];
-
-			// move the last item into root and trickle down to correct position
-			this.count--;
-			this.data[0] = this.data[this.count];
-			this.RebuildHeap();
-			this.version++;
-
-			return current;
+			return this.RemoveAt(0);
 		}
 
 		/// <summary>
@@ -241,50 +228,50 @@ namespace Shadow.Model
 		}
 
 		/// <summary>
-		/// Determines whether an element is in the queue.
+		/// Finds elements within the queue matching a specified criteria.
 		/// </summary>
-		/// <param name="item"></param>
-		/// <returns>true if item is found in the queue; otherwise, false</returns>
-		public bool Contains(T item)
+		/// <param name="predicate"></param>
+		/// <returns>a sequence of items that match the criteria</returns>
+		/// <remarks>
+		/// Find is more efficient than a Where clause since it doesn't guarantee order.
+		/// </remarks>
+		public IEnumerable<T> Find(Func<T, bool> predicate)
 		{
-			return this.Contains(item, EqualityComparer<T>.Default);
-		}
-
-		/// <summary>
-		/// Determines whether an element is in the queue.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <param name="comparer"></param>
-		/// <returns>true if item is found in the queue; otherwise, false</returns>
-		public bool Contains(T item, IEqualityComparer<T> comparer)
-		{
-			if (comparer == null)
+			if (predicate == null)
 			{
-				throw new ArgumentNullException("comparer");
-			}
-
-			if (item == null)
-			{
-				for (int j=0; j<this.count; j++)
-				{
-					if (this.data[j] == null)
-					{
-						return true;
-					}
-				}
-
-				return false;
+				throw new ArgumentNullException("predicate");
 			}
 
 			for (int i=0; i<this.count; i++)
 			{
-				if (comparer.Equals(this.data[i], item))
+				T item = this.data[i];
+				if (predicate(item))
 				{
-					return true;
+					yield return item;
 				}
 			}
+		}
 
-			return false;
+		/// <summary>
+		/// Removes and returns any elements that match the criteria
+		/// </summary>
+		/// <param name="predicate"></param>
+		/// <returns>the sequence of removed elements</returns>
+		public IEnumerable<T> Remove(Func<T, bool> predicate)
+		{
+			if (predicate == null)
+			{
+				throw new ArgumentNullException("predicate");
+			}
+
+			for (int i=0; i<this.count; i++)
+			{
+				if (predicate(this.data[i]))
+				{
+					yield return this.RemoveAt(i);
+					i--;
+				}
+			}
 		}
 
 		#endregion List Methods
@@ -292,13 +279,40 @@ namespace Shadow.Model
 		#region Rebuild Heap Methods
 
 		/// <summary>
+		/// Removes an element from anywhere in the heap and rebuilds accordingly
+		/// </summary>
+		/// <param name="index"></param>
+		/// <returns></returns>
+		private T RemoveAt(int index)
+		{
+			if (this.count <= index)
+			{
+				if (index == 0)
+				{
+					throw new InvalidOperationException("queue is empty");
+				}
+				else
+				{
+					throw new ArgumentOutOfRangeException("index");
+				}
+			}
+
+			T current = this.data[index];
+
+			// move the last item into index and trickle down to correct position
+			this.count--;
+			this.data[index] = this.data[this.count];
+			this.RebuildHeap(index);
+			this.version++;
+
+			return current;
+		}
+
+		/// <summary>
 		/// Ripples the value at the given index down to the correct position
 		/// </summary>
-		private void RebuildHeap()
+		private void RebuildHeap(int index)
 		{
-			// this could be passed in as a parameter for arbitrary rebuilding
-			int index = 0;
-
 			while (this.count > index)
 			{
 				// calc the indices of the children for the given parent index
