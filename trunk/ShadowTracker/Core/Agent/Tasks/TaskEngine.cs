@@ -102,7 +102,7 @@ namespace Shadow.Agent.Tasks
 		{
 			lock (this.Queue.SyncRoot)
 			{
-				if (!this.Queue.Contains(task))
+				if (!this.Queue.Contains(task, TaskItem.EqualityComparer))
 				{
 					this.Queue.Enqueue(task);
 				}

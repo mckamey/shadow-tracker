@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Shadow.Agent.Tasks
 {
@@ -7,6 +8,29 @@ namespace Shadow.Agent.Tasks
 	/// </summary>
 	public class TaskItem
 	{
+		#region TaskItemEqualityComparer
+
+		public static readonly IEqualityComparer<TaskItem> EqualityComparer = new TaskItemEqualityComparer();
+
+		private class TaskItemEqualityComparer : IEqualityComparer<TaskItem>
+		{
+			#region IEqualityComparer<TaskItem> Members
+
+			public bool Equals(TaskItem x, TaskItem y)
+			{
+				return StringComparer.OrdinalIgnoreCase.Equals(x.Key, y.Key);
+			}
+
+			public int GetHashCode(TaskItem obj)
+			{
+				return StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
+			}
+
+			#endregion IEqualityComparer<T> Members
+		}
+
+		#endregion TaskItemEqualityComparer
+
 		#region Properties
 
 		/// <summary>

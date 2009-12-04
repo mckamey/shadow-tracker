@@ -254,8 +254,9 @@ namespace Shadow.Model
 		/// Determines whether an element is in the queue.
 		/// </summary>
 		/// <param name="item"></param>
+		/// <param name="comparer"></param>
 		/// <returns>true if item is found in the queue; otherwise, false</returns>
-		public bool Contains(T item, EqualityComparer<T> comparer)
+		public bool Contains(T item, IEqualityComparer<T> comparer)
 		{
 			if (comparer == null)
 			{
