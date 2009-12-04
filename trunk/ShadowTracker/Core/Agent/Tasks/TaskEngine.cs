@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 using Shadow.Model;
-using System.Collections.Generic;
 
 namespace Shadow.Agent.Tasks
 {
@@ -98,20 +99,41 @@ namespace Shadow.Agent.Tasks
 			this.Timer.Change(Timeout.Infinite, Timeout.Infinite);
 		}
 
+		/// <summary>
+		/// Adds a task to the queue
+		/// </summary>
+		/// <param name="task"></param>
 		public void Add(TaskItem task)
-		{
-			this.Add(task, false);
-		}
-
-		public void Add(TaskItem task, bool allowDuplicateKeys)
 		{
 			lock (this.Queue.SyncRoot)
 			{
-				if (allowDuplicateKeys ||
-					!this.Queue.Contains(task, TaskItem.EqualityComparer))
-				{
-					this.Queue.Enqueue(task);
-				}
+				this.Queue.Enqueue(task);
+			}
+		}
+
+		/// <summary>
+		/// Adds a task to the queue
+		/// </summary>
+		/// <param name="task"></param>
+		public bool Contains(Func<TaskItem, bool> predicate)
+		{
+			lock (this.Queue.SyncRoot)
+			{
+				return this.Queue.Find(predicate).Any();
+			}
+		}
+
+		/// <summary>
+		/// Removes and returns any tasks in the queue which match the criteria
+		/// </summary>
+		/// <param name="predicate">removal criteria</param>
+		/// <returns>the sequence of removed elements</returns>
+		public IEnumerable<TaskItem> Remove(Func<TaskItem, bool> predicate)
+		{
+			lock (this.Queue.SyncRoot)
+			{
+				// convert to list so queue isn't locked during use of enumeration
+				return this.Queue.Remove(predicate).ToList();
 			}
 		}
 
