@@ -19,6 +19,8 @@ namespace Shadow.Model
 		private const int GrowthRate = 2;
 		private const double TrimThreshold = 0.9;
 
+		private readonly object SyncLock = new object();
+
 		#endregion Constants
 
 		#region Fields
@@ -46,7 +48,26 @@ namespace Shadow.Model
 		/// </summary>
 		/// <param name="capacity">initial capacity</param>
 		public PriorityQueue(int capacity)
-			: this(capacity, delegate(T a, T b) { return Comparer<T>.Default.Compare(a, b) == 1; })
+			: this(capacity, Comparer<T>.Default)
+		{
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="comparer">comparer</param>
+		public PriorityQueue(IComparer<T> comparer)
+			: this(MinCapacity, comparer)
+		{
+		}
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="capacity">initial capacity</param>
+		/// <param name="comparer">comparer</param>
+		public PriorityQueue(int capacity, IComparer<T> comparer)
+			: this(capacity, delegate(T a, T b) { return comparer.Compare(a, b) > 0; })
 		{
 		}
 
@@ -364,7 +385,7 @@ namespace Shadow.Model
 		/// </summary>
 		public bool IsSynchronized
 		{
-			get { return this.data.IsSynchronized; }
+			get { return false; }
 		}
 
 		/// <summary>
@@ -372,7 +393,7 @@ namespace Shadow.Model
 		/// </summary>
 		public object SyncRoot
 		{
-			get { return this.data.SyncRoot; }
+			get { return this.SyncLock; }
 		}
 
 		#endregion ICollection Members
