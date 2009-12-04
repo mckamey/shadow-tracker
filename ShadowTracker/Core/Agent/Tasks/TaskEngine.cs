@@ -53,15 +53,6 @@ namespace Shadow.Agent.Tasks
 		#region Properties
 
 		/// <summary>
-		/// Gets and sets if tasks with duplicate keys should be allowed
-		/// </summary>
-		public bool AllowDuplicateKeys
-		{
-			get;
-			set;
-		}
-
-		/// <summary>
 		/// Gets the count of errors
 		/// </summary>
 		public long ErrorCount
@@ -109,9 +100,14 @@ namespace Shadow.Agent.Tasks
 
 		public void Add(TaskItem task)
 		{
+			this.Add(task, false);
+		}
+
+		public void Add(TaskItem task, bool allowDuplicateKeys)
+		{
 			lock (this.Queue.SyncRoot)
 			{
-				if (this.AllowDuplicateKeys ||
+				if (allowDuplicateKeys ||
 					!this.Queue.Contains(task, TaskItem.EqualityComparer))
 				{
 					this.Queue.Enqueue(task);
