@@ -21,6 +21,14 @@ namespace Shadow.Tasks
 		void Execute(TaskEngine<T> engine, T task);
 
 		/// <summary>
+		/// Gives a chance to intercept task additions
+		/// </summary>
+		/// <param name="engine"></param>
+		/// <param name="task"></param>
+		/// <returns>true if task should be added</returns>
+		bool OnAddTask(TaskEngine<T> engine, T task);
+
+		/// <summary>
 		/// Callback when a work item generates an exception
 		/// </summary>
 		/// <param name="engine"></param>

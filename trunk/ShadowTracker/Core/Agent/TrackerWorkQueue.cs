@@ -11,7 +11,7 @@ namespace Shadow.Agent
 	{
 		#region Constants
 
-		private static readonly TimeSpan DefaultDelay = TimeSpan.FromMilliseconds(150);
+		private static readonly TimeSpan TrickleRate = TimeSpan.FromMilliseconds(150);
 		private const decimal MaxRetryCount = 3m;
 
 		#endregion Constants
@@ -20,18 +20,44 @@ namespace Shadow.Agent
 
 		public TimeSpan Delay
 		{
-			get { return TrackerWorkQueue.DefaultDelay; }
+			get { return TrackerWorkQueue.TrickleRate; }
 		}
 
 		public void Execute(TaskEngine<TrackerTask> engine, TrackerTask task)
 		{
+			if (engine == null)
+			{
+				throw new ArgumentNullException("engine");
+			}
+
 #if DEBUG
 			Trace.TraceInformation("Engine: "+task.ToString());
 #endif
 		}
 
+		public bool OnAddTask(TaskEngine<TrackerTask> engine, TrackerTask task)
+		{
+			if (engine == null)
+			{
+				throw new ArgumentNullException("engine");
+			}
+			if (task == null)
+			{
+				return false;
+			}
+
+			task.Priority = this.CalculatePriority(task);
+
+			return true;
+		}
+
 		public void OnError(TaskEngine<TrackerTask> engine, TrackerTask task, Exception ex)
 		{
+			if (engine == null)
+			{
+				throw new ArgumentNullException("engine");
+			}
+
 			Trace.TraceError("Engine Error: "+ex.Message+" "+task.ToString());
 
 			if (task == null)
@@ -42,13 +68,17 @@ namespace Shadow.Agent
 			if (task.RetryCount < TrackerWorkQueue.MaxRetryCount)
 			{
 				task.RetryCount++;
-				task.Priority = this.CalculatePriority(task);
 				engine.Add(task);
 			}
 		}
 
 		public void OnIdle(TaskEngine<TrackerTask> engine)
 		{
+			if (engine == null)
+			{
+				throw new ArgumentNullException("engine");
+			}
+
 #if DEBUG
 			Trace.TraceInformation("Engine: idle");
 #endif
@@ -200,8 +230,6 @@ namespace Shadow.Agent
 			{
 				return XHigherPriorityThanY;
 			}
-
-			// same
 			return XSamePriorityAsY;
 		}
 
