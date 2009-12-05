@@ -25,11 +25,14 @@ namespace Shadow.Agent
 
 		public void Execute(TaskEngine<TrackerTask> engine, TrackerTask task)
 		{
+#if DEBUG
+			Trace.TraceInformation("Engine: "+task.ToString());
+#endif
 		}
 
 		public void OnError(TaskEngine<TrackerTask> engine, TrackerTask task, Exception ex)
 		{
-			Trace.TraceError("Tracker TaskEngine Error: "+ex.Message);
+			Trace.TraceError("Engine Error: "+ex.Message+" "+task.ToString());
 
 			if (task == null)
 			{
@@ -47,7 +50,7 @@ namespace Shadow.Agent
 		public void OnIdle(TaskEngine<TrackerTask> engine)
 		{
 #if DEBUG
-			Trace.TraceInformation("Tracker TaskEngine Idle");
+			Trace.TraceInformation("Engine: idle");
 #endif
 		}
 
