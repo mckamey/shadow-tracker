@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 
 using Microsoft.Practices.ServiceLocation;
+using Shadow.Model;
 using Shadow.Tasks;
 
 namespace Shadow.Agent
@@ -26,6 +25,7 @@ namespace Shadow.Agent
 
 		#region Fields
 
+		private readonly IServiceLocator IoC;
 		private readonly TaskEngine<TrackerTask> WorkQueue;
 		private readonly FileSystemWatcher Watcher = new FileSystemWatcher();
 
@@ -37,56 +37,26 @@ namespace Shadow.Agent
 		/// Ctor
 		/// </summary>
 		/// <param name="ioc"></param>
-		/// <param name="catalogID"></param>
 		/// <param name="catalogPath"></param>
-		/// <param name="fileFilter"></param>
-		/// <param name="trickleRate"></param>
-		public FileTracker(string catalogPath, TaskEngine<TrackerTask> workQueue)
+		/// <param name="workQueue"></param>
+		public FileTracker(IServiceLocator ioc, string catalogPath, TaskEngine<TrackerTask> workQueue)
 		{
+			this.IoC = ioc;
+
 			this.Watcher.Path = catalogPath;
 			this.Watcher.IncludeSubdirectories = true;
 			this.Watcher.NotifyFilter = FileTracker.AllNotifyFilters;
+			this.Watcher.Error += this.OnError;
 
-			this.Watcher.Created += new FileSystemEventHandler(this.OnFileCreated);
-			this.Watcher.Changed += new FileSystemEventHandler(this.OnFileChanged);
-			this.Watcher.Renamed += new RenamedEventHandler(this.OnFileRenamed);
-			this.Watcher.Deleted += new FileSystemEventHandler(this.OnFileDeleted);
-			this.Watcher.Error += new ErrorEventHandler(this.OnError);
+			this.Watcher.Changed += this.OnFileChanged;
+			this.Watcher.Created += this.OnFileChanged;
+			this.Watcher.Deleted += this.OnFileChanged;
+			this.Watcher.Renamed += this.OnFileChanged;
 
 			this.WorkQueue = workQueue;
 		}
 
 		#endregion Init
-
-		#region Events
-
-		private void OnFileCreated(object sender, FileSystemEventArgs e)
-		{
-			this.WorkQueue.Add(new TrackerTask(e));
-		}
-
-		private void OnFileChanged(object sender, FileSystemEventArgs e)
-		{
-			this.WorkQueue.Add(new TrackerTask(e));
-		}
-
-		private void OnFileDeleted(object sender, FileSystemEventArgs e)
-		{
-			this.WorkQueue.Add(new TrackerTask(e));
-		}
-
-		private void OnFileRenamed(object sender, RenamedEventArgs e)
-		{
-			this.WorkQueue.Add(new TrackerTask(e));
-		}
-
-		private void OnError(object sender, ErrorEventArgs e)
-		{
-			string message = e.GetException().Message;
-			Trace.TraceError("FileTracker Error ("+this.Watcher.Path+"):\r\n"+message);
-		}
-
-		#endregion Events
 
 		#region Methods
 
@@ -102,6 +72,54 @@ namespace Shadow.Agent
 			this.Watcher.EnableRaisingEvents = true;
 		}
 
+		public void CheckForChanges(Catalog catalog)
+		{
+			foreach (FileSystemInfo file in FileIterator.GetFiles(catalog.Path, true))
+			{
+				this.WorkQueue.Add(new TrackerTask
+				{
+					FileInfo = file,
+					FullPath = file.FullName,
+					TaskSource = TaskSource.CheckForChanges
+				});
+			}
+		}
+
+		public void RemoveExtras(Catalog catalog)
+		{
+			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
+
+			foreach (string path in repos.GetExistingPaths(catalog.ID))
+			{
+				string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
+
+				if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
+				{
+					this.WorkQueue.Add(new TrackerTask
+					{
+						ChangeType= WatcherChangeTypes.Deleted,
+						FullPath = fullPath,
+						TaskSource = TaskSource.RemoveExtras
+					});
+				}
+			}
+		}
+
 		#endregion Methods
+
+		#region Event Handlers
+
+		private void OnFileChanged(object sender, FileSystemEventArgs e)
+		{
+			this.WorkQueue.Add(new TrackerTask(e));
+		}
+
+		private void OnError(object sender, ErrorEventArgs e)
+		{
+			string message = e.GetException().Message;
+			Trace.TraceError("FileTracker Error ("+this.Watcher.Path+"):\r\n"+message);
+		}
+
+		#endregion Event Handlers
 	}
 }

@@ -6,6 +6,13 @@ namespace Shadow.Agent
 {
 	public class TrackerTask
 	{
+		#region Fields
+
+		private FileSystemInfo fileInfo;
+		private FileSystemInfo oldFileInfo;
+
+		#endregion Fields
+
 		#region Init
 
 		/// <summary>
@@ -25,7 +32,7 @@ namespace Shadow.Agent
 				throw new ArgumentNullException("e", "FileSystemEventArgs was null");
 			}
 
-			this.TaskSource = TaskSource.FileTracker;
+			this.TaskSource = TaskSource.FileSystemEvent;
 
 			this.ChangeType = e.ChangeType;
 			this.FullPath = e.FullPath;
@@ -47,6 +54,22 @@ namespace Shadow.Agent
 			set;
 		}
 
+		public FileSystemInfo FileInfo
+		{
+			get
+			{
+				if (this.fileInfo == null)
+				{
+					if (!String.IsNullOrEmpty(this.FullPath))
+					{
+						this.fileInfo = FileUtility.CreateFileSystemInfo(this.FullPath);
+					}
+				}
+				return this.fileInfo;
+			}
+			set { this.fileInfo = value; }
+		}
+
 		public string FullPath
 		{
 			get;
@@ -57,6 +80,21 @@ namespace Shadow.Agent
 		{
 			get;
 			set;
+		}
+
+		public FileSystemInfo OldFileInfo
+		{
+			get
+			{
+				if (this.oldFileInfo == null)
+				{
+					if (!String.IsNullOrEmpty(this.OldFullPath))
+					{
+						this.oldFileInfo = FileUtility.CreateFileSystemInfo(this.OldFullPath);
+					}
+				}
+				return this.oldFileInfo;
+			}
 		}
 
 		public decimal Priority
@@ -93,6 +131,7 @@ namespace Shadow.Agent
 
 			if (this.ChangeType != default(WatcherChangeTypes))
 			{
+				builder.Append(", ");
 				builder.Append(this.ChangeType.ToString());
 			}
 

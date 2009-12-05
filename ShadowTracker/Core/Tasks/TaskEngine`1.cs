@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace Shadow.Tasks
@@ -60,19 +61,24 @@ namespace Shadow.Tasks
 
 		#region Properties
 
+		public int Count
+		{
+			get { return this.Queue.Count; }
+		}
+
 		/// <summary>
-		/// Gets the count of total errors
+		/// Gets the count of total work cycles
 		/// </summary>
-		public long ErrorCount
+		public long CycleCount
 		{
 			get;
 			private set;
 		}
 
 		/// <summary>
-		/// Gets the count of total work cycles
+		/// Gets the count of total errors
 		/// </summary>
-		public long CyclesCount
+		public long ErrorCount
 		{
 			get;
 			private set;
@@ -101,6 +107,29 @@ namespace Shadow.Tasks
 				{
 					// set state to start when tasks are added
 					this.state = EngineState.Ready;
+
+					// stop any queued iterations
+					this.Timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+					try
+					{
+						if (this.CycleCount > 1000)
+						{
+							// reduce overhead
+							this.Queue.TrimExcess();
+						}
+
+						// signal idle
+						this.Strategy.OnIdle(this);
+					}
+					catch (Exception ex)
+					{
+						try
+						{
+							this.Strategy.OnError(this, default(T), ex);
+						}
+						catch { }
+					}
 				}
 			}
 		}
@@ -200,19 +229,16 @@ namespace Shadow.Tasks
 					hasTasks = this.Queue.Count > 0;
 					if (hasTasks)
 					{
-						// perform work
+						// get highest priority task
 						task = this.Queue.Dequeue();
 					}
 				}
 
 				if (hasTasks)
 				{
+					// increment and perform work
+					this.CycleCount++;
 					this.Strategy.Execute(this, task);
-				}
-				else
-				{
-					// signal idle
-					this.Strategy.OnIdle(this);
 				}
 			}
 			catch (Exception ex)
@@ -234,5 +260,31 @@ namespace Shadow.Tasks
 		}
 
 		#endregion Work Methods
+
+		#region Object Overrides
+
+		/// <summary>
+		/// Represents the TaskItem as a string
+		/// </summary>
+		/// <returns></returns>
+		public override string ToString()
+		{
+			StringBuilder builder = new StringBuilder("{ ");
+
+			builder.Append("Count = ");
+			builder.Append(this.Count);
+
+			builder.Append(", Cycles = ");
+			builder.Append(this.CycleCount);
+
+			builder.Append(", Errors = ");
+			builder.Append(this.ErrorCount);
+
+			builder.Append(" }");
+
+			return builder.ToString();
+		}
+
+		#endregion Object Overrides
 	}
 }

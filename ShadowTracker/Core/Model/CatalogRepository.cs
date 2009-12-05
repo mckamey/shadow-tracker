@@ -179,7 +179,7 @@ namespace Shadow.Model
 					n.Parent.ToLower().StartsWith(asDir)
 				select n;
 
-			Trace.TraceInformation("Rename Entries: \"{0}*\"", asDir);
+			Trace.TraceInformation("Rename Entries: \"{0}\" to \"{1}/*\"", asDir, newPath);
 			foreach (CatalogEntry child in children)
 			{
 				child.Parent = newPath+child.Parent.Substring(oldPath.Length);

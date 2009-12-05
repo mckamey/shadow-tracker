@@ -132,29 +132,6 @@ namespace Shadow.Service
 					this.Out.WriteLine();
 					this.Out.WriteLine("Begin sync: "+folders[i].Name+" ("+folders[i].Path+")");
 
-#if TRICKLE
-					new FileUtility(this.IoC).SyncCatalog(
-						folders[i].Name,
-						folders[i].Path,
-						filterCallback,
-						settings.TrickleRate,
-						delegate(Catalog syncCatalog)
-						{
-							this.Out.WriteLine();
-							this.Out.WriteLine("End sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
-							this.Out.WriteLine("__________________________");
-						},
-						delegate(Catalog syncCatalog, Exception ex)
-						{
-							this.Error.WriteLine("Error in sync: "+syncCatalog.Name+" ("+syncCatalog.Path+")");
-							this.Error.WriteLine(ex);
-						});
-#else
-					this.Out.WriteLine();
-					this.Out.WriteLine("End sync: "+folders[i].Name+" ("+folders[i].Path+")"+Environment.NewLine+"Elapsed trickle update: "+watch.Elapsed);
-					this.Out.WriteLine("__________________________");
-#endif
-
 					Catalog catalog = repository.FindOrCreateCatalog(folders[i].Name, folders[i].Path);
 
 					TaskEngine<TrackerTask> workQueue = new TaskEngine<TrackerTask>(new TrackerWorkQueue(
@@ -164,8 +141,12 @@ namespace Shadow.Service
 						filterCallback,
 						TimeSpan.FromMilliseconds(settings.TrickleRate)));
 
-					this.Trackers[i] = new FileTracker(catalog.Path, workQueue);
+					this.Trackers[i] = new FileTracker(this.IoC, catalog.Path, workQueue);
 					this.Trackers[i].Start();
+#if TRICKLE
+					this.Trackers[i].RemoveExtras(catalog);
+					this.Trackers[i].CheckForChanges(catalog);
+#endif
 				}
 
 				this.Out.WriteLine();
