@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shadow.Agent.Tasks
+namespace Shadow.Agent
 {
 	public enum TaskPriority : int
 	{

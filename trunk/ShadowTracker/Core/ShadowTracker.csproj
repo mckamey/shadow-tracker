@@ -55,20 +55,22 @@
     <Compile Include="Agent\FileIterator.cs" />
     <Compile Include="Agent\FileTracker.cs" />
     <Compile Include="Agent\FileUtility.cs" />
+    <Compile Include="Agent\TaskPriority.cs" />
+    <Compile Include="Agent\TrackerTask.cs" />
+    <Compile Include="Agent\TrackerTaskEngine.cs" />
     <Compile Include="Configuration\WatchFolderSettings.cs" />
     <Compile Include="Configuration\WatchFolderSettingsCollection.cs" />
     <Compile Include="Configuration\TrackerSettingsSection.cs" />
     <Compile Include="IO\FlushedWriter.cs" />
-    <Compile Include="Model\PriorityQueue.cs" />
     <Compile Include="Model\CatalogEntry.cs" />
     <Compile Include="Model\CatalogRepository.cs" />
     <Compile Include="Model\Catalog.cs" />
     <Compile Include="Model\VersionHistory.cs" />
-    <Compile Include="Agent\Tasks\TaskEngine.cs" />
-    <Compile Include="Agent\Tasks\TaskPriority.cs" />
-    <Compile Include="Agent\Tasks\TaskItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyVersion.cs" />
+    <Compile Include="Tasks\ITaskEngineDefn`1.cs" />
+    <Compile Include="Tasks\PriorityQueue`1.cs" />
+    <Compile Include="Tasks\TaskEngine`1.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

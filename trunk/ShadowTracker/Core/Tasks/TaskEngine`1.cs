@@ -5,22 +5,18 @@ using System.Threading;
 
 using Shadow.Model;
 
-namespace Shadow.Agent.Tasks
+namespace Shadow.Tasks
 {
 	/// <summary>
 	/// Trickle update task engine
 	/// </summary>
-	public class TaskEngine
+	public class TaskEngine<T>
 	{
 		#region Fields
 
-		private readonly PriorityQueue<TaskItem> Queue = new PriorityQueue<TaskItem>(
-			delegate(TaskItem x, TaskItem y) { return x.Priority > y.Priority; });
-
-		private readonly Func<TaskItem, Exception, bool> OnFailure;
-		private readonly Action OnIdle;
+		private readonly PriorityQueue<T> Queue;
+		private readonly ITaskEngineDefn<T> Defn;
 		private readonly Timer Timer;
-		private readonly long Delay;
 		private bool isRunning;
 
 		#endregion Fields
@@ -30,22 +26,15 @@ namespace Shadow.Agent.Tasks
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		/// <param name="delay">milliseconds</param>
-		/// <param name="onFailure">callback when a work item throws an exception</param>
-		/// <param name="onIdle">callback when no work is ready to be performed</param>
-		public TaskEngine(
-			long delay,
-			Action onIdle,
-			Func<TaskItem, Exception, bool> onFailure)
+		public TaskEngine(ITaskEngineDefn<T> defn)
 		{
-			if (delay <= 0)
+			if (defn == null)
 			{
-				throw new ArgumentOutOfRangeException("trickleRate");
+				throw new ArgumentNullException("defn");
 			}
 
-			this.Delay = delay;
-			this.OnIdle = onIdle;
-			this.OnFailure = onFailure;
+			this.Defn = defn;
+			this.Queue = new PriorityQueue<T>(this.Defn.IsHigherPriority);
 			this.Timer = new Timer(this.Next);
 		}
 
@@ -80,11 +69,13 @@ namespace Shadow.Agent.Tasks
 		/// </summary>
 		public void Start()
 		{
-			// flag as not running to allow more iterations
+			// flag as running to allow more iterations
 			this.isRunning = true;
 
+			long delay = Math.Abs(this.Defn.Delay);
+
 			// start
-			this.Timer.Change(this.Delay, Timeout.Infinite);
+			this.Timer.Change(delay, Timeout.Infinite);
 		}
 
 		/// <summary>
@@ -92,7 +83,7 @@ namespace Shadow.Agent.Tasks
 		/// </summary>
 		public void Stop()
 		{
-			// flag as not running to prevent next iteration
+			// flag as not-running to prevent next iteration
 			this.isRunning = false;
 
 			// stop any queued iterations
@@ -103,7 +94,7 @@ namespace Shadow.Agent.Tasks
 		/// Adds a task to the queue
 		/// </summary>
 		/// <param name="task"></param>
-		public void Add(TaskItem task)
+		public void Add(T task)
 		{
 			lock (this.Queue.SyncRoot)
 			{
@@ -115,7 +106,7 @@ namespace Shadow.Agent.Tasks
 		/// Adds a task to the queue
 		/// </summary>
 		/// <param name="task"></param>
-		public bool Contains(Func<TaskItem, bool> predicate)
+		public bool Contains(Func<T, bool> predicate)
 		{
 			lock (this.Queue.SyncRoot)
 			{
@@ -128,7 +119,7 @@ namespace Shadow.Agent.Tasks
 		/// </summary>
 		/// <param name="predicate">removal criteria</param>
 		/// <returns>the sequence of removed elements</returns>
-		public IEnumerable<TaskItem> Remove(Func<TaskItem, bool> predicate)
+		public IEnumerable<T> Remove(Func<T, bool> predicate)
 		{
 			lock (this.Queue.SyncRoot)
 			{
@@ -147,7 +138,7 @@ namespace Shadow.Agent.Tasks
 		/// <param name="state"></param>
 		private void Next(object state)
 		{
-			TaskItem task = null;
+			T task = default(T);
 
 			try
 			{
@@ -161,41 +152,25 @@ namespace Shadow.Agent.Tasks
 					}
 				}
 
-				if (task != null &&
-					task.Perform != null)
+				if (task != null)
 				{
-					task.Perform();
+					this.Defn.Perform(task);
 				}
-				else if (this.OnIdle != null)
+				else
 				{
-					// singnal idle
-					this.OnIdle();
+					// signal idle
+					this.Defn.OnIdle(this);
 				}
 			}
 			catch (Exception ex)
 			{
-				this.ErrorCount++;
-				if (this.OnFailure != null)
+				try
 				{
-					try
-					{
-						// signal that an error occurred
-						// provide a chance to reprioritize
-						// and a chance to requeue
-						if (this.OnFailure(task, ex))
-						{
-							if (task != null)
-							{
-								// re-queue item
-								lock (this.Queue.SyncRoot)
-								{
-									this.Queue.Enqueue(task);
-								}
-							}
-						}
-					}
-					catch { }
+					// increment and signal error
+					this.ErrorCount++;
+					this.Defn.OnError(this, task, ex);
 				}
+				catch { }
 			}
 
 			if (this.isRunning)
