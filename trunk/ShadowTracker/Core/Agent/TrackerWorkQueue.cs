@@ -58,9 +58,19 @@ namespace Shadow.Agent
 
 		void ITaskStrategy<TrackerTask>.Execute(TaskEngine<TrackerTask> engine, TrackerTask task)
 		{
+#if DEBUG
+			if (engine.CycleCount % 1000 == 0)
+			{
+				Trace.TraceInformation("Engine ("+this.CatalogID+") cycle: "+engine);
+			}
+#endif
 			if (engine == null)
 			{
 				throw new ArgumentNullException("engine");
+			}
+			if (task == null)
+			{
+				throw new ArgumentNullException("task");
 			}
 
 			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
@@ -70,6 +80,7 @@ namespace Shadow.Agent
 				case WatcherChangeTypes.Deleted:
 				{
 					repos.DeleteEntryByPath(this.CatalogID, this.NormalizePath(task.FullPath));
+					repos.Save();
 					break;
 				}
 				case WatcherChangeTypes.Renamed:
@@ -79,9 +90,7 @@ namespace Shadow.Agent
 						throw new ArgumentException("OldFullPath", "Rename operation was missing OldFullPath");
 					}
 
-					string oldPath = this.NormalizePath(task.OldFullPath);
-					string newPath = this.NormalizePath(task.FullPath);
-					if (this.IsFiltered(oldPath))
+					if (this.IsFiltered(task.OldFileInfo))
 					{
 						task.ChangeType = WatcherChangeTypes.Created;
 						task.OldFullPath = null;
@@ -89,21 +98,26 @@ namespace Shadow.Agent
 						return;
 					}
 
-					if (this.IsFiltered(newPath))
+					if (this.IsFiltered(task.FileInfo))
 					{
 						task.ChangeType = WatcherChangeTypes.Deleted;
+						task.FileInfo = null;
 						task.FullPath = task.OldFullPath;
 						task.OldFullPath = null;
 						engine.Add(task);
 						return;
 					}
 
-					bool found = repos.MoveEntry(this.CatalogID, oldPath, newPath);
-					if (!found)
+					if (repos.MoveEntry(this.CatalogID, this.NormalizePath(task.OldFullPath), this.NormalizePath(task.FullPath)))
+					{
+						repos.Save();
+					}
+					else
 					{
 						task.ChangeType = WatcherChangeTypes.Created;
 						task.OldFullPath = null;
 						engine.Add(task);
+						return;
 					}
 					break;
 				}
@@ -111,25 +125,25 @@ namespace Shadow.Agent
 				case WatcherChangeTypes.Changed:
 				default:
 				{
-					FileSystemInfo info = FileUtility.CreateFileSystemInfo(task.FullPath);
-					CatalogEntry entry = FileUtility.CreateEntry(this.CatalogID, this.CatalogPath, info);
-					if (repos.AddOrUpdate(entry))
+					CatalogEntry entry = FileUtility.CreateEntry(this.CatalogID, this.CatalogPath, task.FileInfo, false);
+					if (repos.AddOrUpdate(entry, task.FileInfo as FileInfo))
 					{
 						repos.Save();
 					}
 
 					// add any children
-					if (info is DirectoryInfo &&
-						task.ChangeType == WatcherChangeTypes.Created)
+					if (task.FileInfo is DirectoryInfo)
 					{
-						Trace.TraceInformation("Add children \"{0}/*\"", entry.FullPath);
+#if VERBOSE
+						Trace.TraceInformation("Queue children \"{0}/*\"", task.FullPath);
+#endif
 
-						// TODO: queue these up instead of immediately executing
-						foreach (FileSystemInfo child in ((DirectoryInfo)info).GetFileSystemInfos())
+						foreach (FileSystemInfo child in ((DirectoryInfo)task.FileInfo).GetFileSystemInfos())
 						{
 							engine.Add(new TrackerTask
 							{
 								ChangeType = task.ChangeType,
+								FileInfo = child,
 								FullPath = child.FullName,
 								TaskSource = task.TaskSource
 							});
@@ -138,8 +152,6 @@ namespace Shadow.Agent
 					break;
 				}
 			}
-
-			repos.Save();
 		}
 
 		bool ITaskStrategy<TrackerTask>.OnAddTask(TaskEngine<TrackerTask> engine, TrackerTask task)
@@ -155,11 +167,12 @@ namespace Shadow.Agent
 
 			if (task.ChangeType == WatcherChangeTypes.Renamed)
 			{
-				if (this.IsFiltered(task.FullPath))
+				if (this.IsFiltered(task.FileInfo))
 				{
-					if (!this.IsFiltered(task.OldFullPath))
+					if (!this.IsFiltered(task.OldFileInfo))
 					{
 						task.ChangeType = WatcherChangeTypes.Deleted;
+						task.FileInfo = null;
 						task.FullPath = task.OldFullPath;
 						task.OldFullPath = null;
 					}
@@ -168,29 +181,27 @@ namespace Shadow.Agent
 						return false;
 					}
 				}
-				else if (this.IsFiltered(task.OldFullPath))
+				else if (this.IsFiltered(task.OldFileInfo))
 				{
 					task.ChangeType = WatcherChangeTypes.Created;
 					task.OldFullPath = null;
 				}
-				else
-				{
-					return false;
-				}
 			}
-			else if (this.IsFiltered(task.FullPath))
+			else if (this.IsFiltered(task.FileInfo))
 			{
-				return false;
-			}
-
-			IEnumerable<TrackerTask> tasks = engine.Find(t => StringComparer.OrdinalIgnoreCase.Equals(t.FullPath, task.FullPath));
-			if (tasks.Any())
-			{
-				// TODO: determine if should remove, filter, merge
 				return false;
 			}
 
 			task.Priority = this.CalculatePriority(task);
+
+			// TODO: determine best way to remove, filter, or merge duplicates
+			if (engine.Contains(t => StringComparer.OrdinalIgnoreCase.Equals(t.FullPath, task.FullPath)))
+			{
+				// if any with lower priority are removed then add, otherwise filter out new task
+				return engine.Remove(t =>
+					StringComparer.OrdinalIgnoreCase.Equals(t.FullPath, task.FullPath) &&
+					t.Priority < task.Priority).Any();
+			}
 
 			return true;
 		}
@@ -204,15 +215,21 @@ namespace Shadow.Agent
 
 			if (task == null)
 			{
-				Trace.TraceError("Engine Error: "+ex.Message);
+				Trace.TraceError("Engine Error ("+this.CatalogID+"): "+ex.Message);
 				return;
 			}
 
-			Trace.TraceError("Engine Error: "+ex.Message+" "+task.ToString());
+			Trace.TraceError("Engine Error ("+this.CatalogID+"): "+ex.Message+" "+task.ToString());
 
 			if (engine == null)
 			{
 				throw new ArgumentNullException("engine");
+			}
+
+			task.FileInfo.Refresh();
+			if (!task.FileInfo.Exists)
+			{
+				return;
 			}
 
 			if (ex is IOException)
@@ -222,6 +239,7 @@ namespace Shadow.Agent
 
 				// TODO: decide how to better detect this issue
 				// works best when wait for 1000ms or more
+
 				task.RetryCount++;
 				engine.Add(task);
 			}
@@ -241,7 +259,7 @@ namespace Shadow.Agent
 			}
 
 #if DEBUG
-			Trace.TraceInformation("Engine: idle");
+			Trace.TraceInformation("Engine ("+this.CatalogID+") idle: "+engine);
 #endif
 		}
 
@@ -255,20 +273,20 @@ namespace Shadow.Agent
 			return FileUtility.NormalizePath(this.CatalogPath, path);
 		}
 
-		private bool IsFiltered(string fullPath)
+		private bool IsFiltered(FileSystemInfo info)
 		{
-			if (this.fileFilter == null)
+			if (info == null)
 			{
-				return false;
+				return true;
 			}
-
-			FileSystemInfo info = FileUtility.CreateFileSystemInfo(fullPath);
 
 			bool filtered = !this.fileFilter(info);
+#if VERBOSE
 			if (filtered)
 			{
-				Trace.TraceInformation("Filtered: \"{0}\"", fullPath);
+			    Trace.TraceInformation("Filtered: \"{0}\"", info.FullName);
 			}
+#endif
 			return filtered;
 		}
 
@@ -306,15 +324,15 @@ namespace Shadow.Agent
 			// arbitrary values but allows custom ordering
 			switch (source)
 			{
-				case TaskSource.FileTracker:
+				case TaskSource.FileSystemEvent:
 				{
 					return 1.00m;
 				}
-				case TaskSource.ExtrasScan:
+				case TaskSource.RemoveExtras:
 				{
 					return 0.67m;
 				}
-				case TaskSource.ChangesScan:
+				case TaskSource.CheckForChanges:
 				{
 					return 0.33m;
 				}

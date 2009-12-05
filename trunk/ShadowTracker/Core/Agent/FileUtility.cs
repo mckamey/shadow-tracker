@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 
-using Microsoft.Practices.ServiceLocation;
 using Shadow.Model;
 
 namespace Shadow.Agent
@@ -97,7 +97,7 @@ namespace Shadow.Agent
 	/// <summary>
 	/// Utility for synchronizing a catalog with the file system.
 	/// </summary>
-	public class FileUtility
+	public static class FileUtility
 	{
 		#region Constants
 
@@ -112,151 +112,7 @@ namespace Shadow.Agent
 
 		#endregion Constants
 
-		#region Fields
-
-		private readonly IServiceLocator IoC;
-
-		#endregion Fields
-
-		#region Init
-
-		/// <summary>
-		/// Ctor
-		/// </summary>
-		/// <param name="ioc"></param>
-		public FileUtility(IServiceLocator ioc)
-		{
-			this.IoC = ioc;
-		}
-
-		#endregion Init
-
 		#region Methods
-
-		/// <summary>
-		/// Syncs an existing catalog with the file system.
-		/// </summary>
-		/// <param name="name"></param>
-		/// <param name="rootPath"></param>
-		/// <param name="fileFilter">function that returns true if passes, false if is to be filtered</param>
-		/// <param name="trickleRate">number of milliseconds to wait between each file processed (for trickle updates)</param>
-		/// <param name="completedCallback"></param>
-		/// <param name="failureCallback"></param>
-		public void SyncCatalog(
-			string name,
-			string rootPath,
-			Func<FileSystemInfo, bool> fileFilter,
-			int trickleRate,
-			Action<Catalog> onCompleted,
-			Action<Catalog, Exception> onFailure)
-		{
-			if (String.IsNullOrEmpty(rootPath))
-			{
-				throw new ArgumentNullException("rootPath", "Root path is invalid.");
-			}
-			if (!Directory.Exists(rootPath))
-			{
-				throw new ArgumentException("Root path is invalid.", "rootPath");
-			}
-			rootPath = FileUtility.EnsureTrailingSlash(rootPath);
-
-			Catalog catalog = this.IoC.GetInstance<CatalogRepository>().FindOrCreateCatalog(name, rootPath);
-
-			// remove any extra files first to ensure references stay intact
-			this.RemoveExtras(
-				catalog,
-				trickleRate,
-				delegate(Catalog c)
-				{
-					// find any new or updated files after
-					this.FindChanged(catalog, rootPath, trickleRate, fileFilter, onCompleted, onFailure);
-				},
-				onFailure);
-		}
-
-		private void FindChanged(
-			Catalog catalog,
-			string rootPath,
-			int trickleRate,
-			Func<FileSystemInfo, bool> fileFilter,
-			Action<Catalog> onCompleted,
-			Action<Catalog, Exception> onFailure)
-		{
-			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
-			var files = FileIterator.GetFiles(rootPath, true).Where(fileFilter);
-
-			files.TrickleIterate(
-				trickleRate,
-				delegate(FileSystemInfo file)
-				{
-					CatalogEntry entry = FileUtility.CreateEntry(catalog.ID, catalog.Path, file, !catalog.IsIndexed);
-					if (repos.AddOrUpdate(entry, file as FileInfo))
-					{
-						repos.Save();
-					}
-				},
-				delegate()
-				{
-					if (onCompleted != null)
-					{
-						onCompleted(catalog);
-					}
-				},
-				delegate(Exception ex)
-				{
-					if (onFailure == null)
-					{
-						throw ex;
-					}
-					onFailure(catalog, ex);
-				});
-		}
-
-		private void RemoveExtras(
-			Catalog catalog,
-			int trickleRate,
-			Action<Catalog> onCompleted,
-			Action<Catalog, Exception> onFailure)
-		{
-			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
-			var paths = repos.GetExistingPaths(catalog.ID);
-
-			paths.TrickleIterate(
-				trickleRate,
-				delegate(string path)
-				{
-					string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
-					if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
-					{
-						repos.DeleteEntryByPath(catalog.ID, path);
-						repos.Save();
-					}
-				},
-				delegate()
-				{
-					// flag catalog as indexed
-					if (!catalog.IsIndexed)
-					{
-						catalog.IsIndexed = true;
-						repos.Catalogs.Update(catalog);
-						repos.Save();
-					}
-
-					// signal extras are removed
-					if (onCompleted != null)
-					{
-						onCompleted(catalog);
-					}
-				},
-				delegate(Exception ex)
-				{
-					if (onFailure == null)
-					{
-						throw ex;
-					}
-					onFailure(catalog, ex);
-				});
-		}
 
 		/// <summary>
 		/// Builds a CatalogEntry from a file system descriptor. (Requires read access)
@@ -267,7 +123,7 @@ namespace Shadow.Agent
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
-		[System.Diagnostics.DebuggerStepThrough]
+		[DebuggerStepThrough]
 		internal static CatalogEntry CreateEntry(long catalogID, string catalogPath, FileSystemInfo file)
 		{
 			return FileUtility.CreateEntry(catalogID, catalogPath, file, true);
@@ -283,8 +139,10 @@ namespace Shadow.Agent
 		/// <exception cref="System.UnauthorizedAccessException">The path is read-only or is a directory.</exception>
 		/// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
 		/// <exception cref="System.IO.IOException">The file is already open.</exception>
-		private static CatalogEntry CreateEntry(long catalogID, string catalogPath, FileSystemInfo file, bool calcHash)
+		internal static CatalogEntry CreateEntry(long catalogID, string catalogPath, FileSystemInfo file, bool calcHash)
 		{
+			file.Refresh();
+
 			FileInfo fileInfo = file as FileInfo;
 
 			DirectoryInfo parent =
@@ -313,7 +171,7 @@ namespace Shadow.Agent
 			return entry;
 		}
 
-		[System.Diagnostics.DebuggerStepThrough]
+		[DebuggerStepThrough]
 		public static Func<FileSystemInfo, bool> CreateFileFilter(params string[] trackedExtensions)
 		{
 			return CreateFileFilter(FileUtility.DefaultFilteredAttribs, trackedExtensions);
@@ -324,7 +182,7 @@ namespace Shadow.Agent
 			return delegate(FileSystemInfo node)
 			{
 				if (node is DirectoryInfo ||
-					!node.Exists && String.IsNullOrEmpty(node.Extension))
+					(!node.Exists && String.IsNullOrEmpty(node.Extension)))
 				{
 					return true;
 				}
@@ -349,7 +207,8 @@ namespace Shadow.Agent
 
 		internal static FileSystemInfo CreateFileSystemInfo(string path)
 		{
-			if (Directory.Exists(path))
+			if (Directory.Exists(path) ||
+				(String.IsNullOrEmpty(Path.GetExtension(path)) && !File.Exists(path)))
 			{
 				// is a directory
 				return new DirectoryInfo(path);
@@ -384,7 +243,7 @@ namespace Shadow.Agent
 		/// <param name="rootPath"></param>
 		/// <param name="path"></param>
 		/// <returns></returns>
-		private static string DenormalizePath(string rootPath, string path)
+		internal static string DenormalizePath(string rootPath, string path)
 		{
 			path = path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
 
