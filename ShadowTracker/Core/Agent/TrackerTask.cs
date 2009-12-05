@@ -25,7 +25,7 @@ namespace Shadow.Agent
 				throw new ArgumentNullException("e", "FileSystemEventArgs was null");
 			}
 
-			this.Priority = TaskPriority.High;
+			this.TaskSource = TaskSource.FileTracker;
 
 			this.ChangeType = e.ChangeType;
 			this.FullPath = e.FullPath;
@@ -59,13 +59,19 @@ namespace Shadow.Agent
 			set;
 		}
 
-		public TaskPriority Priority
+		public decimal Priority
 		{
 			get;
 			set;
 		}
 
 		public int RetryCount
+		{
+			get;
+			set;
+		}
+
+		public TaskSource TaskSource
 		{
 			get;
 			set;
@@ -83,7 +89,7 @@ namespace Shadow.Agent
 		{
 			StringBuilder builder = new StringBuilder("{ ");
 
-			builder.Append(this.Priority.ToString());
+			builder.Append(this.TaskSource.ToString());
 
 			builder.Append(this.ChangeType.ToString());
 

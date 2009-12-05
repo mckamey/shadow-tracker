@@ -55,7 +55,7 @@
     <Compile Include="Agent\FileIterator.cs" />
     <Compile Include="Agent\FileTracker.cs" />
     <Compile Include="Agent\FileUtility.cs" />
-    <Compile Include="Agent\TaskPriority.cs" />
+    <Compile Include="Agent\TaskSource.cs" />
     <Compile Include="Agent\TrackerTask.cs" />
     <Compile Include="Agent\TrackerWorkQueue.cs" />
     <Compile Include="Configuration\WatchFolderSettings.cs" />
