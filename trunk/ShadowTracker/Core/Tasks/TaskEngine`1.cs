@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-using Shadow.Model;
-
 namespace Shadow.Tasks
 {
 	/// <summary>
@@ -12,10 +10,19 @@ namespace Shadow.Tasks
 	/// </summary>
 	public class TaskEngine<T>
 	{
+		#region Constants
+
+		/// <summary>
+		/// A constant used to specify an infinite waiting period
+		/// </summary>
+		public static readonly TimeSpan Infinite = TimeSpan.FromMilliseconds(Timeout.Infinite);
+
+		#endregion Constants
+
 		#region Fields
 
 		private readonly PriorityQueue<T> Queue;
-		private readonly ITaskEngineDefn<T> Defn;
+		private readonly ITaskStrategy<T> Strategy;
 		private readonly Timer Timer;
 		private bool isRunning;
 
@@ -26,15 +33,15 @@ namespace Shadow.Tasks
 		/// <summary>
 		/// Ctor
 		/// </summary>
-		public TaskEngine(ITaskEngineDefn<T> defn)
+		public TaskEngine(ITaskStrategy<T> strategy)
 		{
-			if (defn == null)
+			if (strategy == null)
 			{
-				throw new ArgumentNullException("defn");
+				throw new ArgumentNullException("strategy");
 			}
 
-			this.Defn = defn;
-			this.Queue = new PriorityQueue<T>(this.Defn.IsHigherPriority);
+			this.Strategy = strategy;
+			this.Queue = new PriorityQueue<T>(this.Strategy);
 			this.Timer = new Timer(this.Next);
 		}
 
@@ -72,10 +79,8 @@ namespace Shadow.Tasks
 			// flag as running to allow more iterations
 			this.isRunning = true;
 
-			long delay = Math.Abs(this.Defn.Delay);
-
 			// start
-			this.Timer.Change(delay, Timeout.Infinite);
+			this.Timer.Change(this.Strategy.Delay, TaskEngine<T>.Infinite);
 		}
 
 		/// <summary>
@@ -142,24 +147,26 @@ namespace Shadow.Tasks
 
 			try
 			{
+				bool hasTasks;
 				lock (this.Queue.SyncRoot)
 				{
 					// check if any pending work
-					if (this.Queue.Count > 0)
+					hasTasks = this.Queue.Count > 0;
+					if (hasTasks)
 					{
 						// perform work
 						task = this.Queue.Dequeue();
 					}
 				}
 
-				if (task != null)
+				if (hasTasks)
 				{
-					this.Defn.Perform(task);
+					this.Strategy.Execute(this, task);
 				}
 				else
 				{
 					// signal idle
-					this.Defn.OnIdle(this);
+					this.Strategy.OnIdle(this);
 				}
 			}
 			catch (Exception ex)
@@ -168,7 +175,7 @@ namespace Shadow.Tasks
 				{
 					// increment and signal error
 					this.ErrorCount++;
-					this.Defn.OnError(this, task, ex);
+					this.Strategy.OnError(this, task, ex);
 				}
 				catch { }
 			}
