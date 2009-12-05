@@ -10,6 +10,17 @@ namespace Shadow.Tasks
 	/// </summary>
 	public class TaskEngine<T>
 	{
+		#region EngineState
+
+		private enum EngineState
+		{
+			Stopped,
+			Ready,
+			Running
+		}
+
+		#endregion EngineState
+
 		#region Constants
 
 		/// <summary>
@@ -24,7 +35,7 @@ namespace Shadow.Tasks
 		private readonly PriorityQueue<T> Queue;
 		private readonly ITaskStrategy<T> Strategy;
 		private readonly Timer Timer;
-		private bool isRunning;
+		private EngineState state = EngineState.Stopped;
 
 		#endregion Fields
 
@@ -50,7 +61,7 @@ namespace Shadow.Tasks
 		#region Properties
 
 		/// <summary>
-		/// Gets the count of errors
+		/// Gets the count of total errors
 		/// </summary>
 		public long ErrorCount
 		{
@@ -59,7 +70,7 @@ namespace Shadow.Tasks
 		}
 
 		/// <summary>
-		/// Gets the count of work cycles
+		/// Gets the count of total work cycles
 		/// </summary>
 		public long CyclesCount
 		{
@@ -76,11 +87,22 @@ namespace Shadow.Tasks
 		/// </summary>
 		public void Start()
 		{
-			// flag as running to allow more iterations
-			this.isRunning = true;
+			lock (this.Queue.SyncRoot)
+			{
+				if (this.Queue.Count > 0)
+				{
+					// set state to allow more iterations
+					this.state = EngineState.Running;
 
-			// start
-			this.Timer.Change(this.Strategy.Delay, TaskEngine<T>.Infinite);
+					// start
+					this.Timer.Change(this.Strategy.Delay, TaskEngine<T>.Infinite);
+				}
+				else
+				{
+					// set state to start when tasks are added
+					this.state = EngineState.Ready;
+				}
+			}
 		}
 
 		/// <summary>
@@ -88,8 +110,8 @@ namespace Shadow.Tasks
 		/// </summary>
 		public void Stop()
 		{
-			// flag as not-running to prevent next iteration
-			this.isRunning = false;
+			// set state to prevent next iteration
+			this.state = EngineState.Stopped;
 
 			// stop any queued iterations
 			this.Timer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -104,6 +126,12 @@ namespace Shadow.Tasks
 			lock (this.Queue.SyncRoot)
 			{
 				this.Queue.Enqueue(task);
+
+				// is ready to begin so start iterations
+				if (this.state == EngineState.Ready)
+				{
+					this.Start();
+				}
 			}
 		}
 
@@ -180,7 +208,7 @@ namespace Shadow.Tasks
 				catch { }
 			}
 
-			if (this.isRunning)
+			if (this.state != EngineState.Stopped)
 			{
 				// queue up next iteration
 				this.Start();

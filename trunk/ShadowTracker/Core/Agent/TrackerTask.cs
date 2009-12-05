@@ -82,28 +82,34 @@ namespace Shadow.Agent
 		#region Object Overrides
 
 		/// <summary>
-		/// Displays the TaskItem as a string
+		/// Represents the TaskItem as a string
 		/// </summary>
 		/// <returns></returns>
 		public override string ToString()
 		{
 			StringBuilder builder = new StringBuilder("{ ");
 
-			builder.Append(this.TaskSource.ToString());
+			builder.Append(this.Priority.ToString());
 
-			builder.Append(this.ChangeType.ToString());
+			if (this.ChangeType != default(WatcherChangeTypes))
+			{
+				builder.Append(this.ChangeType.ToString());
+			}
 
 			if (!String.IsNullOrEmpty(this.FullPath))
 			{
-				builder.Append("; Path=");
+				builder.Append(", Path=");
 				builder.Append(this.FullPath);
 			}
 
 			if (!String.IsNullOrEmpty(this.OldFullPath))
 			{
-				builder.Append("; Old=");
+				builder.Append(", Old=");
 				builder.Append(this.OldFullPath);
 			}
+
+			builder.Append(", Source=");
+			builder.Append(this.TaskSource);
 
 			builder.Append(" }");
 
