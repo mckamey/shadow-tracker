@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Shadow.Model
+namespace Shadow.Tasks
 {
 	/// <summary>
 	/// A queue which always returns the highest priority element.

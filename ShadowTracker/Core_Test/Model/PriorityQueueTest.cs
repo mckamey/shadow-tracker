@@ -2,7 +2,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Shadow.Model.Test
+namespace Shadow.Tasks.Test
 {
 	/// <summary>
 	/// Summary description for PriorityQueueTest

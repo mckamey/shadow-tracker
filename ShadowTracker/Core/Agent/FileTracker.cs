@@ -169,19 +169,16 @@ namespace Shadow.Agent
 				return;
 			}
 
-			// apply change immediately since should be no other updates
-			this.ApplyChange(e);
+			lock (this.Timers)
+			{
+				if (this.Timers.ContainsKey(e.FullPath))
+				{
+					//Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
+					return;
+				}
 
-			//lock (this.Timers)
-			//{
-			//    if (this.Timers.ContainsKey(e.FullPath))
-			//    {
-			//        //Console.WriteLine(e.ChangeType+" Timer exists: "+e.FullPath);
-			//        return;
-			//    }
-
-			//    this.Timers[e.FullPath] = new Timer(this.UpdateTimerCallback, e, 2*UpdateDelay, Timeout.Infinite);
-			//}
+				this.Timers[e.FullPath] = new Timer(this.UpdateTimerCallback, e, 2*UpdateDelay, Timeout.Infinite);
+			}
 		}
 
 		private void OnFileRenamed(object sender, RenamedEventArgs e)
