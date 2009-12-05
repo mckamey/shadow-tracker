@@ -125,12 +125,16 @@ namespace Shadow.Tasks
 		{
 			lock (this.Queue.SyncRoot)
 			{
-				this.Queue.Enqueue(task);
-
-				// is ready to begin so start iterations
-				if (this.state == EngineState.Ready)
+				// give chanced to modify task, filter duplicates, etc.
+				if (this.Strategy.OnAddTask(this, task))
 				{
-					this.Start();
+					this.Queue.Enqueue(task);
+
+					// is ready to begin so start iterations
+					if (this.state == EngineState.Ready)
+					{
+						this.Start();
+					}
 				}
 			}
 		}
