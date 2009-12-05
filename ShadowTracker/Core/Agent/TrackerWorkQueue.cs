@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 using Shadow.Tasks;
 
@@ -43,6 +44,13 @@ namespace Shadow.Agent
 			}
 			if (task == null)
 			{
+				return false;
+			}
+
+			IEnumerable<TrackerTask> tasks = engine.Find(t => StringComparer.OrdinalIgnoreCase.Equals(t.FullPath, task.FullPath));
+			if (tasks.Any())
+			{
+				// TODO: determine if should remove, filter, merge
 				return false;
 			}
 
