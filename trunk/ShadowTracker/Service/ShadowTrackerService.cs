@@ -16,6 +16,7 @@ using Shadow.Configuration;
 using Shadow.IO;
 using Shadow.Model;
 using Shadow.Service.IoC;
+using Shadow.Tasks;
 
 namespace Shadow.Service
 {
@@ -154,11 +155,17 @@ namespace Shadow.Service
 					this.Out.WriteLine("__________________________");
 #endif
 
-					this.Trackers[i] = new FileTracker(this.IoC);
-					this.Trackers[i].TrackerError += this.OnError;
-
 					Catalog catalog = repository.FindOrCreateCatalog(folders[i].Name, folders[i].Path);
-					this.Trackers[i].Start(catalog, filterCallback);
+
+					TaskEngine<TrackerTask> workQueue = new TaskEngine<TrackerTask>(new TrackerWorkQueue(
+						this.IoC,
+						catalog.ID,
+						catalog.Path,
+						filterCallback,
+						TimeSpan.FromMilliseconds(settings.TrickleRate)));
+
+					this.Trackers[i] = new FileTracker(catalog.Path, workQueue);
+					this.Trackers[i].Start();
 				}
 
 				this.Out.WriteLine();
@@ -194,20 +201,6 @@ namespace Shadow.Service
 
 			this.Out.WriteLine();
 			this.Out.WriteLine("Tracking stopped.");
-		}
-
-		private void OnError(object sender, ErrorEventArgs e)
-		{
-			FileTracker tracker = sender as FileTracker;
-			if (tracker == null || tracker.Catalog == null)
-			{
-				this.Error.WriteLine("Error in FileTracker:");
-			}
-			else
-			{
-				this.Error.WriteLine("Error in FileTracker: "+tracker.Catalog.Name+" ("+tracker.Catalog.Path+")");
-			}
-			this.Error.WriteLine(e.GetException());
 		}
 
 		public void InstallDatabase()

@@ -50,9 +50,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Shadow Include="Test References\ShadowTracker.Core.accessor" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Core\ShadowTracker.csproj">
       <Project>{A3ACDA32-DFDD-4E78-AEF7-15452C0F4369}</Project>
       <Name>ShadowTracker</Name>

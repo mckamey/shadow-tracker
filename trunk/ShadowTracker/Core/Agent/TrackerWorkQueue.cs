@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
+using Microsoft.Practices.ServiceLocation;
+using Shadow.Model;
 using Shadow.Tasks;
 
 namespace Shadow.Agent
@@ -12,37 +14,171 @@ namespace Shadow.Agent
 	{
 		#region Constants
 
-		private static readonly TimeSpan TrickleRate = TimeSpan.FromMilliseconds(150);
 		private const decimal MaxRetryCount = 3m;
 
 		#endregion Constants
 
-		#region ITaskStrategy<TrackerTask> Members
+		#region Fields
 
-		public TimeSpan Delay
+		private readonly IServiceLocator IoC;
+		private readonly TimeSpan TrickleRate;
+		private readonly Func<FileSystemInfo, bool> fileFilter;
+		private readonly long CatalogID;
+		private readonly string CatalogPath;
+
+		#endregion Fields
+
+		#region Init
+
+		/// <summary>
+		/// Ctor
+		/// </summary>
+		/// <param name="ioc"></param>
+		/// <param name="catalogID"></param>
+		/// <param name="catalogPath"></param>
+		/// <param name="fileFilter"></param>
+		/// <param name="trickleRate"></param>
+		public TrackerWorkQueue(IServiceLocator ioc, long catalogID, string catalogPath, Func<FileSystemInfo, bool> fileFilter, TimeSpan trickleRate)
 		{
-			get { return TrackerWorkQueue.TrickleRate; }
+			this.CatalogID = catalogID;
+			this.CatalogPath = catalogPath;
+			this.IoC = ioc;
+			this.fileFilter = fileFilter;
+			this.TrickleRate = trickleRate;
 		}
 
-		public void Execute(TaskEngine<TrackerTask> engine, TrackerTask task)
+		#endregion Init
+
+		#region ITaskStrategy<TrackerTask> Members
+
+		TimeSpan ITaskStrategy<TrackerTask>.Delay
+		{
+			get { return this.TrickleRate; }
+		}
+
+		void ITaskStrategy<TrackerTask>.Execute(TaskEngine<TrackerTask> engine, TrackerTask task)
 		{
 			if (engine == null)
 			{
 				throw new ArgumentNullException("engine");
 			}
 
-#if DEBUG
-			Trace.TraceInformation("Engine: "+task.ToString());
-#endif
+			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
+
+			switch (task.ChangeType)
+			{
+				case WatcherChangeTypes.Deleted:
+				{
+					repos.DeleteEntryByPath(this.CatalogID, this.NormalizePath(task.FullPath));
+					break;
+				}
+				case WatcherChangeTypes.Renamed:
+				{
+					if (String.IsNullOrEmpty(task.OldFullPath))
+					{
+						throw new ArgumentException("OldFullPath", "Rename operation was missing OldFullPath");
+					}
+
+					string oldPath = this.NormalizePath(task.OldFullPath);
+					string newPath = this.NormalizePath(task.FullPath);
+					if (this.IsFiltered(oldPath))
+					{
+						task.ChangeType = WatcherChangeTypes.Created;
+						task.OldFullPath = null;
+						engine.Add(task);
+						return;
+					}
+
+					if (this.IsFiltered(newPath))
+					{
+						task.ChangeType = WatcherChangeTypes.Deleted;
+						task.FullPath = task.OldFullPath;
+						task.OldFullPath = null;
+						engine.Add(task);
+						return;
+					}
+
+					bool found = repos.MoveEntry(this.CatalogID, oldPath, newPath);
+					if (!found)
+					{
+						task.ChangeType = WatcherChangeTypes.Created;
+						task.OldFullPath = null;
+						engine.Add(task);
+					}
+					break;
+				}
+				case WatcherChangeTypes.Created:
+				case WatcherChangeTypes.Changed:
+				default:
+				{
+					FileSystemInfo info = FileUtility.CreateFileSystemInfo(task.FullPath);
+					CatalogEntry entry = FileUtility.CreateEntry(this.CatalogID, this.CatalogPath, info);
+					if (repos.AddOrUpdate(entry))
+					{
+						repos.Save();
+					}
+
+					// add any children
+					if (info is DirectoryInfo &&
+						task.ChangeType == WatcherChangeTypes.Created)
+					{
+						Trace.TraceInformation("Add children \"{0}/*\"", entry.FullPath);
+
+						// TODO: queue these up instead of immediately executing
+						foreach (FileSystemInfo child in ((DirectoryInfo)info).GetFileSystemInfos())
+						{
+							engine.Add(new TrackerTask
+							{
+								ChangeType = task.ChangeType,
+								FullPath = child.FullName,
+								TaskSource = task.TaskSource
+							});
+						}
+					}
+					break;
+				}
+			}
+
+			repos.Save();
 		}
 
-		public bool OnAddTask(TaskEngine<TrackerTask> engine, TrackerTask task)
+		bool ITaskStrategy<TrackerTask>.OnAddTask(TaskEngine<TrackerTask> engine, TrackerTask task)
 		{
 			if (engine == null)
 			{
 				throw new ArgumentNullException("engine");
 			}
 			if (task == null)
+			{
+				return false;
+			}
+
+			if (task.ChangeType == WatcherChangeTypes.Renamed)
+			{
+				if (this.IsFiltered(task.FullPath))
+				{
+					if (!this.IsFiltered(task.OldFullPath))
+					{
+						task.ChangeType = WatcherChangeTypes.Deleted;
+						task.FullPath = task.OldFullPath;
+						task.OldFullPath = null;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else if (this.IsFiltered(task.OldFullPath))
+				{
+					task.ChangeType = WatcherChangeTypes.Created;
+					task.OldFullPath = null;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else if (this.IsFiltered(task.FullPath))
 			{
 				return false;
 			}
@@ -59,18 +195,35 @@ namespace Shadow.Agent
 			return true;
 		}
 
-		public void OnError(TaskEngine<TrackerTask> engine, TrackerTask task, Exception ex)
+		void ITaskStrategy<TrackerTask>.OnError(TaskEngine<TrackerTask> engine, TrackerTask task, Exception ex)
 		{
+			if (ex == null)
+			{
+				throw new ArgumentNullException("ex");
+			}
+
+			if (task == null)
+			{
+				Trace.TraceError("Engine Error: "+ex.Message);
+				return;
+			}
+
+			Trace.TraceError("Engine Error: "+ex.Message+" "+task.ToString());
+
 			if (engine == null)
 			{
 				throw new ArgumentNullException("engine");
 			}
 
-			Trace.TraceError("Engine Error: "+ex.Message+" "+task.ToString());
-
-			if (task == null)
+			if (ex is IOException)
 			{
-				return;
+				//"The process cannot access the file 'XYZ' because it is being used by another process."
+				// http://stackoverflow.com/questions/1314958
+
+				// TODO: decide how to better detect this issue
+				// works best when wait for 1000ms or more
+				task.RetryCount++;
+				engine.Add(task);
 			}
 
 			if (task.RetryCount < TrackerWorkQueue.MaxRetryCount)
@@ -80,7 +233,7 @@ namespace Shadow.Agent
 			}
 		}
 
-		public void OnIdle(TaskEngine<TrackerTask> engine)
+		void ITaskStrategy<TrackerTask>.OnIdle(TaskEngine<TrackerTask> engine)
 		{
 			if (engine == null)
 			{
@@ -93,6 +246,33 @@ namespace Shadow.Agent
 		}
 
 		#endregion ITaskStrategy<TrackerTask> Members
+
+		#region Utility Methods
+
+		[DebuggerStepThrough]
+		private string NormalizePath(string path)
+		{
+			return FileUtility.NormalizePath(this.CatalogPath, path);
+		}
+
+		private bool IsFiltered(string fullPath)
+		{
+			if (this.fileFilter == null)
+			{
+				return false;
+			}
+
+			FileSystemInfo info = FileUtility.CreateFileSystemInfo(fullPath);
+
+			bool filtered = !this.fileFilter(info);
+			if (filtered)
+			{
+				Trace.TraceInformation("Filtered: \"{0}\"", fullPath);
+			}
+			return filtered;
+		}
+
+		#endregion Utility Methods
 
 		#region Priority Calculations
 
