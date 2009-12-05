@@ -52,7 +52,7 @@ namespace Shadow.Tasks
 			}
 
 			this.Strategy = strategy;
-			this.Queue = new PriorityQueue<T>(this.Strategy);
+			this.Queue = new PriorityQueue<T>(strategy);
 			this.Timer = new Timer(this.Next);
 		}
 

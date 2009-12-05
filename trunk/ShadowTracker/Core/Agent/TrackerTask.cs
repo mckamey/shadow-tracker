@@ -89,7 +89,7 @@ namespace Shadow.Agent
 		{
 			StringBuilder builder = new StringBuilder("{ ");
 
-			builder.Append(this.Priority.ToString());
+			builder.Append(this.Priority.ToString("0.000"));
 
 			if (this.ChangeType != default(WatcherChangeTypes))
 			{
@@ -110,6 +110,12 @@ namespace Shadow.Agent
 
 			builder.Append(", Source=");
 			builder.Append(this.TaskSource);
+
+			if (this.RetryCount > 0)
+			{
+				builder.Append(", Retry=");
+				builder.Append(this.RetryCount);
+			}
 
 			builder.Append(" }");
 
