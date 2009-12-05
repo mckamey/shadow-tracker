@@ -7,17 +7,16 @@ using Shadow.Tasks;
 
 namespace Shadow.Agent
 {
-	public class TrackerWorkQueue :
-		ITaskStrategy<TrackerTask>,
-		IComparer<TrackerTask>
+	public class TrackerWorkQueue : ITaskStrategy<TrackerTask>
 	{
 		#region Constants
 
 		private static readonly TimeSpan DefaultDelay = TimeSpan.FromMilliseconds(150);
+		private const decimal MaxRetryCount = 3m;
 
 		#endregion Constants
 
-		#region ITaskEngineDefn<TrackerTask> Members
+		#region ITaskStrategy<TrackerTask> Members
 
 		public TimeSpan Delay
 		{
@@ -37,10 +36,10 @@ namespace Shadow.Agent
 				return;
 			}
 
-			if (task.RetryCount < 3)
+			if (task.RetryCount < TrackerWorkQueue.MaxRetryCount)
 			{
 				task.RetryCount++;
-				task.Priority--;
+				task.Priority = this.CalculatePriority(task);
 				engine.Add(task);
 			}
 		}
@@ -52,7 +51,114 @@ namespace Shadow.Agent
 #endif
 		}
 
-		#endregion ITaskEngineDefn<TrackerTask> Members
+		#endregion ITaskStrategy<TrackerTask> Members
+
+		#region Priority Calculations
+
+		/// <summary>
+		/// Calculates a fuzzy weighting of tasks which may then be ordered.
+		/// </summary>
+		/// <param name="task"></param>
+		/// <returns></returns>
+		private decimal CalculatePriority(TrackerTask task)
+		{
+			const decimal TaskSourceWeight = 0.35m;
+			const decimal ChangeTypeWeight = 0.25m;
+			const decimal RetryCountWeight = 0.40m;
+
+			decimal priority = 0.0m;
+
+			priority += this.PrioritizeTaskSource(task.TaskSource) * TaskSourceWeight;
+			priority += this.PrioritizeChangeType(task.ChangeType) * ChangeTypeWeight;
+			priority += this.PrioritizeRetryCount(task.RetryCount) * RetryCountWeight;
+
+			return priority;
+		}
+
+		/// <summary>
+		/// Calculates prioritization for the task-source component
+		/// </summary>
+		/// <param name="source"></param>
+		/// <returns>a normalized [0.0-1.0] range</returns>
+		private decimal PrioritizeTaskSource(TaskSource source)
+		{
+			// arbitrary values but allows custom ordering
+			switch (source)
+			{
+				case TaskSource.FileTracker:
+				{
+					return 1.00m;
+				}
+				case TaskSource.ExtrasScan:
+				{
+					return 0.67m;
+				}
+				case TaskSource.ChangesScan:
+				{
+					return 0.33m;
+				}
+				default:
+				{
+					return 0.00m;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Calculates prioritization for the retry-count component
+		/// </summary>
+		/// <param name="retryCount"></param>
+		/// <returns>a normalized [0.0-1.0] range</returns>
+		private decimal PrioritizeRetryCount(decimal retryCount)
+		{
+			// bound count between zero and max
+			if (retryCount < Decimal.Zero)
+			{
+				retryCount = Decimal.Zero;
+			}
+			else if (retryCount > TrackerWorkQueue.MaxRetryCount)
+			{
+				retryCount = TrackerWorkQueue.MaxRetryCount;
+			}
+
+			// normalize count inversely between zero and max
+			return (TrackerWorkQueue.MaxRetryCount-retryCount) / TrackerWorkQueue.MaxRetryCount;
+		}
+
+		/// <summary>
+		/// Calculates prioritization for the change-type component
+		/// </summary>
+		/// <param name="changeType"></param>
+		/// <returns>a normalized [0.0-1.0] range</returns>
+		private decimal PrioritizeChangeType(WatcherChangeTypes changeType)
+		{
+			// arbitrary values but allows custom ordering
+			switch (changeType)
+			{
+				case WatcherChangeTypes.Deleted:
+				{
+					return 1.00m;
+				}
+				case WatcherChangeTypes.Renamed:
+				{
+					return 0.75m;
+				}
+				case WatcherChangeTypes.Created:
+				{
+					return 0.50m;
+				}
+				case WatcherChangeTypes.Changed:
+				{
+					return 0.25m;
+				}
+				default:
+				{
+					return 0.00m;
+				}
+			}
+		}
+
+		#endregion Priority Calculations
 
 		#region IComparer<TrackerTask> Members
 
@@ -82,7 +188,7 @@ namespace Shadow.Agent
 				return XHigherPriorityThanY;
 			}
 
-			// Priority directly affects
+			// compare Priority levels
 			if (x.Priority < y.Priority)
 			{
 				return XLowerPriorityThanY;
@@ -92,57 +198,8 @@ namespace Shadow.Agent
 				return XHigherPriorityThanY;
 			}
 
-			// the higher RetryCount, the lower priority
-			if (x.RetryCount < y.RetryCount)
-			{
-				return XHigherPriorityThanY;
-			}
-			if (x.RetryCount > y.RetryCount)
-			{
-				return XLowerPriorityThanY;
-			}
-
-			// sort by change type
-			int xPri = GetChangeTypePriority(x.ChangeType);
-			int yPri = GetChangeTypePriority(y.ChangeType);
-			if (xPri < yPri)
-			{
-				return XLowerPriorityThanY;
-			}
-			if (xPri > yPri)
-			{
-				return XHigherPriorityThanY;
-			}
-
 			// same
 			return XSamePriorityAsY;
-		}
-
-		private static int GetChangeTypePriority(WatcherChangeTypes changeType)
-		{
-			switch (changeType)
-			{
-				case WatcherChangeTypes.Deleted:
-				{
-					return 4;
-				}
-				case WatcherChangeTypes.Renamed:
-				{
-					return 3;
-				}
-				case WatcherChangeTypes.Created:
-				{
-					return 2;
-				}
-				case WatcherChangeTypes.Changed:
-				{
-					return 1;
-				}
-				default:
-				{
-					return 0;
-				}
-			}
 		}
 
 		#endregion IComparer<TrackerTask> Members
