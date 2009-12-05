@@ -152,6 +152,20 @@ namespace Shadow.Tasks
 		}
 
 		/// <summary>
+		/// Finds any tasks in the queue which match the criteria
+		/// </summary>
+		/// <param name="predicate">matching criteria</param>
+		/// <returns>the sequence of matched elements</returns>
+		public IEnumerable<T> Find(Func<T, bool> predicate)
+		{
+			lock (this.Queue.SyncRoot)
+			{
+				// convert to list so queue isn't locked during use of enumeration
+				return this.Queue.Find(predicate).ToList();
+			}
+		}
+
+		/// <summary>
 		/// Removes and returns any tasks in the queue which match the criteria
 		/// </summary>
 		/// <param name="predicate">removal criteria</param>
