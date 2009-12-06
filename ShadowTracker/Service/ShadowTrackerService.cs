@@ -100,6 +100,9 @@ namespace Shadow.Service
 		{
 			try
 			{
+				Trace.Listeners.Clear();
+				Trace.Listeners.Add(new TextWriterTraceListener(this.Out));
+
 				TrackerSettingsSection settings = TrackerSettingsSection.GetSettings();
 
 				var filterCallback = FileUtility.CreateFileFilter(settings.FileFilters);
@@ -122,8 +125,6 @@ namespace Shadow.Service
 				this.Out.WriteLine("Beginning trickle update...");
 				this.Out.WriteLine(settings.FileFilter);
 				this.Out.WriteLine("__________________________");
-
-				var watch = Stopwatch.StartNew();
 
 				WatchFolderSettingsCollection folders = settings.WatchFolders;
 				this.Trackers = new FileTracker[folders.Count];

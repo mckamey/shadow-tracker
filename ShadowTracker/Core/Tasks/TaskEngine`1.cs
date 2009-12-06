@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -34,6 +35,7 @@ namespace Shadow.Tasks
 
 		#region Fields
 
+		private readonly Stopwatch Watch = Stopwatch.StartNew();
 		private readonly PriorityQueue<T> Queue;
 		private readonly ITaskStrategy<T> Strategy;
 		private readonly Timer Timer;
@@ -83,6 +85,14 @@ namespace Shadow.Tasks
 		{
 			get;
 			private set;
+		}
+
+		/// <summary>
+		/// Gets the elapsed life of the engine
+		/// </summary>
+		public TimeSpan Elapsed
+		{
+			get { return this.Watch.Elapsed; }
 		}
 
 		#endregion Properties
@@ -280,6 +290,9 @@ namespace Shadow.Tasks
 
 			builder.Append(", Errors = ");
 			builder.Append(this.ErrorCount);
+
+			builder.Append(", Elapsed = ");
+			builder.Append(this.Elapsed);
 
 			builder.Append(" }");
 
