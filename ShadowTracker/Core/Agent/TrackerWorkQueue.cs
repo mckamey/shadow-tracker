@@ -194,7 +194,7 @@ namespace Shadow.Agent
 
 			task.Priority = this.CalculatePriority(task);
 
-			// TODO: determine best way to remove, filter, or merge duplicates
+			// TODO: determine best way to remove, filter, or merge work queue duplicates
 			if (engine.Contains(t => StringComparer.OrdinalIgnoreCase.Equals(t.FullPath, task.FullPath)))
 			{
 				// if any with lower priority are removed then add, otherwise filter out new task
@@ -236,10 +236,7 @@ namespace Shadow.Agent
 			{
 				//"The process cannot access the file 'XYZ' because it is being used by another process."
 				// http://stackoverflow.com/questions/1314958
-
-				// TODO: decide how to better detect this issue
-				// works best when wait for 1000ms or more
-
+				// seems to work best when wait for 1000ms
 				task.RetryCount++;
 				engine.Add(task);
 			}

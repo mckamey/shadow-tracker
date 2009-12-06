@@ -31,23 +31,23 @@ namespace Shadow.Agent
 				return null;
 			}
 
-#if DEBUG
-			//var timer = System.Diagnostics.Stopwatch.StartNew();
-			//try
-			//{
+#if VERBOSE
+			var timer = System.Diagnostics.Stopwatch.StartNew();
+			try
 #endif
-			using (Stream data = file.OpenRead())
 			{
-				return FileHash.ComputeHash(data);
+				using (Stream data = file.OpenRead())
+				{
+					return FileHash.ComputeHash(data);
+				}
 			}
-#if DEBUG
-			//}
-			//finally
-			//{
-			//    timer.Stop();
-			//    long ms = timer.ElapsedMilliseconds;
-			//    Console.WriteLine("Hash took {0} ms for {1} bytes", ms, file.Length);
-			//}
+#if VERBOSE
+			finally
+			{
+				timer.Stop();
+				long ms = timer.ElapsedMilliseconds;
+				Console.WriteLine("Hash took {0} ms for {1} bytes", ms, file.Length);
+			}
 #endif
 		}
 
