@@ -1,99 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 using Shadow.Model;
 
 namespace Shadow.Agent
 {
-	internal static class EnumerableExtensions
-	{
-		#region Methods
-
-		public static void TrickleIterate<T>(
-			this IEnumerable<T> items,
-			int trickleRate,
-			Action<T> doWork,
-			Action onCompleted,
-			Action<Exception> onFailure)
-		{
-			if (trickleRate > 0)
-			{
-				var enumerator = items.GetEnumerator();
-
-				// perform loop with a timer to allow trickle iteration
-				// use a closure as the callback to allow access to local vars
-				Timer timer = null;
-				timer = new Timer(
-					delegate(object state)
-					{
-						try
-						{
-							// check if any left
-							if (!enumerator.MoveNext())
-							{
-								if (onCompleted != null)
-								{
-									onCompleted();
-								}
-								return;
-							}
-
-							// perform work
-							doWork(enumerator.Current);
-						}
-						catch (Exception ex)
-						{
-							if (onFailure == null)
-							{
-								throw;
-							}
-							onFailure(ex);
-
-							// TODO: create a retry queue
-						}
-
-						// queue up next iteration
-						timer.Change(trickleRate, Timeout.Infinite);
-					},
-					null,
-					trickleRate,
-					Timeout.Infinite);
-			}
-			else
-			{
-				foreach (T item in items)
-				{
-					try
-					{
-						// sync each node
-						doWork(item);
-					}
-					catch (Exception ex)
-					{
-						if (onFailure == null)
-						{
-							throw;
-						}
-						onFailure(ex);
-
-						// TODO: create a retry queue
-					}
-				}
-
-				if (onCompleted != null)
-				{
-					onCompleted();
-				}
-			}
-		}
-
-		#endregion Methods
-	}
-
 	/// <summary>
 	/// Utility for synchronizing a catalog with the file system.
 	/// </summary>

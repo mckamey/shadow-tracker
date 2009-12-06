@@ -53,27 +53,6 @@ namespace Shadow.Model.Test
 			this.repos = new CatalogRepository(unitOfWork);
 		}
 
-		//[TestMethod()]
-		//public void AddOrUpdateTest()
-		//{
-		//    Assert.Inconclusive("Verify the correctness of this test method.");
-
-		//    CatalogRepository target = this.repos;
-		//    CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-		//    target.AddOrUpdate(entry);
-		//}
-
-		//[TestMethod()]
-		//public void UpdateTest()
-		//{
-		//    Assert.Inconclusive("Verify the correctness of this test method.");
-
-		//    CatalogRepository target = this.repos;
-		//    CatalogEntry entry = null; // TODO: Initialize to an appropriate value
-		//    CatalogEntry original = null; // TODO: Initialize to an appropriate value
-		//    target.Update(entry, original);
-		//}
-
 		[TestMethod]
 		public void MoveEntryTest()
 		{
