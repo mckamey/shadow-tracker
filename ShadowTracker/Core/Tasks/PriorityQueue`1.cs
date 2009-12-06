@@ -99,7 +99,7 @@ namespace Shadow.Tasks
 		public PriorityQueue(int capacity, Func<T, T, bool> higherPriorityPredicate)
 		{
 			this.HigherPriority = higherPriorityPredicate;
-			this.SetCapacity(capacity);
+			this.Capacity = capacity;
 		}
 
 		/// <summary>
@@ -110,10 +110,10 @@ namespace Shadow.Tasks
 		{
 			this.HigherPriority = queue.HigherPriority;
 			this.count = queue.count;
-			this.version = queue.version;
 			this.data = new T[queue.data.Length];
 
 			Array.Copy(queue.data, this.data, this.count);
+			this.version = queue.version;
 		}
 
 		#endregion Init
@@ -130,7 +130,7 @@ namespace Shadow.Tasks
 			if (this.count >= this.data.Length)
 			{
 				// grow internal storage
-				this.SetCapacity(GrowthRate * this.count);
+				this.Capacity = GrowthRate * this.count;
 			}
 
 			// insert value at end of queue
@@ -190,25 +190,28 @@ namespace Shadow.Tasks
 			int threshold = (int)(this.data.Length * TrimThreshold);
 			if (this.count < threshold)
 			{
-				this.SetCapacity(this.count);
+				this.Capacity = this.count;
 			}
 		}
 
 		/// <summary>
-		/// Sets the capacity of the underlying storage
+		/// Gets the current capacity of the underlying storage
 		/// </summary>
-		/// <param name="capacity"></param>
-		private void SetCapacity(int capacity)
+		internal int Capacity
 		{
-			// bound capacity between MinCapacity and the current count
-			capacity = Math.Max(this.count, Math.Max(MinCapacity, capacity));
-
-			T[] array = new T[capacity];
-			if (this.count > 0)
+			get { return this.data.Length; }
+			private set
 			{
-				Array.Copy(this.data, 0, array, 0, this.count);
+				// bound capacity between MinCapacity and the current count
+				value = Math.Max(this.count, Math.Max(MinCapacity, value));
+
+				T[] array = new T[value];
+				if (this.count > 0)
+				{
+					Array.Copy(this.data, 0, array, 0, this.count);
+				}
+				this.data = array;
 			}
-			this.data = array;
 		}
 
 		#endregion Queue Methods
