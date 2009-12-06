@@ -28,6 +28,7 @@ namespace Shadow.Tasks
 		/// A constant used to specify an infinite waiting period
 		/// </summary>
 		public static readonly TimeSpan Infinite = TimeSpan.FromMilliseconds(Timeout.Infinite);
+		private const int TrimThreshold = 1000;
 
 		#endregion Constants
 
@@ -113,7 +114,7 @@ namespace Shadow.Tasks
 
 					try
 					{
-						if (this.CycleCount > 1000)
+						if (this.Queue.Capacity > TaskEngine<T>.TrimThreshold)
 						{
 							// reduce overhead
 							this.Queue.TrimExcess();
