@@ -134,11 +134,11 @@ namespace Shadow.Agent
 		}
 
 		/// <summary>
-		/// Makes paths root-relative and converts to URL type directory delim (for more compact encoding in C-style languages).
+		/// Makes paths root-relative and converts to URL type directory delim (for more compact encoding in C-style strings).
 		/// </summary>
 		/// <param name="fullPath"></param>
 		/// <returns>root-relative paths</returns>
-		internal static string NormalizePath(string rootPath, string fullPath)
+		public static string NormalizePath(string rootPath, string fullPath)
 		{
 			rootPath = FileUtility.TrimTrailingSlash(rootPath);
 
@@ -156,14 +156,14 @@ namespace Shadow.Agent
 		/// <param name="rootPath"></param>
 		/// <param name="path"></param>
 		/// <returns></returns>
-		internal static string DenormalizePath(string rootPath, string path)
+		public static string DenormalizePath(string rootPath, string path)
 		{
 			path = path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
 
 			return Path.Combine(rootPath, path);
 		}
 
-		internal static void SplitPath(string path, out string parent, out string name)
+		public static void SplitPath(string path, out string parent, out string name)
 		{
 			int index = path.LastIndexOf('/');
 
