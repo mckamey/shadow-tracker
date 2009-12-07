@@ -134,7 +134,7 @@ namespace Shadow.Agent
 		}
 
 		/// <summary>
-		/// Makes paths root-relative and converts to URL type directory delim (for more compact encoding in C-style strings).
+		/// Makes paths root-relative and converts to URL-style directory delim (for more compact encoding in C-style strings).
 		/// </summary>
 		/// <param name="fullPath"></param>
 		/// <returns>root-relative paths</returns>
