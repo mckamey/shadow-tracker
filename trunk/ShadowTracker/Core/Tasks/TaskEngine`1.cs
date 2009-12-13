@@ -29,7 +29,7 @@ namespace Shadow.Tasks
 		/// A constant used to specify an infinite waiting period
 		/// </summary>
 		public static readonly TimeSpan Infinite = TimeSpan.FromMilliseconds(Timeout.Infinite);
-		private const int TrimThreshold = 1000;
+		internal const int TrimThreshold = 1000;
 
 		#endregion Constants
 

@@ -1,6 +1,4 @@
-﻿#define TRICKLE
-
-using System;
+﻿using System;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Diagnostics;
@@ -143,12 +141,8 @@ namespace Shadow.Service
 						TimeSpan.FromMilliseconds(settings.TrickleRate),
 						settings.ThreadCount));
 
-					this.Trackers[i] = new FileTracker(this.IoC, catalog.Path, workQueue);
+					this.Trackers[i] = new FileTracker(this.IoC, catalog.ID, catalog.Path, workQueue);
 					this.Trackers[i].Start();
-#if TRICKLE
-					this.Trackers[i].RemoveExtras(catalog);
-					this.Trackers[i].CheckForChanges(catalog);
-#endif
 				}
 
 				this.Out.WriteLine();

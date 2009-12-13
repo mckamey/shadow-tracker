@@ -26,6 +26,7 @@ namespace Shadow.Agent
 		private readonly Func<FileSystemInfo, bool> fileFilter;
 		private readonly long CatalogID;
 		private readonly string CatalogPath;
+		private readonly IEnumerator<FileSystemInfo> IdleQueue;
 
 		#endregion Fields
 
@@ -48,6 +49,7 @@ namespace Shadow.Agent
 			this.fileFilter = fileFilter;
 			this.TrickleRate = trickleRate;
 			this.ThreadCount = threadCount;
+			this.IdleQueue = FileIterator.GetFiles(catalogPath, true).GetEnumerator();
 		}
 
 		#endregion Init
@@ -67,7 +69,7 @@ namespace Shadow.Agent
 		void ITaskStrategy<TrackerTask>.Execute(TaskEngine<TrackerTask> engine, int timerID, TrackerTask task)
 		{
 #if DEBUG
-			if (engine.CycleCount % 1000 == 0)
+			if (engine.CycleCount % TaskEngine<TrackerTask>.TrimThreshold == 0)
 			{
 				Trace.TraceInformation("Engine ("+this.CatalogID+") cycle: "+engine);
 			}
@@ -266,6 +268,22 @@ namespace Shadow.Agent
 #if DEBUG
 			Trace.TraceInformation("Engine ("+this.CatalogID+") idle: "+engine);
 #endif
+
+			// add 100 more at a time
+			int count = 0;
+			while (count < 100 && this.IdleQueue.MoveNext())
+			{
+				FileSystemInfo file = this.IdleQueue.Current;
+
+				engine.Add(new TrackerTask
+				{
+					FileInfo = file,
+					FullPath = file.FullName,
+					TaskSource = TaskSource.CheckForChanges
+				});
+
+				count++;
+			}
 		}
 
 		#endregion ITaskStrategy<TrackerTask> Members
