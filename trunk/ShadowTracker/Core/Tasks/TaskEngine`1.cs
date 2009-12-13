@@ -127,7 +127,7 @@ namespace Shadow.Tasks
 						timer.Change(this.Strategy.Delay, TaskEngine<T>.Infinite);
 					}
 				}
-				else
+				else if (this.state != EngineState.Ready)
 				{
 					// set state to start when tasks are added
 					this.state = EngineState.Ready;
@@ -147,7 +147,7 @@ namespace Shadow.Tasks
 						}
 
 						// signal idle
-						this.Strategy.OnIdle(this, -1);
+						this.Strategy.OnIdle(this);
 					}
 					catch (Exception ex)
 					{
@@ -250,12 +250,15 @@ namespace Shadow.Tasks
 		{
 			T task = default(T);
 
-			int timerID = -1;
+			int timerID;
 			try
 			{
 				timerID = (int)state;
 			}
-			catch { }
+			catch
+			{
+				timerID = -2;
+			}
 
 			try
 			{

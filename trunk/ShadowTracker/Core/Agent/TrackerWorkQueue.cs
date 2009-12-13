@@ -256,7 +256,7 @@ namespace Shadow.Agent
 			}
 		}
 
-		void ITaskStrategy<TrackerTask>.OnIdle(TaskEngine<TrackerTask> engine, int timerID)
+		void ITaskStrategy<TrackerTask>.OnIdle(TaskEngine<TrackerTask> engine)
 		{
 			if (engine == null)
 			{
