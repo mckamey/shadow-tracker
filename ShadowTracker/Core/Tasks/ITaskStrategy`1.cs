@@ -54,6 +54,6 @@ namespace Shadow.Tasks
 		/// <remarks>
 		/// Provides an opportunity to perform background cleanup
 		/// </remarks>
-		void OnIdle(TaskEngine<T> engine, int timerID);
+		void OnIdle(TaskEngine<T> engine);
 	}
 }
