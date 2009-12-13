@@ -270,8 +270,8 @@ namespace Shadow.Agent
 #endif
 
 			// add 100 more at a time
-			int count = 0;
-			while (count < 100 && this.IdleQueue.MoveNext())
+			int count = TaskEngine<TrackerTask>.TrimThreshold / 10;
+			while (count > 0 && this.IdleQueue.MoveNext())
 			{
 				FileSystemInfo file = this.IdleQueue.Current;
 
@@ -282,7 +282,7 @@ namespace Shadow.Agent
 					TaskSource = TaskSource.CheckForChanges
 				});
 
-				count++;
+				count--;
 			}
 		}
 
