@@ -14,11 +14,19 @@ namespace Shadow.Tasks
 		}
 
 		/// <summary>
+		/// Gets the number of simultaneous tasks which may be performed
+		/// </summary>
+		int ThreadCount
+		{
+			get;
+		}
+
+		/// <summary>
 		/// Performs a single cycle of work
 		/// </summary>
 		/// <param name="engine"></param>
 		/// <param name="task"></param>
-		void Execute(TaskEngine<T> engine, T task);
+		void Execute(TaskEngine<T> engine, int timerID, T task);
 
 		/// <summary>
 		/// Gives a chance to intercept task additions
@@ -37,7 +45,7 @@ namespace Shadow.Tasks
 		/// <remarks>
 		/// Provides an opportunity to reprioritize and/or retry
 		/// </remarks>
-		void OnError(TaskEngine<T> engine, T task, Exception error);
+		void OnError(TaskEngine<T> engine, int timerID, T task, Exception error);
 
 		/// <summary>
 		/// Callback when no work is ready to be performed</summary>
@@ -46,6 +54,6 @@ namespace Shadow.Tasks
 		/// <remarks>
 		/// Provides an opportunity to perform background cleanup
 		/// </remarks>
-		void OnIdle(TaskEngine<T> engine);
+		void OnIdle(TaskEngine<T> engine, int timerID);
 	}
 }

@@ -14,6 +14,7 @@ namespace Shadow.Configuration
 		private const string DefaultSectionPath = "trackerSettings";
 		private const string DefaultServiceName = "ShadowTrackerService";
 		private const int DefaultTrickleRate = 200;//milliseconds
+		private const int DefaultThreadCount = 1;//threads
 
 		private const string Key_ServiceName = "serviceName";
 		private const string Key_DisplayName = "displayName";
@@ -22,6 +23,7 @@ namespace Shadow.Configuration
 		private const string Key_SqlMapping = "sqlMapping";
 		private const string Key_FileFilter = "fileFilter";
 		private const string Key_TrickleRate = "trickleRate";
+		private const string Key_ThreadCount = "threadCount";
 		private const string Key_WatchFolders = ""; // default so no key name
 
 		#endregion Constants
@@ -170,6 +172,23 @@ namespace Shadow.Configuration
 				}
 			}
 			set { this[Key_TrickleRate] = value; }
+		}
+
+		[ConfigurationProperty(Key_ThreadCount, DefaultValue=DefaultThreadCount, IsRequired=false)]
+		public int ThreadCount
+		{
+			get
+			{
+				try
+				{
+					return (int)this[Key_ThreadCount];
+				}
+				catch
+				{
+					return DefaultThreadCount;
+				}
+			}
+			set { this[Key_ThreadCount] = value; }
 		}
 
 		[ConfigurationProperty(Key_WatchFolders, IsDefaultCollection=true)]
