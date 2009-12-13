@@ -2,8 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("ShadowTracker.Core_Test")]
-[assembly: AssemblyDescription("Shadow Tracker Core Library Test.")]
+[assembly: AssemblyTitle("ShadowTracker.Test")]
+[assembly: AssemblyDescription("Shadow Tracker Library Test.")]
 [assembly: AssemblyProduct("ShadowTracker")]
 [assembly: AssemblyCopyright("Copyright ©2009. All rights reserved.")]
 

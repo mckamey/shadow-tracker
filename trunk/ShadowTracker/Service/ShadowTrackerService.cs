@@ -110,7 +110,7 @@ namespace Shadow.Service
 				CatalogRepository repository = this.IoC.GetInstance<CatalogRepository>();
 				var version = repository.GetVersionInfo();
 
-				this.Out.WriteLine("ShadowTracker");
+				this.Out.WriteLine(this.GetType().Name);
 				if (version != null)
 				{
 					this.Out.WriteLine("v"+version.Label+" ("+version.UpdatedDate.ToString("yyyy-MM-dd HH:mm")+")");

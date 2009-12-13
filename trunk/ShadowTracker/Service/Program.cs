@@ -57,6 +57,8 @@ namespace Shadow.Service
 			}
 			else
 			{
+				string serviceName = Path.GetFileName(ServiceLocation);
+
 				service.In = Console.In;
 				service.Out = Console.Out;
 				service.Error = Console.Error;
@@ -66,7 +68,7 @@ namespace Shadow.Service
 					case "c":
 					case "console":
 					{
-						Console.WriteLine("Running ShadowTracker as Console");
+						Console.WriteLine("Running {0} as Console", serviceName);
 
 						service.Begin(args);
 
@@ -79,7 +81,7 @@ namespace Shadow.Service
 					case "i":
 					case "install":
 					{
-						Console.WriteLine("Installing ShadowTracker as Windows Service");
+						Console.WriteLine("Installing {0} as Windows Service", serviceName);
 						Console.WriteLine("Press any key to continue.");
 						Console.ReadKey(true);
 
@@ -102,7 +104,7 @@ namespace Shadow.Service
 					case "u":
 					case "uninstall":
 					{
-						Console.WriteLine("Uninstalling ShadowTracker as Windows Service");
+						Console.WriteLine("Uninstalling {0} as Windows Service", serviceName);
 						Console.WriteLine("Press any key to continue.");
 						Console.ReadKey(true);
 
@@ -123,8 +125,6 @@ namespace Shadow.Service
 					default:
 					case "?":
 					{
-						string serviceName = Path.GetFileName(ServiceLocation);
-
 						Console.WriteLine("USAGE:");
 						Console.WriteLine("\t"+serviceName+" [/? | /console | /install | /uninstall]");
 						Console.WriteLine();
