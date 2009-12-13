@@ -2,8 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("ShadowTracker.Core")]
-[assembly: AssemblyDescription("Shadow Tracker Core Library.")]
+[assembly: AssemblyTitle("ShadowTracker")]
+[assembly: AssemblyDescription("Shadow Tracker Library.")]
 [assembly: AssemblyProduct("ShadowTracker")]
 [assembly: AssemblyCopyright("Copyright ©2009. All rights reserved.")]
 
@@ -16,4 +16,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 [assembly: Guid("8195af82-1a28-44a8-9ed9-cb793ed53825")]
 
-[assembly: InternalsVisibleTo("ShadowTracker.Core.Test")]
+[assembly: InternalsVisibleTo("ShadowTracker.Test")]

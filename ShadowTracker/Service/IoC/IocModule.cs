@@ -35,7 +35,7 @@ namespace Shadow.Service.IoC
 
 		public override void Load()
 		{
-			// ShadowTracker UnitOfWork, provider will check data connection
+			// UnitOfWork, provider will check data connection
 			this.Bind<IUnitOfWork>().ToProvider(new UnitOfWorkProvider(this.TrackerService)).InTransientScope();
 
 			this.RegisterServiceLocator();
