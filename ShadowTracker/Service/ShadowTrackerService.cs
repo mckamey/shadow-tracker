@@ -140,7 +140,8 @@ namespace Shadow.Service
 						catalog.ID,
 						catalog.Path,
 						filterCallback,
-						TimeSpan.FromMilliseconds(settings.TrickleRate)));
+						TimeSpan.FromMilliseconds(settings.TrickleRate),
+						settings.ThreadCount));
 
 					this.Trackers[i] = new FileTracker(this.IoC, catalog.Path, workQueue);
 					this.Trackers[i].Start();

@@ -22,6 +22,7 @@ namespace Shadow.Agent
 
 		private readonly IServiceLocator IoC;
 		private readonly TimeSpan TrickleRate;
+		private readonly int ThreadCount;
 		private readonly Func<FileSystemInfo, bool> fileFilter;
 		private readonly long CatalogID;
 		private readonly string CatalogPath;
@@ -38,13 +39,15 @@ namespace Shadow.Agent
 		/// <param name="catalogPath"></param>
 		/// <param name="fileFilter"></param>
 		/// <param name="trickleRate"></param>
-		public TrackerWorkQueue(IServiceLocator ioc, long catalogID, string catalogPath, Func<FileSystemInfo, bool> fileFilter, TimeSpan trickleRate)
+		/// <param name="threadCount"></param>
+		public TrackerWorkQueue(IServiceLocator ioc, long catalogID, string catalogPath, Func<FileSystemInfo, bool> fileFilter, TimeSpan trickleRate, int threadCount)
 		{
 			this.CatalogID = catalogID;
 			this.CatalogPath = catalogPath;
 			this.IoC = ioc;
 			this.fileFilter = fileFilter;
 			this.TrickleRate = trickleRate;
+			this.ThreadCount = threadCount;
 		}
 
 		#endregion Init
@@ -56,7 +59,12 @@ namespace Shadow.Agent
 			get { return this.TrickleRate; }
 		}
 
-		void ITaskStrategy<TrackerTask>.Execute(TaskEngine<TrackerTask> engine, TrackerTask task)
+		int ITaskStrategy<TrackerTask>.ThreadCount
+		{
+			get { return this.ThreadCount; }
+		}
+
+		void ITaskStrategy<TrackerTask>.Execute(TaskEngine<TrackerTask> engine, int timerID, TrackerTask task)
 		{
 #if DEBUG
 			if (engine.CycleCount % 1000 == 0)
@@ -206,7 +214,7 @@ namespace Shadow.Agent
 			return true;
 		}
 
-		void ITaskStrategy<TrackerTask>.OnError(TaskEngine<TrackerTask> engine, TrackerTask task, Exception ex)
+		void ITaskStrategy<TrackerTask>.OnError(TaskEngine<TrackerTask> engine, int timerID, TrackerTask task, Exception ex)
 		{
 			if (ex == null)
 			{
@@ -248,7 +256,7 @@ namespace Shadow.Agent
 			}
 		}
 
-		void ITaskStrategy<TrackerTask>.OnIdle(TaskEngine<TrackerTask> engine)
+		void ITaskStrategy<TrackerTask>.OnIdle(TaskEngine<TrackerTask> engine, int timerID)
 		{
 			if (engine == null)
 			{

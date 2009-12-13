@@ -58,7 +58,7 @@ namespace Shadow.Agent
 
 		#endregion Init
 
-		#region Methods
+		#region Control Methods
 
 		public void Start()
 		{
@@ -105,7 +105,7 @@ namespace Shadow.Agent
 			}
 		}
 
-		#endregion Methods
+		#endregion Control Methods
 
 		#region Event Handlers
 

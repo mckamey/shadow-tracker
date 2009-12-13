@@ -38,7 +38,7 @@ namespace Shadow.Tasks
 		private readonly Stopwatch Watch = Stopwatch.StartNew();
 		private readonly PriorityQueue<T> Queue;
 		private readonly ITaskStrategy<T> Strategy;
-		private readonly Timer Timer;
+		private readonly IEnumerable<Timer> Timers;
 		private EngineState state = EngineState.Stopped;
 
 		#endregion Fields
@@ -54,10 +54,20 @@ namespace Shadow.Tasks
 			{
 				throw new ArgumentNullException("strategy");
 			}
+			if (strategy.ThreadCount <= 0)
+			{
+				throw new ArgumentException("ThreadCount");
+			}
 
 			this.Strategy = strategy;
 			this.Queue = new PriorityQueue<T>(strategy);
-			this.Timer = new Timer(this.Next);
+
+			Timer[] timers = new Timer[strategy.ThreadCount];
+			for (int i=0; i< timers.Length; i++)
+			{
+				timers[i] = new Timer(this.Next, i, TaskEngine<T>.Infinite, TaskEngine<T>.Infinite);
+			}
+			this.Timers = timers;
 		}
 
 		#endregion Init
@@ -112,7 +122,10 @@ namespace Shadow.Tasks
 					this.state = EngineState.Running;
 
 					// start
-					this.Timer.Change(this.Strategy.Delay, TaskEngine<T>.Infinite);
+					foreach (Timer timer in this.Timers)
+					{
+						timer.Change(this.Strategy.Delay, TaskEngine<T>.Infinite);
+					}
 				}
 				else
 				{
@@ -120,7 +133,10 @@ namespace Shadow.Tasks
 					this.state = EngineState.Ready;
 
 					// stop any queued iterations
-					this.Timer.Change(Timeout.Infinite, Timeout.Infinite);
+					foreach (Timer timer in this.Timers)
+					{
+						timer.Change(Timeout.Infinite, Timeout.Infinite);
+					}
 
 					try
 					{
@@ -131,13 +147,13 @@ namespace Shadow.Tasks
 						}
 
 						// signal idle
-						this.Strategy.OnIdle(this);
+						this.Strategy.OnIdle(this, -1);
 					}
 					catch (Exception ex)
 					{
 						try
 						{
-							this.Strategy.OnError(this, default(T), ex);
+							this.Strategy.OnError(this, -1, default(T), ex);
 						}
 						catch { }
 					}
@@ -154,7 +170,10 @@ namespace Shadow.Tasks
 			this.state = EngineState.Stopped;
 
 			// stop any queued iterations
-			this.Timer.Change(Timeout.Infinite, Timeout.Infinite);
+			foreach (Timer timer in this.Timers)
+			{
+				timer.Change(Timeout.Infinite, Timeout.Infinite);
+			}
 		}
 
 		/// <summary>
@@ -231,6 +250,13 @@ namespace Shadow.Tasks
 		{
 			T task = default(T);
 
+			int timerID = -1;
+			try
+			{
+				timerID = (int)state;
+			}
+			catch { }
+
 			try
 			{
 				bool hasTasks;
@@ -249,7 +275,7 @@ namespace Shadow.Tasks
 				{
 					// increment and perform work
 					this.CycleCount++;
-					this.Strategy.Execute(this, task);
+					this.Strategy.Execute(this, timerID, task);
 				}
 			}
 			catch (Exception ex)
@@ -258,7 +284,7 @@ namespace Shadow.Tasks
 				{
 					// increment and signal error
 					this.ErrorCount++;
-					this.Strategy.OnError(this, task, ex);
+					this.Strategy.OnError(this, timerID, task, ex);
 				}
 				catch { }
 			}
