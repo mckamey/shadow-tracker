@@ -113,6 +113,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="Console.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Uninstall.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
