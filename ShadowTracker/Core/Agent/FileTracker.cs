@@ -28,6 +28,7 @@ namespace Shadow.Agent
 		private readonly IServiceLocator IoC;
 		private readonly TaskEngine<TrackerTask> WorkQueue;
 		private readonly FileSystemWatcher Watcher = new FileSystemWatcher();
+		private readonly long CatalogID;
 
 		#endregion Fields
 
@@ -39,9 +40,10 @@ namespace Shadow.Agent
 		/// <param name="ioc"></param>
 		/// <param name="catalogPath"></param>
 		/// <param name="workQueue"></param>
-		public FileTracker(IServiceLocator ioc, string catalogPath, TaskEngine<TrackerTask> workQueue)
+		public FileTracker(IServiceLocator ioc, long catalogID, string catalogPath, TaskEngine<TrackerTask> workQueue)
 		{
 			this.IoC = ioc;
+			this.CatalogID = catalogID;
 
 			this.Watcher.Path = catalogPath;
 			this.Watcher.IncludeSubdirectories = true;
@@ -64,6 +66,9 @@ namespace Shadow.Agent
 		{
 			this.WorkQueue.Start();
 			this.Watcher.EnableRaisingEvents = true;
+
+			// TODO: move this into idle processing area
+			this.RemoveExtras();
 		}
 
 		public void Stop()
@@ -72,26 +77,13 @@ namespace Shadow.Agent
 			this.Watcher.EnableRaisingEvents = true;
 		}
 
-		public void CheckForChanges(Catalog catalog)
-		{
-			foreach (FileSystemInfo file in FileIterator.GetFiles(catalog.Path, true))
-			{
-				this.WorkQueue.Add(new TrackerTask
-				{
-					FileInfo = file,
-					FullPath = file.FullName,
-					TaskSource = TaskSource.CheckForChanges
-				});
-			}
-		}
-
-		public void RemoveExtras(Catalog catalog)
+		private void RemoveExtras()
 		{
 			CatalogRepository repos = this.IoC.GetInstance<CatalogRepository>();
 
-			foreach (string path in repos.GetExistingPaths(catalog.ID))
+			foreach (string path in repos.GetExistingPaths(this.CatalogID))
 			{
-				string fullPath = FileUtility.DenormalizePath(catalog.Path, path);
+				string fullPath = FileUtility.DenormalizePath(this.Watcher.Path, path);
 
 				if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
 				{

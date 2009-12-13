@@ -138,6 +138,13 @@ namespace Shadow.Tasks
 			this.data[index] = value;
 			this.count++;
 
+#if DEBUG
+			if (this.count % (TaskEngine<T>.TrimThreshold/2) == 0)
+			{
+				System.Diagnostics.Trace.TraceInformation("PriorityQueue<"+typeof(T).Name+">.Count = "+this.count);
+			}
+#endif
+
 			// trickle up to correct position
 			int parent = (index - 1) / 2;
 			while (index > 0 && this.HigherPriority(this.data[index], this.data[parent]))
