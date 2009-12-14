@@ -4,8 +4,8 @@ namespace Shadow.Agent
 {
 	public enum TaskSource
 	{
-		FileSystemEvent,
-		CheckForChanges,
-		RemoveExtras
+		UserAction,
+		DataSync,
+		IdleCleanup
 	}
 }
