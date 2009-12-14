@@ -279,7 +279,7 @@ namespace Shadow.Agent
 				{
 					FileInfo = file,
 					FullPath = file.FullName,
-					TaskSource = TaskSource.CheckForChanges
+					TaskSource = TaskSource.IdleCleanup
 				});
 
 				count--;
@@ -347,15 +347,15 @@ namespace Shadow.Agent
 			// arbitrary values but allows custom ordering
 			switch (source)
 			{
-				case TaskSource.FileSystemEvent:
+				case TaskSource.UserAction:
 				{
 					return 1.00m;
 				}
-				case TaskSource.RemoveExtras:
+				case TaskSource.DataSync:
 				{
 					return 0.67m;
 				}
-				case TaskSource.CheckForChanges:
+				case TaskSource.IdleCleanup:
 				{
 					return 0.33m;
 				}

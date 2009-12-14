@@ -74,7 +74,7 @@ namespace Shadow.Agent
 		public void Stop()
 		{
 			this.WorkQueue.Stop();
-			this.Watcher.EnableRaisingEvents = true;
+			this.Watcher.EnableRaisingEvents = false;
 		}
 
 		private void RemoveExtras()
@@ -91,7 +91,7 @@ namespace Shadow.Agent
 					{
 						ChangeType= WatcherChangeTypes.Deleted,
 						FullPath = fullPath,
-						TaskSource = TaskSource.RemoveExtras
+						TaskSource = TaskSource.DataSync
 					});
 				}
 			}

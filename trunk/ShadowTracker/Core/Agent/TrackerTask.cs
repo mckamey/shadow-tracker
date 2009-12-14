@@ -32,7 +32,7 @@ namespace Shadow.Agent
 				throw new ArgumentNullException("e", "FileSystemEventArgs was null");
 			}
 
-			this.TaskSource = TaskSource.FileSystemEvent;
+			this.TaskSource = TaskSource.UserAction;
 
 			this.ChangeType = e.ChangeType;
 			this.FullPath = e.FullPath;
