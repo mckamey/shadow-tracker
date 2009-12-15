@@ -75,7 +75,7 @@ namespace Shadow.Agent
 				return String.Empty;
 			}
 
-			StringBuilder builder = new StringBuilder();
+			StringBuilder builder = new StringBuilder(value.Length*2);
 
 			// Loop through each byte of the binary data 
 			// and format each one as a hexadecimal string
