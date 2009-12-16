@@ -95,6 +95,20 @@
 					CanBeNull="false"
 					UpdateCheck="Never" />
 
+			<Column Name="ContentType"
+					Member="ContentType"
+					Storage="contentType"
+					DbType="VarChar(100)"
+					CanBeNull="true"
+					UpdateCheck="Never" />
+
+			<Column Name="MimeCategory"
+					Member="MimeCategory"
+					Storage="mimeCategory"
+					DbType="BigInt NOT NULL"
+					CanBeNull="false"
+					UpdateCheck="Never" />
+
 			<Column Name="Size"
 					Member="Length"
 					Storage="length"
