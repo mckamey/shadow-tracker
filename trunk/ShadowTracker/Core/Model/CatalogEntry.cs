@@ -528,9 +528,11 @@ namespace Shadow.Model
 			//this.ID = that.ID;
 
 			this.Attributes = that.Attributes;
+			this.ContentType = that.ContentType;
 			this.CreatedDate = that.CreatedDate;
 			this.DeletedDate = that.DeletedDate;
 			this.Length = that.Length;
+			this.MimeCategory = that.MimeCategory;
 			this.ModifiedDate = that.ModifiedDate;
 			this.Parent = that.Parent;
 			this.Name = that.Name;
