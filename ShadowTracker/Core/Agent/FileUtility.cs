@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
+using MimeUtils;
 using Shadow.Model;
 
 namespace Shadow.Agent
@@ -65,12 +66,19 @@ namespace Shadow.Agent
 
 			long length = (fileInfo != null && fileInfo.Exists) ? fileInfo.Length : 0L;
 
+			MimeType mimeType =
+				(fileInfo != null) ?
+				MimeTypes.GetByExtension(fileInfo.Extension) :
+				MimeType.Empty;
+
 			CatalogEntry entry = new CatalogEntry
 			{
 				Attributes = (file.Attributes&FileUtility.AttribMask),
 				CatalogID = catalogID,
+				ContentType = mimeType.ContentType,
 				CreatedDate = file.CreationTimeUtc,
 				Length = length,
+				MimeCategory = (file is DirectoryInfo) ? MimeCategory.Folder : mimeType.Category,
 				ModifiedDate = file.LastWriteTimeUtc,
 				Name = file.Name,
 				Parent = FileUtility.NormalizePath(catalogPath, parent.FullName)

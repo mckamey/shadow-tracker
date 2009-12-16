@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 
 using IgnorantPersistence;
+using MimeUtils;
 
 namespace Shadow.Model
 {
@@ -114,6 +115,8 @@ namespace Shadow.Model
 					EqualityComparer<DateTime>.Default.Equals(x.CreatedDate, y.CreatedDate) &&
 					EqualityComparer<DateTime>.Default.Equals(x.ModifiedDate, y.ModifiedDate) &&
 					EqualityComparer<DateTime?>.Default.Equals(x.DeletedDate, y.DeletedDate) &&
+					EqualityComparer<MimeCategory>.Default.Equals(x.MimeCategory, y.MimeCategory) &&
+					StringComparer.OrdinalIgnoreCase.Equals(x.ContentType, y.ContentType) &&
 					EqualityComparer<Int64>.Default.Equals(x.Length, y.Length) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Name, y.Name) &&
 					StringComparer.OrdinalIgnoreCase.Equals(x.Parent, y.Parent) &&
@@ -132,6 +135,8 @@ namespace Shadow.Model
 				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Parent);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<FileAttributes>.Default.GetHashCode(obj.Attributes);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<Int64>.Default.GetHashCode(obj.Length);
+				hashcode = (ShiftValue * hashcode) + EqualityComparer<MimeCategory>.Default.GetHashCode(obj.MimeCategory);
+				hashcode = (ShiftValue * hashcode) + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.ContentType);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.CreatedDate);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime>.Default.GetHashCode(obj.ModifiedDate);
 				hashcode = (ShiftValue * hashcode) + EqualityComparer<DateTime?>.Default.GetHashCode(obj.DeletedDate);
@@ -177,6 +182,8 @@ namespace Shadow.Model
 		private string name;
 		private string parent;
 		private long length;
+		private string contentType;
+		private MimeCategory mimeCategory;
 		private FileAttributes attributes;
 		private DateTime createdDate;
 		private DateTime modifiedDate;
@@ -294,6 +301,45 @@ namespace Shadow.Model
 				this.OnPropertyChanging("Length");
 				this.length = value;
 				this.OnPropertyChanged("Length");
+			}
+		}
+
+		/// <summary>
+		/// Gets and sets Content-Type
+		/// </summary>
+		public string ContentType
+		{
+			get { return this.contentType; }
+			set
+			{
+				if (StringComparer.OrdinalIgnoreCase.Equals(this.contentType, value))
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("ContentType");
+				this.contentType = (value??"").ToLowerInvariant();
+				this.OnPropertyChanged("ContentType");
+			}
+		}
+
+		/// <summary>
+		/// Gets and sets MIME Category
+		/// </summary>
+		[DefaultValue(MimeCategory.Unknown)]
+		public MimeCategory MimeCategory
+		{
+			get { return this.mimeCategory; }
+			set
+			{
+				if (this.mimeCategory == value)
+				{
+					return;
+				}
+
+				this.OnPropertyChanging("MimeCategory");
+				this.mimeCategory = value;
+				this.OnPropertyChanged("MimeCategory");
 			}
 		}
 

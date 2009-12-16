@@ -116,6 +116,9 @@
     <Content Include="Console.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="MimeTypes.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Uninstall.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
