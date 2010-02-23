@@ -82,8 +82,6 @@ namespace Shadow.Service
 					case "install":
 					{
 						Console.WriteLine("Installing {0} as Windows Service", serviceName);
-						Console.WriteLine("Press any key to continue.");
-						Console.ReadKey(true);
 
 						try
 						{
@@ -97,16 +95,12 @@ namespace Shadow.Service
 						{
 							Console.Error.WriteLine("Installation failed: "+ex);
 						}
-						Console.WriteLine("Press any key to exit.");
-						Console.ReadKey(true);
 						break;
 					}
 					case "u":
 					case "uninstall":
 					{
 						Console.WriteLine("Uninstalling {0} as Windows Service", serviceName);
-						Console.WriteLine("Press any key to continue.");
-						Console.ReadKey(true);
 
 						try
 						{
@@ -118,8 +112,6 @@ namespace Shadow.Service
 						{
 							Console.Error.WriteLine("Uninstallation failed: "+ex);
 						}
-						Console.WriteLine("Press any key to exit.");
-						Console.ReadKey(true);
 						break;
 					}
 					default:
