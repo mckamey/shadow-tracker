@@ -4,105 +4,32 @@
         <name>IgnorantPersistence</name>
     </assembly>
     <members>
-        <member name="T:IgnorantPersistence.Memory.MemoryUnitOfWork">
+        <member name="T:IgnorantPersistence.ISoftDeleteEntity">
             <summary>
-            An in-memory implementation of a unit-of-work
+            An interface entities can implement to support
             </summary>
         </member>
-        <member name="T:IgnorantPersistence.IUnitOfWork">
+        <member name="M:IgnorantPersistence.ISoftDeleteEntity.CopyValuesFrom(System.Object)">
             <summary>
-            Unit-of-Work interface
+            Updates an existing entity from the values of another
+            </summary>
+            <param name="item"></param>
+        </member>
+        <member name="P:IgnorantPersistence.ISoftDeleteEntity.DeletedDate">
+            <summary>
+            Gets and sets the DateTime which the entity was deleted. null means not deleted
             </summary>
         </member>
-        <member name="M:IgnorantPersistence.IUnitOfWork.GetTable``1">
+        <member name="P:IgnorantPersistence.ISoftDeleteEntity.Signature">
             <summary>
-            Gets access to the persistence collection for <typeparamref name="T" />
+            Gets a value which is used to identify the entity after it is deleted
+            </summary>
+        </member>
+        <member name="T:IgnorantPersistence.ISoftDeleteTable`1">
+            <summary>
+            A table which doesn't actually delete but instead flags as deleted
             </summary>
             <typeparam name="T"></typeparam>
-            <returns></returns>
-        </member>
-        <member name="M:IgnorantPersistence.IUnitOfWork.Save">
-            <summary>
-            Persists any changes to the underlying storage
-            </summary>
-        </member>
-        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.Save">
-            <summary>
-            Save any changes
-            </summary>
-        </member>
-        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.GetTable``1">
-            <summary>
-            Gets an in-memory instance of an ITable
-            </summary>
-            <typeparam name="T"></typeparam>
-            <returns></returns>
-        </member>
-        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.PopulateTable``1(System.Collections.Generic.IEnumerable{``0})">
-            <summary>
-            Sets equality comparer for a given type
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="items"></param>
-        </member>
-        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.PopulateTable``1(System.Collections.Generic.IEqualityComparer{``0},System.Collections.Generic.IEnumerable{``0})">
-            <summary>
-            Sets the equality comparer and initial values for a given type
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="comparer"></param>
-            <param name="items"></param>
-        </member>
-        <member name="T:IgnorantPersistence.L2S.L2SUnitOfWork">
-            <summary>
-            A unit-of-work adapter for LINQ-to-SQL DataContexts.
-            </summary>
-        </member>
-        <member name="M:IgnorantPersistence.L2S.L2SUnitOfWork.#ctor(System.Data.Linq.DataContext)">
-            <summary>
-            Ctor
-            </summary>
-            <param name="db"></param>
-        </member>
-        <member name="M:IgnorantPersistence.L2S.L2SUnitOfWork.CanConnect">
-            <summary>
-            Checks if the configured database exists at the location specified in the connection string.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:IgnorantPersistence.L2S.L2SUnitOfWork.InitializeDatabase">
-            <summary>
-            Creates a database at the location specified in the connection string.
-            </summary>
-        </member>
-        <member name="M:IgnorantPersistence.L2S.L2SUnitOfWork.Save">
-            <summary>
-            Stores any pending changes
-            </summary>
-        </member>
-        <member name="M:IgnorantPersistence.L2S.L2SUnitOfWork.GetTable``1">
-            <summary>
-            Returns a collection of objects of a particular type,
-            where the type is defined by the T parameter.
-            </summary>
-            <typeparam name="T">The type of the objects to be returned.</typeparam>
-            <returns>A collection of objects.</returns>
-        </member>
-        <member name="E:IgnorantPersistence.L2S.L2SUnitOfWork.OnCommit">
-            <summary>
-            A callback which notifies any listeners of pending changes
-            </summary>
-        </member>
-        <member name="T:IgnorantPersistence.Memory.MemoryTable`1">
-            <summary>
-            An in-memory representation of a queryable table.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <remarks>
-            Note this contains object references so if the object is retrieved and updated,
-            the changes will take effect immediately within the Table. This is different
-            from remote persistent storage system such as a RDBMS.
-            </remarks>
         </member>
         <member name="T:IgnorantPersistence.ITable`1">
             <summary>
@@ -134,6 +61,44 @@
             </summary>
             <param name="match"></param>
         </member>
+        <member name="P:IgnorantPersistence.ISoftDeleteTable`1.AllItems">
+            <summary>
+            Gets a queryable collection of all items, deleted or not
+            </summary>
+        </member>
+        <member name="P:IgnorantPersistence.ISoftDeleteTable`1.Deleted">
+            <summary>
+            Gets a queryable collection of all the deleted items
+            </summary>
+        </member>
+        <member name="T:IgnorantPersistence.IUnitOfWork">
+            <summary>
+            Unit-of-Work interface
+            </summary>
+        </member>
+        <member name="M:IgnorantPersistence.IUnitOfWork.GetTable``1">
+            <summary>
+            Gets access to the persistence collection for <typeparamref name="T" />
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:IgnorantPersistence.IUnitOfWork.Save">
+            <summary>
+            Persists any changes to the underlying storage
+            </summary>
+        </member>
+        <member name="T:IgnorantPersistence.Memory.MemoryTable`1">
+            <summary>
+            An in-memory representation of a queryable table.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <remarks>
+            Note this contains object references so if the object is retrieved and updated,
+            the changes will take effect immediately within the Table. This is different
+            from remote persistent storage system such as a RDBMS.
+            </remarks>
+        </member>
         <member name="M:IgnorantPersistence.Memory.MemoryTable`1.#ctor(System.Collections.Generic.IEqualityComparer{`0})">
             <summary>
             Ctor
@@ -147,72 +112,37 @@
             <param name="comparer">initial items</param>
             <param name="items">determines if two objects represent the same item</param>
         </member>
-        <member name="T:IgnorantPersistence.ISoftDeleteEntity">
+        <member name="T:IgnorantPersistence.Memory.MemoryUnitOfWork">
             <summary>
-            An interface entities can implement to support
+            An in-memory implementation of a unit-of-work
             </summary>
         </member>
-        <member name="M:IgnorantPersistence.ISoftDeleteEntity.CopyValuesFrom(System.Object)">
+        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.Save">
             <summary>
-            Updates an existing entity from the values of another
-            </summary>
-            <param name="item"></param>
-        </member>
-        <member name="P:IgnorantPersistence.ISoftDeleteEntity.DeletedDate">
-            <summary>
-            Gets and sets the DateTime which the entity was deleted. null means not deleted
+            Save any changes
             </summary>
         </member>
-        <member name="P:IgnorantPersistence.ISoftDeleteEntity.Signature">
+        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.GetTable``1">
             <summary>
-            Gets a value which is used to identify the entity after it is deleted
-            </summary>
-        </member>
-        <member name="T:IgnorantPersistence.L2S.L2STable`1">
-            <summary>
-            A queryable table adapter for LINQ-to-SQL tables.
+            Gets an in-memory instance of an ITable
             </summary>
             <typeparam name="T"></typeparam>
+            <returns></returns>
         </member>
-        <member name="M:IgnorantPersistence.L2S.L2STable`1.#ctor(System.Data.Linq.DataContext)">
+        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.PopulateTable``1(System.Collections.Generic.IEnumerable{``0})">
             <summary>
-            Ctor
-            </summary>
-            <param name="db">DataContext</param>
-        </member>
-        <member name="T:IgnorantPersistence.L2S.L2SSoftDeleteTable`1">
-            <summary>
-            A table which doesn't actually delete but instead flags as deleted
-            </summary>
-            <typeparam name="T">must implement ISoftDeleteEntity</typeparam>
-        </member>
-        <member name="T:IgnorantPersistence.ISoftDeleteTable`1">
-            <summary>
-            A table which doesn't actually delete but instead flags as deleted
+            Sets equality comparer for a given type
             </summary>
             <typeparam name="T"></typeparam>
+            <param name="items"></param>
         </member>
-        <member name="P:IgnorantPersistence.ISoftDeleteTable`1.AllItems">
+        <member name="M:IgnorantPersistence.Memory.MemoryUnitOfWork.PopulateTable``1(System.Collections.Generic.IEqualityComparer{``0},System.Collections.Generic.IEnumerable{``0})">
             <summary>
-            Gets a queryable collection of all items, deleted or not
+            Sets the equality comparer and initial values for a given type
             </summary>
-        </member>
-        <member name="P:IgnorantPersistence.ISoftDeleteTable`1.Deleted">
-            <summary>
-            Gets a queryable collection of all the deleted items
-            </summary>
-        </member>
-        <member name="M:IgnorantPersistence.L2S.L2SSoftDeleteTable`1.#ctor(System.Data.Linq.DataContext)">
-            <summary>
-            Ctor
-            </summary>
-            <param name="db">DataContext</param>
-        </member>
-        <member name="M:IgnorantPersistence.L2S.L2SSoftDeleteTable`1.Add(`0)">
-            <summary>
-            Adds by first checking if a deleted version exists
-            </summary>
-            <param name="item"></param>
+            <typeparam name="T"></typeparam>
+            <param name="comparer"></param>
+            <param name="items"></param>
         </member>
     </members>
 </doc>
