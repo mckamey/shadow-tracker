@@ -59,6 +59,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.dll</HintPath>
     </Reference>
+    <Reference Include="IgnorantPersistence.L2S">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\IgnorantPersistence\IgnorantPersistence.L2S.dll</HintPath>
+    </Reference>
     <Reference Include="JsonFx.BuildTools">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\JsonFx\JsonFx.BuildTools.dll</HintPath>
